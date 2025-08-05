@@ -168,6 +168,19 @@ function hide_admin_menus_from_allergist()
             }
         }
     }
+
+    // Also check if user already has a physicians post and remove "Add New" submenu
+    $existing_posts = get_posts(array(
+        'post_type' => 'physicians',
+        'post_status' => array('publish', 'draft', 'pending'),
+        'author' => $current_user->ID,
+        'numberposts' => 1
+    ));
+
+    if (!empty($existing_posts)) {
+        // Remove the "Add New" submenu item if they already have a post
+        remove_submenu_page('edit.php?post_type=physicians', 'post-new.php?post_type=physicians');
+    }
 }
 add_action('admin_menu', 'hide_admin_menus_from_allergist', 999);
 
@@ -196,12 +209,23 @@ function hide_add_new_for_allergist()
         ));
 
         if (!empty($existing_posts)) {
-            // Hide the "Add New" button with CSS
+            // Hide the "Add New" button with more comprehensive CSS
             echo '<style>
                 .page-title-action,
                 .add-new-h2,
                 #favorite-actions,
-                .tablenav .alignleft .button {
+                .tablenav .alignleft .button,
+                .wrap .page-title-action,
+                .wrap h1 .page-title-action,
+                a.page-title-action,
+                .wp-heading-inline + .page-title-action,
+                .subsubsub .current + li a,
+                input[value="Add New"] {
+                    display: none !important;
+                }
+                
+                /* Also hide any "Add New" links in submenus */
+                #adminmenu .wp-submenu a[href*="post-new.php?post_type=physicians"] {
                     display: none !important;
                 }
             </style>';
@@ -211,7 +235,155 @@ function hide_add_new_for_allergist()
 add_action('admin_head', 'hide_add_new_for_allergist');
 
 /**
- * Restrict allergist users from accessing posts they don't own and limit to one published post
+ * Comprehensive system to restrict allergist users to one physicians post
+ */
+
+/**
+ * Check if allergist user can create/publish physicians posts
+ */
+function can_allergist_create_physicians_post($user_id = null)
+{
+    if (!$user_id) {
+        $user_id = get_current_user_id();
+    }
+
+    $user = get_userdata($user_id);
+    if (!$user || !in_array('allergist', $user->roles)) {
+        return true; // Not an allergist, no restriction
+    }
+
+    // Check if user already has any physicians post
+    $existing_posts = get_posts(array(
+        'post_type' => 'physicians',
+        'post_status' => array('publish', 'draft', 'pending', 'future', 'private'),
+        'author' => $user_id,
+        'numberposts' => 1,
+        'fields' => 'ids'
+    ));
+
+    return empty($existing_posts);
+}
+
+/**
+ * Block creation of new physicians posts if allergist already has one
+ */
+function restrict_allergist_physicians_creation($post_data, $postarr)
+{
+    // Only apply to physicians post type
+    if ($post_data['post_type'] !== 'physicians') {
+        return $post_data;
+    }
+
+    // Skip if this is an update to existing post
+    if (!empty($postarr['ID'])) {
+        return $post_data;
+    }
+
+    $current_user = wp_get_current_user();
+
+    // Only apply to allergist users
+    if (!in_array('allergist', $current_user->roles)) {
+        return $post_data;
+    }
+
+    // Check if they can create a physicians post
+    if (!can_allergist_create_physicians_post($current_user->ID)) {
+        // Prevent the post from being created by setting an invalid post type
+        wp_die(
+            __('You can only create one physician profile. Please edit your existing profile instead.'),
+            __('Permission Denied'),
+            array('response' => 403, 'back_link' => true)
+        );
+    }
+
+    return $post_data;
+}
+add_filter('wp_insert_post_data', 'restrict_allergist_physicians_creation', 10, 2);
+
+/**
+ * Prevent duplicate posts via capability check
+ */
+function restrict_allergist_create_posts_capability($allcaps, $caps, $args, $user)
+{
+    // Check if we're dealing with create_posts capability for physicians
+    if (in_array('create_physicians', $caps) && isset($user->roles) && in_array('allergist', $user->roles)) {
+        // If they already have a physicians post, remove the create capability
+        if (!can_allergist_create_physicians_post($user->ID)) {
+            $allcaps['create_physicians'] = false;
+        }
+    }
+
+    return $allcaps;
+}
+add_filter('user_has_cap', 'restrict_allergist_create_posts_capability', 10, 4);
+
+/**
+ * Validate post before saving to prevent duplicates
+ */
+function validate_allergist_physicians_post($post_id, $post, $update)
+{
+    // Only apply to physicians post type
+    if ($post->post_type !== 'physicians') {
+        return;
+    }
+
+    // Skip auto-saves and revisions
+    if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) {
+        return;
+    }
+
+    $author = get_userdata($post->post_author);
+
+    // Only apply to allergist users
+    if (!$author || !in_array('allergist', $author->roles)) {
+        return;
+    }
+
+    // If this is a new post (not an update)
+    if (!$update) {
+        // Check if author already has another physicians post
+        $existing_posts = get_posts(array(
+            'post_type' => 'physicians',
+            'post_status' => array('publish', 'draft', 'pending', 'future', 'private'),
+            'author' => $post->post_author,
+            'exclude' => array($post_id),
+            'numberposts' => 1,
+            'fields' => 'ids'
+        ));
+
+        if (!empty($existing_posts)) {
+            // Delete this duplicate post
+            wp_delete_post($post_id, true);
+
+            // Redirect with error message
+            wp_redirect(add_query_arg(
+                array(
+                    'post_type' => 'physicians',
+                    'error' => 'duplicate_post'
+                ),
+                admin_url('edit.php')
+            ));
+            exit;
+        }
+    }
+}
+add_action('save_post', 'validate_allergist_physicians_post', 10, 3);
+
+/**
+ * Display error message for duplicate post attempts
+ */
+function display_allergist_duplicate_post_error()
+{
+    if (isset($_GET['error']) && $_GET['error'] === 'duplicate_post') {
+        echo '<div class="notice notice-error is-dismissible">
+            <p><strong>Error:</strong> You can only create one physician profile. Please edit your existing profile instead.</p>
+        </div>';
+    }
+}
+add_action('admin_notices', 'display_allergist_duplicate_post_error');
+
+/**
+ * Remove the old, less robust restriction functions
  */
 function restrict_allergist_post_access()
 {
@@ -250,53 +422,6 @@ function restrict_allergist_post_access()
         }
     }
 }
-add_action('admin_init', 'restrict_allergist_post_access');
-
-/**
- * Restrict allergist users from publishing more than one physicians post
- */
-function restrict_allergist_publish_limit($post_id)
-{
-    // Only check on physicians post type
-    if (get_post_type($post_id) !== 'physicians') {
-        return;
-    }
-
-    $current_user = wp_get_current_user();
-
-    // Only apply to allergist users
-    if (!in_array('allergist', $current_user->roles)) {
-        return;
-    }
-
-    $post = get_post($post_id);
-
-    // If this post is being published
-    if ($post->post_status === 'publish') {
-        // Check if user already has another published physicians post
-        $existing_posts = get_posts(array(
-            'post_type' => 'physicians',
-            'post_status' => 'publish',
-            'author' => $current_user->ID,
-            'exclude' => array($post_id), // Exclude current post
-            'numberposts' => 1
-        ));
-
-        if (!empty($existing_posts)) {
-            // Revert to draft status
-            wp_update_post(array(
-                'ID' => $post_id,
-                'post_status' => 'draft'
-            ));
-
-            // Add admin notice
-            add_action('admin_notices', function () {
-                echo '<div class="notice notice-error"><p>You can only have one published physician profile. This post has been saved as a draft.</p></div>';
-            });
-        }
-    }
-}
-add_action('save_post', 'restrict_allergist_publish_limit');
 add_action('admin_init', 'restrict_allergist_post_access');
 
 /**
