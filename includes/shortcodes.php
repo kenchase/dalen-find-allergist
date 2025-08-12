@@ -27,17 +27,6 @@ function find_allergist_results_shortcode($atts)
         true
     );
 
-    // Pass data to JavaScript including AJAX URL
-    wp_localize_script(
-        'find-allergist-results-js',
-        'allergist_ajax',
-        array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('allergist_search_nonce'),
-            'plugin_url' => plugin_dir_url(__FILE__) . '../'
-        )
-    );
-
     // Start output buffering
     ob_start();
 
@@ -116,38 +105,15 @@ function find_allergist_results_shortcode($atts)
             </div>
 
             <div class="grid-column-two">
-                <button type="submit" id="btn_search" class="btn_search et_pb_contact_submit et_pb_button"><?php _e('Search', 'dalen-find-allergist'); ?></button>
+                <button type="submit" id="btn-search" class="btn_search et_pb_contact_submit et_pb_button"><?php _e('Search', 'dalen-find-allergist'); ?></button>
                 <button onclick="searchClear(); return false;"><?php _e('Clear Search', 'dalen-find-allergist'); ?></button>
             </div>
         </form>
     </div>
     <!-- Search Results -->
-    <div class="clear"></div>
-    <div id="no-results-container" style="display: none;">
-        <?php _e('No results found. Please try different search criteria.', 'dalen-find-allergist'); ?>
-    </div>
-    <div id="search-results-container" style="display: none;">
-        <div id="search-results-container-inner">
-            <div id="results-column">
-                <div id="search-result-count-box">
-                    <span id="search-result-count"></span> <?php _e('result(s) found. Click a marker below to highlight the location on the map.', 'dalen-find-allergist'); ?>
-                </div>
-                <div class="pagination-box"></div>
-                <div class="physician_results" id="search-results"></div>
-                <div class="pagination-box"></div>
-            </div>
-            <div id="map-results">
-                <div id="googleMap" style="width: 100%; height: 400px;"></div>
-            </div>
-        </div>
-    </div>
-    <script>
-        jQuery(document).ready(function($) {
-            if (typeof autoFillAndSubmit === 'function') {
-                autoFillAndSubmit();
-            }
-        });
-    </script>
+    <div id="results"></div>
+
+
 
 <?php
 
