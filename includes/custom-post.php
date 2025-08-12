@@ -24,6 +24,7 @@ function csaci_custom_allergist_post()
         ),
         'public' => true,
         'show_ui' => true,
+        'show_in_rest' => true,
         'has_archive' => true,
         'menu_position' => 2,
         'menu_icon' => 'dashicons-groups',

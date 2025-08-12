@@ -28,4 +28,5 @@ add_filter('acf/fields/google_map/api', 'my_acf_google_map_api');
 include_once plugin_dir_path(__FILE__) . 'includes/custom-role.php';
 include_once plugin_dir_path(__FILE__) . 'includes/custom-post.php';
 include_once plugin_dir_path(__FILE__) . 'includes/shortcodes.php';
+include_once plugin_dir_path(__FILE__) . 'includes/helper-functions.php';
 // include_once plugin_dir_path(__FILE__) . 'includes/login-redirect.php';

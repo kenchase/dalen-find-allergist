@@ -12,7 +12,7 @@ function ajax(data, callback) {
 		data: data,
 	};
 
-	jQuery.post(ajax_url, data_send, callback);
+	jQuery.post(allergist_ajax.ajax_url, data_send, callback);
 }
 
 function allergistSearch(that) {
@@ -28,6 +28,7 @@ function searchResultsDisplay(json) {
 
 	var map_info = data.map_info;
 	var items = data.items;
+	console.log(data.items);
 
 	var total_count = items.length; //TODO - write out the count somewhere
 

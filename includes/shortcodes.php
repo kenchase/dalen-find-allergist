@@ -27,6 +27,17 @@ function find_allergist_results_shortcode($atts)
         true
     );
 
+    // Pass data to JavaScript including AJAX URL
+    wp_localize_script(
+        'find-allergist-results-js',
+        'allergist_ajax',
+        array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('allergist_search_nonce'),
+            'plugin_url' => plugin_dir_url(__FILE__) . '../'
+        )
+    );
+
     // Start output buffering
     ob_start();
 
@@ -145,4 +156,4 @@ function find_allergist_results_shortcode($atts)
 }
 
 // Register the shortcode
-add_shortcode('find_allergist_results', 'find_allergist_results_shortcode');
+add_shortcode('find_allergists', 'find_allergist_results_shortcode');
