@@ -114,7 +114,7 @@ function my_physician_search(WP_REST_Request $req)
         'oit'      => 'practices_oral_immunotherapy_oit',
         'city'     => 'physician_city',
         'province' => 'physician_province',
-        'postal'   => 'physician_zipcode',
+        // Note: postal is handled separately as it searches within organizations_details
     ];
 
     // OIT (checkbox field - value is "OIT" when checked, empty when unchecked)
@@ -159,29 +159,16 @@ function my_physician_search(WP_REST_Request $req)
         ];
     }
 
-    // Postal: allow match without space (store normalized; use LIKE for flexibility)
-    if (!empty($req['postal'])) {
-        $postal_search = $req['postal'];
-        // Try multiple formats for better matching
-        $meta_query[] = [
-            'relation' => 'OR',
-            [
-                'key'     => $acf_keys['postal'],
-                'value'   => $postal_search,
-                'compare' => 'LIKE',
-            ],
-            [
-                'key'     => $acf_keys['postal'],
-                'value'   => substr($postal_search, 0, 3) . ' ' . substr($postal_search, 3), // Add space if needed
-                'compare' => 'LIKE',
-            ],
-            [
-                'key'     => $acf_keys['postal'],
-                'value'   => str_replace(' ', '', $postal_search), // Remove space if needed
-                'compare' => 'LIKE',
-            ]
-        ];
-    }
+    // Note: postal code search is handled post-query for better performance
+
+    // Store postal search for post-query filtering if meta query fails
+    $postal_search_term = !empty($req['postal']) ? $req['postal'] : null;
+
+    // Remove postal from meta_query for now - we'll filter after the query
+    $meta_query_without_postal = array_filter($meta_query, function ($query) {
+        return !isset($query['relation']) || $query['relation'] !== 'OR' ||
+            !isset($query[0]['key']) || strpos($query[0]['key'], 'post_code') === false;
+    });
 
     // Base query: try exact slug first (fast), else phrase search filtered to exact title.
     $per_page = max(1, min(50, (int)$req['per_page']));
@@ -196,7 +183,7 @@ function my_physician_search(WP_REST_Request $req)
             'post_type'      => 'physicians',
             'post_status'    => 'publish',
             'name'           => sanitize_title($full),
-            'meta_query'     => $meta_query,
+            'meta_query'     => $meta_query_without_postal,
             'posts_per_page' => $per_page,
             'paged'          => $paged,
             'no_found_rows'  => false,
@@ -211,7 +198,7 @@ function my_physician_search(WP_REST_Request $req)
                 'post_status'    => 'publish',
                 's'              => $full,
                 'sentence'       => true,
-                'meta_query'     => $meta_query,
+                'meta_query'     => $meta_query_without_postal,
                 'posts_per_page' => $per_page,
                 'paged'          => $paged,
                 'no_found_rows'  => false,
@@ -222,17 +209,45 @@ function my_physician_search(WP_REST_Request $req)
             }));
         }
     } else {
-        // No name provided, search only by meta fields (postal code, city, province, etc.)
+        // No name provided, search only by meta fields (except postal code)
         $q = new WP_Query([
             'post_type'      => 'physicians',
             'post_status'    => 'publish',
-            'meta_query'     => $meta_query,
-            'posts_per_page' => $per_page,
+            'meta_query'     => $meta_query_without_postal,
+            'posts_per_page' => $postal_search_term ? 100 : $per_page, // Get more posts if we need to filter by postal
             'paged'          => $paged,
             'no_found_rows'  => false,
         ]);
 
         $posts = $q->posts;
+    }
+
+    // Post-query filter for postal code if needed
+    if ($postal_search_term && !empty($posts)) {
+        $posts = array_values(array_filter($posts, function ($p) use ($postal_search_term) {
+            $organizations_details = get_field('organizations_details', $p->ID) ?: [];
+
+            foreach ($organizations_details as $org) {
+                if (isset($org['institution_gmap']['post_code'])) {
+                    $stored_postal = $org['institution_gmap']['post_code'];
+
+                    // Check for matches with different formats
+                    if (
+                        stripos($stored_postal, $postal_search_term) !== false ||
+                        stripos(str_replace(' ', '', $stored_postal), str_replace(' ', '', $postal_search_term)) !== false ||
+                        stripos($stored_postal, substr($postal_search_term, 0, 3)) !== false
+                    ) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }));
+
+        // Re-paginate the filtered results
+        $total_filtered = count($posts);
+        $start = ($paged - 1) * $per_page;
+        $posts = array_slice($posts, $start, $per_page);
     }
 
     // Debug: Log the query for troubleshooting (remove in production)
@@ -241,6 +256,21 @@ function my_physician_search(WP_REST_Request $req)
         error_log('Search params: ' . print_r($req->get_params(), true));
         error_log('Meta query: ' . print_r($meta_query, true));
         error_log('Posts found: ' . count($posts));
+
+        // Additional debug for postal code searches
+        if (!empty($req['postal'])) {
+            error_log('Postal code search for: ' . $req['postal']);
+            // Let's also try a direct database query to see what's actually stored
+            global $wpdb;
+            $postal_meta = $wpdb->get_results($wpdb->prepare("
+                SELECT post_id, meta_key, meta_value 
+                FROM {$wpdb->postmeta} 
+                WHERE meta_key LIKE %s 
+                AND meta_value LIKE %s
+                LIMIT 10
+            ", '%institution_gmap_post_code', '%' . $req['postal'] . '%'));
+            error_log('Direct postal meta query results: ' . print_r($postal_meta, true));
+        }
     }
 
     // Optional: distance filter (requires lat/lng on each post)
