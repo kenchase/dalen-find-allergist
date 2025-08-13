@@ -41,8 +41,15 @@ function my_geocode_postal($postal_code)
         return null;
     }
 
-    // Format postal code for Google API
-    $formatted_postal = substr($postal_code, 0, 3) . ' ' . substr($postal_code, 3, 3);
+    // Normalize postal code - remove spaces and convert to uppercase
+    $clean_postal = strtoupper(preg_replace('/\s+/', '', $postal_code));
+
+    // Format postal code for Google API (add space: "K1A0A6" -> "K1A 0A6")
+    if (strlen($clean_postal) === 6) {
+        $formatted_postal = substr($clean_postal, 0, 3) . ' ' . substr($clean_postal, 3, 3);
+    } else {
+        $formatted_postal = $clean_postal; // Use as-is if not 6 characters
+    }
 
     // Use Google Geocoding API
     $api_key = 'AIzaSyDxGyqMkrVCU7C65nKSHqaI0pXKGhgCW1Q'; // Same key from shortcodes.php
@@ -97,15 +104,8 @@ function my_physician_search(WP_REST_Request $req)
     $lname = trim((string) $req['lname']);
     $full  = trim("$fname $lname");
 
-    // Debug logging
-    if (defined('WP_DEBUG') && WP_DEBUG) {
-        error_log('Name search - fname: ' . $fname);
-        error_log('Name search - lname: ' . $lname);
-        error_log('Name search - full: ' . $full);
-    }
-
     // Require at least one search criterion
-    if (empty($fname) && empty($lname) && empty($req['city']) && empty($req['province']) && empty($req['postal'])) {
+    if (empty($fname) && empty($lname) && empty($req['city']) && empty($req['province']) && empty($req['postal']) && empty($req['kms'])) {
         return new WP_Error('missing_criteria', 'Please provide at least one search criterion.', ['status' => 400]);
     }
 
@@ -208,34 +208,34 @@ function my_physician_search(WP_REST_Request $req)
 
             return false;
         }));
-
-        // Debug: Log search results
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('Name search - fname: ' . $fname . ', lname: ' . $lname);
-            error_log('Search found ' . count($posts) . ' total posts');
-            if (!empty($posts)) {
-                foreach ($posts as $post) {
-                    error_log('Found post: ' . get_the_title($post) . ' (ID: ' . $post->ID . ')');
-                }
-            } else {
-                // Log some existing physicians for debugging
-                $all_physicians = get_posts([
-                    'post_type' => 'physicians',
-                    'post_status' => 'publish',
-                    'numberposts' => 10
-                ]);
-                error_log('Available physicians:');
-                foreach ($all_physicians as $physician) {
-                    error_log('- ' . get_the_title($physician) . ' (ID: ' . $physician->ID . ')');
-                }
-            }
-        }
     } else {
         // No name provided, search only by meta fields (except postal code)
+        // If only postal+kms provided, get all physicians to filter by distance
+        $meta_query_for_search = $meta_query_without_postal;
+
+        // If no traditional search criteria provided (only postal+kms), get all physicians
+        if (empty($req['city']) && empty($req['province']) && !($req['oit'] === true)) {
+            // Only use the immunologist exclusion filter, get all other physicians
+            $meta_query_for_search = [
+                [
+                    'relation' => 'OR',
+                    [
+                        'key'     => 'immunologist_online_search_tool',
+                        'value'   => 'YES',
+                        'compare' => '!='
+                    ],
+                    [
+                        'key'     => 'immunologist_online_search_tool',
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ]
+            ];
+        }
+
         $q = new WP_Query([
             'post_type'      => 'physicians',
             'post_status'    => 'publish',
-            'meta_query'     => $meta_query_without_postal,
+            'meta_query'     => $meta_query_for_search,
             'posts_per_page' => -1, // Get all posts
             'no_found_rows'  => true,
         ]);
@@ -243,8 +243,8 @@ function my_physician_search(WP_REST_Request $req)
         $posts = $q->posts;
     }
 
-    // Post-query filter for postal code if needed
-    if ($postal_search_term && !empty($posts)) {
+    // Post-query filter for postal code if needed (but skip if doing distance filtering)
+    if ($postal_search_term && !empty($posts) && empty($req['kms'])) {
         $posts = array_values(array_filter($posts, function ($p) use ($postal_search_term) {
             $organizations_details = get_field('organizations_details', $p->ID) ?: [];
 
@@ -266,64 +266,51 @@ function my_physician_search(WP_REST_Request $req)
         }));
     }
 
-    // Debug: Log the query for troubleshooting (remove in production)
-    if (defined('WP_DEBUG') && WP_DEBUG) {
-        error_log('Physician Search Debug:');
-        error_log('Search params: ' . print_r($req->get_params(), true));
-        error_log('Meta query: ' . print_r($meta_query_without_postal, true));
-
-        // If searching by province only, let's see what province values exist
-        if (!empty($req['province']) && empty($fname) && empty($lname) && empty($req['city']) && empty($req['postal'])) {
-            error_log('Province-only search for: ' . $req['province']);
-
-            // Get all physicians and their province values for debugging
-            global $wpdb;
-            $province_meta = $wpdb->get_results($wpdb->prepare("
-                SELECT post_id, meta_value 
-                FROM {$wpdb->postmeta} 
-                WHERE meta_key = %s
-                LIMIT 20
-            ", 'physician_province'));
-            error_log('Sample province values in database: ' . print_r($province_meta, true));
-        }
-
-        error_log('Posts found: ' . count($posts));
-
-        // Additional debug for postal code searches
-        if (!empty($req['postal'])) {
-            error_log('Postal code search for: ' . $req['postal']);
-            // Let's also try a direct database query to see what's actually stored
-            global $wpdb;
-            $postal_meta = $wpdb->get_results($wpdb->prepare("
-                SELECT post_id, meta_key, meta_value 
-                FROM {$wpdb->postmeta} 
-                WHERE meta_key LIKE %s 
-                AND meta_value LIKE %s
-                LIMIT 10
-            ", '%institution_gmap_post_code', '%' . $req['postal'] . '%'));
-            error_log('Direct postal meta query results: ' . print_r($postal_meta, true));
-        }
-    }
-
-    // Optional: distance filter (requires lat/lng on each post)
-    // If you store ACF fields 'lat' & 'lng' on the post, you can compute distance here in PHP
-    // (after fetching a modest set) and then array_filter by $req['kms'].
+    // Distance-based filtering: filter physicians by organizations within specified radius
     if (!empty($req['kms']) && !empty($req['postal'])) {
-        // You’ll need to geocode the postal to lat/lng (once) or keep a lookup table.
-        // Example outline (pseudo):
-        // $origin = my_geocode_postal($req['postal']); // ['lat' => ..., 'lng' => ...]
-        // $radius = (float)$req['kms'];
-        // $posts = array_values(array_filter($posts, function($p) use ($origin, $radius){
-        //   $lat = (float) get_post_meta($p->ID, 'lat', true);
-        //   $lng = (float) get_post_meta($p->ID, 'lng', true);
-        //   return $lat && $lng && my_haversine_miles($origin['lat'],$origin['lng'],$lat,$lng) <= $radius;
-        // }));
+        $origin = my_geocode_postal($req['postal']);
+        $radius = (float)$req['kms'];
+
+        if ($origin && is_array($origin) && isset($origin['lat']) && isset($origin['lng'])) {
+            $posts = array_values(array_filter($posts, function ($p) use ($origin, $radius) {
+                $organizations_details = get_field('organizations_details', $p->ID) ?: [];
+
+                // Check if ANY organization is within the radius
+                foreach ($organizations_details as $org) {
+                    // Check both institution_gmap structure and direct lat/lng fields
+                    $lat = null;
+                    $lng = null;
+
+                    if (isset($org['institution_gmap']['lat']) && isset($org['institution_gmap']['lng'])) {
+                        $lat = (float) $org['institution_gmap']['lat'];
+                        $lng = (float) $org['institution_gmap']['lng'];
+                    } elseif (isset($org['institution_latitude']) && isset($org['institution_longitude'])) {
+                        $lat = (float) $org['institution_latitude'];
+                        $lng = (float) $org['institution_longitude'];
+                    }
+
+                    if ($lat && $lng) {
+                        $distance = my_haversine_distance($origin['lat'], $origin['lng'], $lat, $lng);
+
+                        if ($distance <= $radius) {
+                            return true;
+                        }
+                    }
+                }
+                return false; // No organizations within radius
+            }));
+        }
     }
 
     // Build response—include selected ACF fields if useful
     $search_postal_coords = null;
     if (!empty($req['postal'])) {
-        $search_postal_coords = my_geocode_postal($req['postal']);
+        // Reuse the geocoded coordinates if we already have them from distance filtering
+        if (isset($origin) && is_array($origin) && isset($origin['lat']) && isset($origin['lng'])) {
+            $search_postal_coords = $origin;
+        } else {
+            $search_postal_coords = my_geocode_postal($req['postal']);
+        }
     }
 
     $out = array_map(function ($p) use ($search_postal_coords) {
