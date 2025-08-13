@@ -30,6 +30,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 const ENDPOINT = "/wp-json/my/v1/physicians/search";
 
+// Global variables for map functionality
+let allergistMap = null;
+let mapMarkers = [];
+let mapInfoWindow = null;
+let orgIndexCounter = 0;
+
 /**
  * Handle search form submission
  */
@@ -79,6 +85,145 @@ async function handleSearchSubmit() {
 }
 
 /**
+ * Initialize Google Map with organization markers
+ * @param {Array} results - Array of search results containing organizations
+ */
+function initializeMap(results) {
+	const mapContainer = document.getElementById("allergist-map");
+	if (!mapContainer || !window.google) {
+		console.log("Map container or Google Maps API not available");
+		return;
+	}
+
+	// Reset global variables
+	mapMarkers = [];
+	mapInfoWindow = new google.maps.InfoWindow();
+
+	// Collect all organization locations
+	const locations = [];
+	let orgIndex = 0;
+
+	results.forEach((item) => {
+		if (item.acf?.organizations_details) {
+			item.acf.organizations_details.forEach((org) => {
+				const lat = parseFloat(org.institution_gmap?.lat);
+				const lng = parseFloat(org.institution_gmap?.lng);
+				const orgName = org.institutation_name || "";
+				const address = org.institution_gmap?.name || "";
+				const city = org.institution_gmap?.city || "";
+				const state = org.institution_gmap?.state || "";
+				const cityState = [city, state].filter(Boolean).join(", ");
+
+				if (!isNaN(lat) && !isNaN(lng) && orgName) {
+					locations.push({
+						lat: lat,
+						lng: lng,
+						title: orgName,
+						address: address,
+						cityState: cityState,
+						physicianName: item.title,
+						physicianCredentials: item.acf?.credentials || "",
+						orgId: `org-${orgIndex}`, // Unique identifier for each organization
+					});
+					orgIndex++;
+				}
+			});
+		}
+	});
+
+	if (locations.length === 0) {
+		mapContainer.innerHTML = "<p>No locations available for mapping.</p>";
+		return;
+	}
+
+	// Calculate map bounds
+	const bounds = new google.maps.LatLngBounds();
+	locations.forEach((location) => {
+		bounds.extend(new google.maps.LatLng(location.lat, location.lng));
+	});
+
+	// Initialize map
+	allergistMap = new google.maps.Map(mapContainer, {
+		zoom: 10,
+		center: bounds.getCenter(),
+		mapTypeId: google.maps.MapTypeId.ROADMAP,
+	});
+
+	// Add markers
+	locations.forEach((location, index) => {
+		const marker = new google.maps.Marker({
+			position: { lat: location.lat, lng: location.lng },
+			map: allergistMap,
+			title: location.title,
+			animation: google.maps.Animation.DROP,
+		});
+
+		// Create info window content
+		const infoContent = `
+			<div class="map-info-window">
+				<h4>${escapeHTML(location.title)}</h4>
+				<p><strong>${escapeHTML(location.physicianName)}</strong>
+				${
+					location.physicianCredentials
+						? `<br><em>${escapeHTML(
+								location.physicianCredentials
+						  )}</em>`
+						: ""
+				}
+				</p>
+				${location.address ? `<p>${escapeHTML(location.address)}</p>` : ""}
+				${location.cityState ? `<p>${escapeHTML(location.cityState)}</p>` : ""}
+			</div>
+		`;
+
+		marker.addListener("click", () => {
+			mapInfoWindow.setContent(infoContent);
+			mapInfoWindow.open(allergistMap, marker);
+		});
+
+		// Store marker with orgId for reference
+		mapMarkers.push({
+			marker: marker,
+			infoContent: infoContent,
+			orgId: location.orgId,
+		});
+	});
+
+	// Fit map to show all markers
+	if (locations.length > 1) {
+		allergistMap.fitBounds(bounds);
+	} else {
+		allergistMap.setCenter(bounds.getCenter());
+		allergistMap.setZoom(15);
+	}
+}
+
+/**
+ * Show marker info window and scroll to map
+ * @param {string} orgId - Organization ID to show on map
+ */
+function showOnMap(orgId) {
+	const markerData = mapMarkers.find((m) => m.orgId === orgId);
+	if (markerData && mapInfoWindow && allergistMap) {
+		// Set info window content and open it
+		mapInfoWindow.setContent(markerData.infoContent);
+		mapInfoWindow.open(allergistMap, markerData.marker);
+
+		// Center map on the marker
+		allergistMap.setCenter(markerData.marker.getPosition());
+
+		// Scroll to map
+		const mapContainer = document.getElementById("allergist-map");
+		if (mapContainer) {
+			mapContainer.scrollIntoView({
+				behavior: "smooth",
+				block: "center",
+			});
+		}
+	}
+}
+
+/**
  * Generate organizations HTML from repeater field data
  * @param {Array} organizations - Array of organization objects from ACF repeater
  * @param {Object} physicianInfo - Object containing physician's basic info
@@ -98,6 +243,13 @@ function generateOrganizationsHTML(organizations, physicianInfo = {}) {
 			const orgCity = org.institution_gmap?.city || "";
 			const orgState = org.institution_gmap?.state || "";
 			const orgPostal = org.institution_gmap?.post_code || "";
+			const lat = parseFloat(org.institution_gmap?.lat);
+			const lng = parseFloat(org.institution_gmap?.lng);
+
+			// Create unique org ID using global counter
+			const orgId = `org-${orgIndexCounter}`;
+			const hasValidCoords = !isNaN(lat) && !isNaN(lng);
+			orgIndexCounter++; // Increment global counter
 
 			// Format city and state display
 			const cityState = [orgCity, orgState].filter(Boolean).join(", ");
@@ -140,6 +292,11 @@ function generateOrganizationsHTML(organizations, physicianInfo = {}) {
 								: ""
 						}
 						${orgPostal ? `<div class="far-org-postal">${escapeHTML(orgPostal)}</div>` : ""}
+						${
+							hasValidCoords
+								? `<div class="far-view-map"><a href="#" onclick="showOnMap('${orgId}'); return false;" class="far-map-link">📍 View on Map</a></div>`
+								: ""
+						}
 					</div>
 				</div>`;
 		})
@@ -157,6 +314,9 @@ function generateOrganizationsHTML(organizations, physicianInfo = {}) {
  * { page, per_page, count, results: [{id,title,link,acf:{...}}] }
  */
 function renderResults(payload) {
+	// Reset organization counter for consistent indexing
+	orgIndexCounter = 0;
+
 	const container = document.getElementById("results");
 	if (!container) {
 		console.log("Results:", payload);
@@ -204,9 +364,13 @@ function renderResults(payload) {
 		.join("");
 
 	setResultsHTML(`
+    <div id="allergist-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px;"></div>
     <p>Found ${count} result${count === 1 ? "" : "s"}.</p>
     <ul class="far-list">${list}</ul>
   `);
+
+	// Initialize the map after HTML is rendered
+	setTimeout(() => initializeMap(results), 100);
 }
 
 /**
