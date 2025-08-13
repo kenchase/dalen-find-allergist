@@ -12,15 +12,10 @@ add_action('rest_api_init', function () {
             'lname' => ['required' => false,  'sanitize_callback' => 'sanitize_text_field'],
 
             // ACF-backed filters (all optional)
-            'oit'       => ['required' => false, 'sanitize_callback' => 'rest_sanitize_boolean'],
             'city'      => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'province'  => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'postal'    => ['required' => false, 'sanitize_callback' => 'my_sanitize_postal'],
-            'miles'     => ['required' => false, 'sanitize_callback' => 'absint'], // distance filter (see note below)
-
-            // pagination
-            'page'      => ['required' => false, 'sanitize_callback' => 'absint', 'default' => 1],
-            'per_page'  => ['required' => false, 'sanitize_callback' => 'absint', 'default' => 10],
+            'kms'       => ['required' => false, 'sanitize_callback' => 'absint'], // distance filter in kilometers
         ],
     ]);
 });
@@ -101,8 +96,15 @@ function my_physician_search(WP_REST_Request $req)
     $lname = trim((string) $req['lname']);
     $full  = trim("$fname $lname");
 
+    // Debug logging
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('Name search - fname: ' . $fname);
+        error_log('Name search - lname: ' . $lname);
+        error_log('Name search - full: ' . $full);
+    }
+
     // Require at least one search criterion
-    if (empty($fname) && empty($lname) && empty($req['city']) && empty($req['postal'])) {
+    if (empty($fname) && empty($lname) && empty($req['city']) && empty($req['province']) && empty($req['postal'])) {
         return new WP_Error('missing_criteria', 'Please provide at least one search criterion.', ['status' => 400]);
     }
 
@@ -117,31 +119,7 @@ function my_physician_search(WP_REST_Request $req)
         // Note: postal is handled separately as it searches within organizations_details
     ];
 
-    // OIT (checkbox field - value is "OIT" when checked, empty when unchecked)
-    if (null !== $req['oit']) {
-        if ($req['oit']) {
-            // Looking for physicians who DO practice OIT
-            $meta_query[] = [
-                'key'     => $acf_keys['oit'],
-                'value'   => 'OIT',
-                'compare' => '='
-            ];
-        } else {
-            // Looking for physicians who DON'T practice OIT (empty or not set)
-            $meta_query[] = [
-                'relation' => 'OR',
-                [
-                    'key'     => $acf_keys['oit'],
-                    'value'   => '',
-                    'compare' => '='
-                ],
-                [
-                    'key'     => $acf_keys['oit'],
-                    'compare' => 'NOT EXISTS'
-                ]
-            ];
-        }
-    }
+    // Note: OIT field is not used for filtering - it's just displayed in results
 
     // City/province: exact or partial; choose one. Here we do case-insensitive partial:
     if (!empty($req['city'])) {
@@ -152,9 +130,10 @@ function my_physician_search(WP_REST_Request $req)
         ];
     }
     if (!empty($req['province'])) {
+        $province_search = trim($req['province']);
         $meta_query[] = [
             'key'     => $acf_keys['province'],
-            'value'   => $req['province'],
+            'value'   => $province_search,
             'compare' => 'LIKE',
         ];
     }
@@ -170,43 +149,62 @@ function my_physician_search(WP_REST_Request $req)
             !isset($query[0]['key']) || strpos($query[0]['key'], 'post_code') === false;
     });
 
-    // Base query: try exact slug first (fast), else phrase search filtered to exact title.
-    $per_page = max(1, min(50, (int)$req['per_page']));
-    $paged    = max(1, (int)$req['page']);
-
     $posts = [];
 
-    // If we have a name to search for, use the name-based search
+    // If we have a name to search for, use title-based search only
     if (!empty(trim($full))) {
-        // 1) Try exact slug
-        $q1 = new WP_Query([
+        // Get all physicians first, then filter by title
+        $q = new WP_Query([
             'post_type'      => 'physicians',
             'post_status'    => 'publish',
-            'name'           => sanitize_title($full),
             'meta_query'     => $meta_query_without_postal,
-            'posts_per_page' => $per_page,
-            'paged'          => $paged,
-            'no_found_rows'  => false,
+            'posts_per_page' => -1, // Get all posts to filter
+            'no_found_rows'  => true,
         ]);
 
-        $posts = $q1->posts;
+        // Filter by title matching
+        $posts = array_values(array_filter($q->posts, function ($p) use ($fname, $lname) {
+            $title = mb_strtolower(get_the_title($p));
 
-        // 2) Fallback: phrase search, then exact-title filter (case-insensitive)
-        if (empty($posts)) {
-            $q2 = new WP_Query([
-                'post_type'      => 'physicians',
-                'post_status'    => 'publish',
-                's'              => $full,
-                'sentence'       => true,
-                'meta_query'     => $meta_query_without_postal,
-                'posts_per_page' => $per_page,
-                'paged'          => $paged,
-                'no_found_rows'  => false,
-            ]);
+            // Check if both first and last name are in the title (if both provided)
+            if (!empty($fname) && !empty($lname)) {
+                return (stripos($title, mb_strtolower($fname)) !== false &&
+                    stripos($title, mb_strtolower($lname)) !== false);
+            }
 
-            $posts = array_values(array_filter($q2->posts, function ($p) use ($full) {
-                return mb_strtolower(get_the_title($p)) === mb_strtolower($full);
-            }));
+            // Check if just first name is in title (if only first name provided)
+            if (!empty($fname) && empty($lname)) {
+                return stripos($title, mb_strtolower($fname)) !== false;
+            }
+
+            // Check if just last name is in title (if only last name provided)
+            if (empty($fname) && !empty($lname)) {
+                return stripos($title, mb_strtolower($lname)) !== false;
+            }
+
+            return false;
+        }));
+
+        // Debug: Log search results
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Name search - fname: ' . $fname . ', lname: ' . $lname);
+            error_log('Search found ' . count($posts) . ' total posts');
+            if (!empty($posts)) {
+                foreach ($posts as $post) {
+                    error_log('Found post: ' . get_the_title($post) . ' (ID: ' . $post->ID . ')');
+                }
+            } else {
+                // Log some existing physicians for debugging
+                $all_physicians = get_posts([
+                    'post_type' => 'physicians',
+                    'post_status' => 'publish',
+                    'numberposts' => 10
+                ]);
+                error_log('Available physicians:');
+                foreach ($all_physicians as $physician) {
+                    error_log('- ' . get_the_title($physician) . ' (ID: ' . $physician->ID . ')');
+                }
+            }
         }
     } else {
         // No name provided, search only by meta fields (except postal code)
@@ -214,9 +212,8 @@ function my_physician_search(WP_REST_Request $req)
             'post_type'      => 'physicians',
             'post_status'    => 'publish',
             'meta_query'     => $meta_query_without_postal,
-            'posts_per_page' => $postal_search_term ? 100 : $per_page, // Get more posts if we need to filter by postal
-            'paged'          => $paged,
-            'no_found_rows'  => false,
+            'posts_per_page' => -1, // Get all posts
+            'no_found_rows'  => true,
         ]);
 
         $posts = $q->posts;
@@ -243,18 +240,29 @@ function my_physician_search(WP_REST_Request $req)
             }
             return false;
         }));
-
-        // Re-paginate the filtered results
-        $total_filtered = count($posts);
-        $start = ($paged - 1) * $per_page;
-        $posts = array_slice($posts, $start, $per_page);
     }
 
     // Debug: Log the query for troubleshooting (remove in production)
     if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log('Physician Search Debug:');
         error_log('Search params: ' . print_r($req->get_params(), true));
-        error_log('Meta query: ' . print_r($meta_query, true));
+        error_log('Meta query: ' . print_r($meta_query_without_postal, true));
+
+        // If searching by province only, let's see what province values exist
+        if (!empty($req['province']) && empty($fname) && empty($lname) && empty($req['city']) && empty($req['postal'])) {
+            error_log('Province-only search for: ' . $req['province']);
+
+            // Get all physicians and their province values for debugging
+            global $wpdb;
+            $province_meta = $wpdb->get_results($wpdb->prepare("
+                SELECT post_id, meta_value 
+                FROM {$wpdb->postmeta} 
+                WHERE meta_key = %s
+                LIMIT 20
+            ", 'physician_province'));
+            error_log('Sample province values in database: ' . print_r($province_meta, true));
+        }
+
         error_log('Posts found: ' . count($posts));
 
         // Additional debug for postal code searches
@@ -275,12 +283,12 @@ function my_physician_search(WP_REST_Request $req)
 
     // Optional: distance filter (requires lat/lng on each post)
     // If you store ACF fields 'lat' & 'lng' on the post, you can compute distance here in PHP
-    // (after fetching a modest set) and then array_filter by $req['miles'].
-    if (!empty($req['miles']) && !empty($req['postal'])) {
+    // (after fetching a modest set) and then array_filter by $req['kms'].
+    if (!empty($req['kms']) && !empty($req['postal'])) {
         // You’ll need to geocode the postal to lat/lng (once) or keep a lookup table.
         // Example outline (pseudo):
         // $origin = my_geocode_postal($req['postal']); // ['lat' => ..., 'lng' => ...]
-        // $radius = (float)$req['miles'];
+        // $radius = (float)$req['kms'];
         // $posts = array_values(array_filter($posts, function($p) use ($origin, $radius){
         //   $lat = (float) get_post_meta($p->ID, 'lat', true);
         //   $lng = (float) get_post_meta($p->ID, 'lng', true);
@@ -333,8 +341,6 @@ function my_physician_search(WP_REST_Request $req)
     }, $posts);
 
     return rest_ensure_response([
-        'page'      => $paged,
-        'per_page'  => $per_page,
         'count'     => count($out),
         'results'   => $out,
     ]);

@@ -1,29 +1,34 @@
 // Find Allergist Results JavaScript
 document.addEventListener("DOMContentLoaded", function () {
+	// Cache DOM elements to avoid repeated queries
+	const elements = {
+		form: document.getElementById("allergistfrm"),
+		searchBtn: document.getElementById("btn-search"),
+		clearBtn: document.getElementById("btn-clear"),
+		results: document.getElementById("results"),
+	};
+
 	// Handle form submission
-	const allergistForm = document.getElementById("allergistfrm");
-	if (allergistForm) {
-		allergistForm.addEventListener("submit", function (e) {
+	if (elements.form) {
+		elements.form.addEventListener("submit", function (e) {
 			e.preventDefault();
 			handleSearchSubmit();
 		});
 	}
 
 	// Handle search button click
-	const btnSearch = document.getElementById("btn-search");
-	if (btnSearch) {
-		btnSearch.addEventListener("click", function (e) {
+	if (elements.searchBtn) {
+		elements.searchBtn.addEventListener("click", function (e) {
 			e.preventDefault();
 			handleSearchSubmit();
 		});
 	}
 
 	// Handle clear button click
-	const btnClear = document.getElementById("btn-clear");
-	if (btnClear) {
-		btnClear.addEventListener("click", function (e) {
+	if (elements.clearBtn) {
+		elements.clearBtn.addEventListener("click", function (e) {
 			e.preventDefault();
-			allergistForm.reset();
+			elements.form?.reset();
 		});
 	}
 });
@@ -35,12 +40,21 @@ let allergistMap = null;
 let mapMarkers = [];
 let mapInfoWindow = null;
 let orgIndexCounter = 0;
+let searchController = null; // For aborting previous requests
 
 /**
  * Handle search form submission
  */
 async function handleSearchSubmit() {
 	console.log("Search submitted");
+
+	// Abort previous request if still pending
+	if (searchController) {
+		searchController.abort();
+	}
+
+	// Create new abort controller for this request
+	searchController = new AbortController();
 
 	// Get all form data
 	const formData = getAllFormData();
@@ -55,7 +69,7 @@ async function handleSearchSubmit() {
 	if (formData.phy_province) params.set("province", formData.phy_province);
 	if (formData.phy_postal)
 		params.set("postal", normalizePostal(formData.phy_postal));
-	if (formData.phy_miles) params.set("miles", formData.phy_miles);
+	if (formData.phy_kms) params.set("kms", formData.phy_kms);
 
 	// Optional pagination defaults
 	params.set("per_page", "10");
@@ -65,9 +79,10 @@ async function handleSearchSubmit() {
 	setResultsHTML("<p>Searching…</p>");
 
 	try {
-		const nonce = window.wpApiSettings?.nonce; // present if you localized it; not required for public reads
+		const nonce = window.wpApiSettings?.nonce;
 		const res = await fetch(`${ENDPOINT}?${params.toString()}`, {
 			headers: nonce ? { "X-WP-Nonce": nonce } : undefined,
+			signal: searchController.signal,
 		});
 
 		if (!res.ok) {
@@ -77,10 +92,18 @@ async function handleSearchSubmit() {
 		const data = await res.json();
 		renderResults(data);
 	} catch (err) {
-		console.error(err);
+		// Don't show error for aborted requests
+		if (err.name === "AbortError") {
+			console.log("Request was aborted");
+			return;
+		}
+
+		console.error("Search error:", err);
 		setResultsHTML(
 			'<p role="alert">Sorry, something went wrong. Please try again.</p>'
 		);
+	} finally {
+		searchController = null;
 	}
 }
 
@@ -95,52 +118,52 @@ function initializeMap(results) {
 		return;
 	}
 
-	// Reset global variables
+	// Clean up existing map resources
+	cleanupMap();
+
+	// Initialize map components
 	mapMarkers = [];
 	mapInfoWindow = new google.maps.InfoWindow();
-
-	// Collect all organization locations
+	const bounds = new google.maps.LatLngBounds();
 	const locations = [];
 	let orgIndex = 0;
 
-	results.forEach((item) => {
-		if (item.acf?.organizations_details) {
-			item.acf.organizations_details.forEach((org) => {
-				const lat = parseFloat(org.institution_gmap?.lat);
-				const lng = parseFloat(org.institution_gmap?.lng);
-				const orgName = org.institutation_name || "";
-				const address = org.institution_gmap?.name || "";
-				const city = org.institution_gmap?.city || "";
-				const state = org.institution_gmap?.state || "";
-				const cityState = [city, state].filter(Boolean).join(", ");
+	// Single loop to collect locations and calculate bounds
+	for (const item of results) {
+		if (!item.acf?.organizations_details) continue;
 
-				if (!isNaN(lat) && !isNaN(lng) && orgName) {
-					locations.push({
-						lat: lat,
-						lng: lng,
-						title: orgName,
-						address: address,
-						cityState: cityState,
-						physicianName: item.title,
-						physicianCredentials: item.acf?.credentials || "",
-						orgId: `org-${orgIndex}`, // Unique identifier for each organization
-					});
-					orgIndex++;
-				}
-			});
+		for (const org of item.acf.organizations_details) {
+			const lat = parseFloat(org.institution_gmap?.lat);
+			const lng = parseFloat(org.institution_gmap?.lng);
+			const orgName = org.institutation_name || "";
+
+			if (isNaN(lat) || isNaN(lng) || !orgName) continue;
+
+			const location = {
+				lat,
+				lng,
+				title: orgName,
+				address: org.institution_gmap?.name || "",
+				cityState: [
+					org.institution_gmap?.city,
+					org.institution_gmap?.state,
+				]
+					.filter(Boolean)
+					.join(", "),
+				physicianName: item.title,
+				physicianCredentials: item.acf?.credentials || "",
+				orgId: `org-${orgIndex++}`,
+			};
+
+			locations.push(location);
+			bounds.extend(new google.maps.LatLng(lat, lng));
 		}
-	});
+	}
 
 	if (locations.length === 0) {
 		mapContainer.innerHTML = "<p>No locations available for mapping.</p>";
 		return;
 	}
-
-	// Calculate map bounds
-	const bounds = new google.maps.LatLngBounds();
-	locations.forEach((location) => {
-		bounds.extend(new google.maps.LatLng(location.lat, location.lng));
-	});
 
 	// Initialize map
 	allergistMap = new google.maps.Map(mapContainer, {
@@ -149,45 +172,8 @@ function initializeMap(results) {
 		mapTypeId: google.maps.MapTypeId.ROADMAP,
 	});
 
-	// Add markers
-	locations.forEach((location, index) => {
-		const marker = new google.maps.Marker({
-			position: { lat: location.lat, lng: location.lng },
-			map: allergistMap,
-			title: location.title,
-			animation: google.maps.Animation.DROP,
-		});
-
-		// Create info window content
-		const infoContent = `
-			<div class="map-info-window">
-				<h4>${escapeHTML(location.title)}</h4>
-				<p><strong>${escapeHTML(location.physicianName)}</strong>
-				${
-					location.physicianCredentials
-						? `<br><em>${escapeHTML(
-								location.physicianCredentials
-						  )}</em>`
-						: ""
-				}
-				</p>
-				${location.address ? `<p>${escapeHTML(location.address)}</p>` : ""}
-				${location.cityState ? `<p>${escapeHTML(location.cityState)}</p>` : ""}
-			</div>
-		`;
-
-		marker.addListener("click", () => {
-			mapInfoWindow.setContent(infoContent);
-			mapInfoWindow.open(allergistMap, marker);
-		});
-
-		// Store marker with orgId for reference
-		mapMarkers.push({
-			marker: marker,
-			infoContent: infoContent,
-			orgId: location.orgId,
-		});
-	});
+	// Add markers efficiently
+	createMapMarkers(locations);
 
 	// Fit map to show all markers
 	if (locations.length > 1) {
@@ -196,6 +182,84 @@ function initializeMap(results) {
 		allergistMap.setCenter(bounds.getCenter());
 		allergistMap.setZoom(15);
 	}
+}
+
+/**
+ * Clean up existing map resources to prevent memory leaks
+ */
+function cleanupMap() {
+	if (mapMarkers.length > 0) {
+		mapMarkers.forEach(({ marker }) => {
+			if (marker.setMap) marker.setMap(null);
+		});
+		mapMarkers = [];
+	}
+	if (mapInfoWindow) {
+		mapInfoWindow.close();
+	}
+}
+
+/**
+ * Create map markers efficiently
+ * @param {Array} locations - Array of location objects
+ */
+function createMapMarkers(locations) {
+	const infoContents = new Map(); // Cache info window content
+
+	locations.forEach((location) => {
+		const marker = new google.maps.Marker({
+			position: { lat: location.lat, lng: location.lng },
+			map: allergistMap,
+			title: location.title,
+			animation: google.maps.Animation.DROP,
+		});
+
+		// Generate and cache info content
+		const infoContent = generateInfoWindowContent(location);
+		infoContents.set(location.orgId, infoContent);
+
+		marker.addListener("click", () => {
+			mapInfoWindow.setContent(infoContent);
+			mapInfoWindow.open(allergistMap, marker);
+		});
+
+		mapMarkers.push({
+			marker,
+			infoContent,
+			orgId: location.orgId,
+		});
+	});
+}
+
+/**
+ * Generate info window content
+ * @param {Object} location - Location object
+ * @returns {string} HTML content for info window
+ */
+function generateInfoWindowContent(location) {
+	const parts = [
+		`<div class="map-info-window">`,
+		`<h4>${escapeHTML(location.title)}</h4>`,
+		`<p><strong>${escapeHTML(location.physicianName)}</strong>`,
+	];
+
+	if (location.physicianCredentials) {
+		parts.push(`<br><em>${escapeHTML(location.physicianCredentials)}</em>`);
+	}
+
+	parts.push(`</p>`);
+
+	if (location.address) {
+		parts.push(`<p>${escapeHTML(location.address)}</p>`);
+	}
+
+	if (location.cityState) {
+		parts.push(`<p>${escapeHTML(location.cityState)}</p>`);
+	}
+
+	parts.push(`</div>`);
+
+	return parts.join("");
 }
 
 /**
@@ -235,82 +299,92 @@ function generateOrganizationsHTML(organizations, physicianInfo = {}) {
 	}
 
 	const { title = "", credentials = "", oit = "", link = "" } = physicianInfo;
+	const organizationParts = [];
 
-	const organizationsList = organizations
-		.map((org) => {
-			const orgName = org.institutation_name || "";
-			const orgAddressName = org.institution_gmap?.name || "";
-			const orgCity = org.institution_gmap?.city || "";
-			const orgState = org.institution_gmap?.state || "";
-			const orgPostal = org.institution_gmap?.post_code || "";
-			const lat = parseFloat(org.institution_gmap?.lat);
-			const lng = parseFloat(org.institution_gmap?.lng);
-			const distance = org.distance_km || null; // Distance from backend calculation
+	for (const org of organizations) {
+		const orgName = org.institutation_name || "";
+		if (!orgName) continue; // Skip if no organization name
 
-			// Create unique org ID using global counter
-			const orgId = `org-${orgIndexCounter}`;
-			const hasValidCoords = !isNaN(lat) && !isNaN(lng);
-			orgIndexCounter++; // Increment global counter
+		const orgAddressName = org.institution_gmap?.name || "";
+		const orgCity = org.institution_gmap?.city || "";
+		const orgState = org.institution_gmap?.state || "";
+		const orgPostal = org.institution_gmap?.post_code || "";
+		const lat = parseFloat(org.institution_gmap?.lat);
+		const lng = parseFloat(org.institution_gmap?.lng);
+		const distance = org.distance_km || null;
 
-			// Format city and state display
-			const cityState = [orgCity, orgState].filter(Boolean).join(", ");
+		// Create unique org ID using global counter
+		const orgId = `org-${orgIndexCounter++}`;
+		const hasValidCoords = !isNaN(lat) && !isNaN(lng);
+		const cityState = [orgCity, orgState].filter(Boolean).join(", ");
 
-			if (!orgName) return ""; // Skip if no organization name
-
-			return `
-				<div class="far-org">
-					<div class="far-physician-info">
-						<a href="${link}" rel="bookmark" class="far-physician-name">${escapeHTML(
+		// Build HTML parts array for better performance
+		const htmlParts = [
+			'<div class="far-org">',
+			'<div class="far-physician-info">',
+			`<a href="${link}" rel="bookmark" class="far-physician-name">${escapeHTML(
 				title
-			)}</a>
-						${
-							credentials
-								? `<div class="far-physician-credentials">${escapeHTML(
-										credentials
-								  )}</div>`
-								: ""
-						}
-						${
-							oit !== ""
-								? `<div class="far-oit-status">Practices Oral Immunotherapy (OIT)?: ${oit}</div>`
-								: ""
-						}
-						${
-							distance !== null
-								? `<div class="far-distance">Distance: ${distance} km</div>`
-								: ""
-						}
-					</div>
-					<div class="far-org-info">
-						<strong class="far-org-name">${escapeHTML(orgName)}</strong>
-						${
-							orgAddressName
-								? `<div class="far-org-address">${escapeHTML(
-										orgAddressName
-								  )}</div>`
-								: ""
-						}
-						${
-							cityState
-								? `<div class="far-org-city-state">${escapeHTML(
-										cityState
-								  )}</div>`
-								: ""
-						}
-						${orgPostal ? `<div class="far-org-postal">${escapeHTML(orgPostal)}</div>` : ""}
-						${
-							hasValidCoords
-								? `<div class="far-view-map"><a href="#" onclick="showOnMap('${orgId}'); return false;" class="far-map-link">📍 View on Map</a></div>`
-								: ""
-						}
-					</div>
-				</div>`;
-		})
-		.filter(Boolean) // Remove empty entries
-		.join("");
+			)}</a>`,
+		];
 
-	return organizationsList
-		? `<div class="far-orgs">${organizationsList}</div>`
+		if (credentials) {
+			htmlParts.push(
+				`<div class="far-physician-credentials">${escapeHTML(
+					credentials
+				)}</div>`
+			);
+		}
+
+		if (oit !== "") {
+			htmlParts.push(
+				`<div class="far-oit-status">Practices Oral Immunotherapy (OIT)?: ${oit}</div>`
+			);
+		}
+
+		if (distance !== null) {
+			htmlParts.push(
+				`<div class="far-distance">Distance: ${distance} km</div>`
+			);
+		}
+
+		htmlParts.push(
+			"</div>",
+			'<div class="far-org-info">',
+			`<strong class="far-org-name">${escapeHTML(orgName)}</strong>`
+		);
+
+		if (orgAddressName) {
+			htmlParts.push(
+				`<div class="far-org-address">${escapeHTML(
+					orgAddressName
+				)}</div>`
+			);
+		}
+
+		if (cityState) {
+			htmlParts.push(
+				`<div class="far-org-city-state">${escapeHTML(cityState)}</div>`
+			);
+		}
+
+		if (orgPostal) {
+			htmlParts.push(
+				`<div class="far-org-postal">${escapeHTML(orgPostal)}</div>`
+			);
+		}
+
+		if (hasValidCoords) {
+			htmlParts.push(
+				`<div class="far-view-map"><a href="#" onclick="showOnMap('${orgId}'); return false;" class="far-map-link">📍 View on Map</a></div>`
+			);
+		}
+
+		htmlParts.push("</div>", "</div>");
+		organizationParts.push(htmlParts.join(""));
+	}
+
+	return organizationParts.length > 0
+		? `<div class="far-orgs">${organizationParts.join("")}</div>`
 		: "";
 }
 
@@ -335,45 +409,43 @@ function renderResults(payload) {
 		return;
 	}
 
-	const list = results
-		.map((item) => {
-			const city = item.acf?.city || "";
-			const prov = item.acf?.province || "";
-			const location = [city, prov].filter(Boolean).join(", ");
-			const credentials = item.acf?.credentials || "";
-			const oit =
-				item.acf?.oit === "OIT"
-					? "Yes"
-					: item.acf?.oit === ""
-					? "No"
-					: "";
+	// Build results HTML efficiently
+	const resultParts = [
+		'<div id="allergist-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px;"></div>',
+		`<p>Found ${count} result${count === 1 ? "" : "s"}.</p>`,
+		'<ul class="far-list">',
+	];
 
-			// Prepare physician info for organizations
-			const physicianInfo = {
-				title: item.title,
-				credentials: credentials,
-				oit: oit,
-				link: item.link,
-			};
+	for (const item of results) {
+		const city = item.acf?.city || "";
+		const prov = item.acf?.province || "";
+		const credentials = item.acf?.credentials || "";
+		const oit =
+			item.acf?.oit === "OIT" ? "Yes" : item.acf?.oit === "" ? "No" : "";
 
-			// Generate organizations HTML using separate function
-			const organizationsHTML = generateOrganizationsHTML(
-				item.acf?.organizations_details,
-				physicianInfo
+		// Prepare physician info for organizations
+		const physicianInfo = {
+			title: item.title,
+			credentials,
+			oit,
+			link: item.link,
+		};
+
+		// Generate organizations HTML using separate function
+		const organizationsHTML = generateOrganizationsHTML(
+			item.acf?.organizations_details,
+			physicianInfo
+		);
+
+		if (organizationsHTML) {
+			resultParts.push(
+				`<li class="far-list-item">${organizationsHTML}</li>`
 			);
+		}
+	}
 
-			return `
-        <li class="far-list-item">
-          ${organizationsHTML}
-        </li>`;
-		})
-		.join("");
-
-	setResultsHTML(`
-    <div id="allergist-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px;"></div>
-    <p>Found ${count} result${count === 1 ? "" : "s"}.</p>
-    <ul class="far-list">${list}</ul>
-  `);
+	resultParts.push("</ul>");
+	setResultsHTML(resultParts.join(""));
 
 	// Initialize the map after HTML is rendered
 	setTimeout(() => initializeMap(results), 100);
@@ -384,21 +456,30 @@ function renderResults(payload) {
  * @returns {Object} Form data object
  */
 function getAllFormData() {
+	// Cache field elements to avoid repeated DOM queries
+	const fields = {
+		fname: document.getElementById("phy_fname"),
+		lname: document.getElementById("phy_lname"),
+		oit: document.getElementById("phy_oit"),
+		city: document.getElementById("phy_city"),
+		postal: document.getElementById("phy_postal"),
+		province: document.getElementById("phy_province"),
+		kms: document.getElementById("phy_kms"),
+	};
+
 	return {
-		phy_fname: getFieldValue("phy_fname"),
-		phy_lname: getFieldValue("phy_lname"),
-		phy_oit: document.getElementById("phy_oit")
-			? document.getElementById("phy_oit").checked
-			: false,
-		phy_city: getFieldValue("phy_city"),
-		phy_postal: getFieldValue("phy_postal"),
-		phy_province: getFieldValue("phy_province"),
-		phy_miles: getFieldValue("phy_miles") || "30",
+		phy_fname: fields.fname?.value.trim() || "",
+		phy_lname: fields.lname?.value.trim() || "",
+		phy_oit: fields.oit?.checked || false,
+		phy_city: fields.city?.value.trim() || "",
+		phy_postal: fields.postal?.value.trim() || "",
+		phy_province: fields.province?.value.trim() || "",
+		phy_kms: fields.kms?.value.trim() || "30",
 	};
 }
 
 /**
- * Get field value safely
+ * Get field value safely (legacy function for backward compatibility)
  * @param {string} fieldId - The ID of the field
  * @returns {string} Field value or empty string
  */
@@ -425,13 +506,16 @@ function setResultsHTML(html) {
 }
 
 /**
- * Very small HTML escaper for titles/strings we render
+ * Optimized HTML escaper for titles/strings we render
  */
 function escapeHTML(str) {
+	if (!str) return "";
+
+	// Use a more efficient approach with replace chain
 	return String(str)
-		.replaceAll("&", "&amp;")
-		.replaceAll("<", "&lt;")
-		.replaceAll(">", "&gt;")
-		.replaceAll('"', "&quot;")
-		.replaceAll("'", "&#039;");
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#039;");
 }

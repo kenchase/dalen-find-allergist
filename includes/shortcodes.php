@@ -99,7 +99,7 @@ function find_allergist_results_shortcode($atts)
 
             <div class="grid-field-box grid-column-one">
                 <label><?php _e('Within the range of', 'dalen-find-allergist'); ?></label>
-                <select id="phy_miles" name="phy_miles" class="short-box">
+                <select id="phy_kms" name="phy_kms" class="short-box">
                     <option value="10">10</option>
                     <option value="20">20</option>
                     <option value="30" selected>30</option>
