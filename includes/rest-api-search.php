@@ -110,6 +110,20 @@ function my_physician_search(WP_REST_Request $req)
 
     $meta_query = ['relation' => 'AND'];
 
+    // Exclude records where immunologist_online_search_tool is "YES"
+    $meta_query[] = [
+        'relation' => 'OR',
+        [
+            'key'     => 'immunologist_online_search_tool',
+            'value'   => 'YES',
+            'compare' => '!='
+        ],
+        [
+            'key'     => 'immunologist_online_search_tool',
+            'compare' => 'NOT EXISTS'
+        ]
+    ];
+
     // Map your form fields to ACF keys. (Change these to YOUR actual ACF field names.)
     // Map request params -> your ACF meta keys
     $acf_keys = [
