@@ -12,6 +12,7 @@ add_action('rest_api_init', function () {
             'lname' => ['required' => false,  'sanitize_callback' => 'sanitize_text_field'],
 
             // ACF-backed filters (all optional)
+            'oit'       => ['required' => false, 'sanitize_callback' => 'rest_sanitize_boolean'],
             'city'      => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'province'  => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'postal'    => ['required' => false, 'sanitize_callback' => 'my_sanitize_postal'],
@@ -133,7 +134,16 @@ function my_physician_search(WP_REST_Request $req)
         // Note: postal is handled separately as it searches within organizations_details
     ];
 
-    // Note: OIT field is not used for filtering - it's just displayed in results
+    // OIT filtering: only filter when checkbox is selected (true)
+    if ($req['oit'] === true) {
+        // Only return records where the practices_oral_immunotherapy_oit array contains "OIT"
+        $meta_query[] = [
+            'key'     => $acf_keys['oit'],
+            'value'   => 'OIT',
+            'compare' => 'LIKE'
+        ];
+    }
+    // If OIT checkbox is not selected, the OIT field value doesn't impact results
 
     // City/province: exact or partial; choose one. Here we do case-insensitive partial:
     if (!empty($req['city'])) {
