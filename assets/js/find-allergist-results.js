@@ -1,7 +1,5 @@
 // Find Allergist Results JavaScript
 document.addEventListener("DOMContentLoaded", function () {
-	console.log("Find Allergist Results JS loaded");
-
 	// Handle form submission
 	const allergistForm = document.getElementById("allergistfrm");
 	if (allergistForm) {
@@ -40,7 +38,6 @@ async function handleSearchSubmit() {
 
 	// Get all form data
 	const formData = getAllFormData();
-	console.log("Form data:", formData);
 
 	// Build query params (send only what’s filled)
 	const params = new URLSearchParams();
@@ -82,6 +79,57 @@ async function handleSearchSubmit() {
 }
 
 /**
+ * Generate organizations HTML from repeater field data
+ * @param {Array} organizations - Array of organization objects from ACF repeater
+ * @param {Object} physicianInfo - Object containing physician's basic info
+ * @returns {string} HTML string for organizations
+ */
+function generateOrganizationsHTML(organizations, physicianInfo = {}) {
+	if (!Array.isArray(organizations) || organizations.length === 0) {
+		return "";
+	}
+
+	const { title = "", credentials = "", oit = "", link = "" } = physicianInfo;
+
+	const organizationsList = organizations
+		.map((org) => {
+			const orgName = org.institutation_name || "";
+			const orgAddress = org.institutation_map?.address || "";
+
+			if (!orgName) return ""; // Skip if no organization name
+
+			return `
+				<div class="organization">
+					<div class="physician-info">
+						<a href="${link}" rel="bookmark" class="physician-name">${escapeHTML(title)}</a>
+						${
+							credentials
+								? `<div class="physician-credentials">${escapeHTML(
+										credentials
+								  )}</div>`
+								: ""
+						}
+						${
+							oit !== ""
+								? `<div class="oit-status">Practices Oral Immunotherapy (OIT)?: ${oit}</div>`
+								: ""
+						}
+					</div>
+					<div class="organization-info">
+						<strong class="org-name">${escapeHTML(orgName)}</strong>
+						${orgAddress ? `<div class="org-address">${escapeHTML(orgAddress)}</div>` : ""}
+					</div>
+				</div>`;
+		})
+		.filter(Boolean) // Remove empty entries
+		.join("");
+
+	return organizationsList
+		? `<div class="organizations">${organizationsList}</div>`
+		: "";
+}
+
+/**
  * Render results into #results
  * Expects the response shape from the earlier PHP example:
  * { page, per_page, count, results: [{id,title,link,acf:{...}}] }
@@ -104,17 +152,31 @@ function renderResults(payload) {
 			const city = item.acf?.city || "";
 			const prov = item.acf?.province || "";
 			const location = [city, prov].filter(Boolean).join(", ");
+			const credentials = item.acf?.credentials || "";
 			const oit =
-				item.acf?.oit === "1"
+				item.acf?.oit === "OIT"
 					? "Yes"
-					: item.acf?.oit === "0"
+					: item.acf?.oit === ""
 					? "No"
 					: "";
+
+			// Prepare physician info for organizations
+			const physicianInfo = {
+				title: item.title,
+				credentials: credentials,
+				oit: oit,
+				link: item.link,
+			};
+
+			// Generate organizations HTML using separate function
+			const organizationsHTML = generateOrganizationsHTML(
+				item.acf?.organizations_details,
+				physicianInfo
+			);
+
 			return `
-        <li>
-          <a href="${item.link}" rel="bookmark">${escapeHTML(item.title)}</a>
-          ${location ? `<div>${escapeHTML(location)}</div>` : ""}
-          ${oit !== "" ? `<div>OIT: ${oit}</div>` : ""}
+        <li class="search-result-item">
+          ${organizationsHTML}
         </li>`;
 		})
 		.join("");

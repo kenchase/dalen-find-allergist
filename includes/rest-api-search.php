@@ -169,6 +169,7 @@ function my_physician_search(WP_REST_Request $req)
                 'city'     => get_post_meta($p->ID, 'physician_city', true),
                 'province' => get_post_meta($p->ID, 'physician_province', true),
                 'postal'   => get_post_meta($p->ID, 'physician_zipcode', true),
+                'credentials' => get_post_meta($p->ID, 'physician_credentials', true),
                 'organizations_details' => get_field('organizations_details', $p->ID) ?: [],
             ],
         ];
