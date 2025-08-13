@@ -335,7 +335,7 @@ function generateOrganizationsHTML(organizations, physicianInfo = {}) {
 			);
 		}
 
-		if (oit !== "") {
+		if (oit) {
 			htmlParts.push(
 				`<div class="far-oit-status">Practices Oral Immunotherapy (OIT)?: ${oit}</div>`
 			);
@@ -420,8 +420,11 @@ function renderResults(payload) {
 		const city = item.acf?.city || "";
 		const prov = item.acf?.province || "";
 		const credentials = item.acf?.credentials || "";
-		const oit =
-			item.acf?.oit === "OIT" ? "Yes" : item.acf?.oit === "" ? "No" : "";
+
+		// Map OIT field value to Yes/No
+		// OIT is either "" (No) or an array (Yes)
+		const oitValue = item.acf?.oit;
+		const oit = Array.isArray(oitValue) ? "Yes" : "No";
 
 		// Prepare physician info for organizations
 		const physicianInfo = {
