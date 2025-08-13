@@ -68,8 +68,22 @@
 .entry-content .far-oit-status,
 .far-oit-status {
 	font-size: 0.9rem;
+	color: #2271b1;
 	margin-top: 0.25rem;
 	font-weight: 500;
+}
+
+/* Distance Display */
+.entry-content .far-distance,
+.far-distance {
+	font-size: 0.9rem;
+	color: #d63638;
+	margin-top: 0.25rem;
+	font-weight: 600;
+	background-color: #f0f0f1;
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	display: inline-block;
 }
 
 .entry-content .far-org-info,

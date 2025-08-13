@@ -245,6 +245,7 @@ function generateOrganizationsHTML(organizations, physicianInfo = {}) {
 			const orgPostal = org.institution_gmap?.post_code || "";
 			const lat = parseFloat(org.institution_gmap?.lat);
 			const lng = parseFloat(org.institution_gmap?.lng);
+			const distance = org.distance_km || null; // Distance from backend calculation
 
 			// Create unique org ID using global counter
 			const orgId = `org-${orgIndexCounter}`;
@@ -272,6 +273,11 @@ function generateOrganizationsHTML(organizations, physicianInfo = {}) {
 						${
 							oit !== ""
 								? `<div class="far-oit-status">Practices Oral Immunotherapy (OIT)?: ${oit}</div>`
+								: ""
+						}
+						${
+							distance !== null
+								? `<div class="far-distance">Distance: ${distance} km</div>`
 								: ""
 						}
 					</div>
