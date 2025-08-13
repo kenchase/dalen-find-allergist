@@ -27,6 +27,14 @@ function find_allergist_results_shortcode($atts)
         true
     );
 
+    // Enqueue the CSS file for this shortcode
+    wp_enqueue_style(
+        'find-allergist-results-css',
+        plugin_dir_url(__FILE__) . '../assets/css/find-allergist-results.css',
+        array(),
+        '1.0.0'
+    );
+
     // Start output buffering
     ob_start();
 
@@ -111,7 +119,7 @@ function find_allergist_results_shortcode($atts)
         </form>
     </div>
     <!-- Search Results -->
-    <div id="results"></div>
+    <div id="results" class="find-allergists-results"></div>
 
 
 

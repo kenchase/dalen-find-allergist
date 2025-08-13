@@ -94,30 +94,52 @@ function generateOrganizationsHTML(organizations, physicianInfo = {}) {
 	const organizationsList = organizations
 		.map((org) => {
 			const orgName = org.institutation_name || "";
-			const orgAddress = org.institutation_map?.address || "";
+			const orgAddressName = org.institution_gmap?.name || "";
+			const orgCity = org.institution_gmap?.city || "";
+			const orgState = org.institution_gmap?.state || "";
+			const orgPostal = org.institution_gmap?.post_code || "";
+
+			// Format city and state display
+			const cityState = [orgCity, orgState].filter(Boolean).join(", ");
 
 			if (!orgName) return ""; // Skip if no organization name
 
 			return `
-				<div class="organization">
-					<div class="physician-info">
-						<a href="${link}" rel="bookmark" class="physician-name">${escapeHTML(title)}</a>
+				<div class="far-org">
+					<div class="far-physician-info">
+						<a href="${link}" rel="bookmark" class="far-physician-name">${escapeHTML(
+				title
+			)}</a>
 						${
 							credentials
-								? `<div class="physician-credentials">${escapeHTML(
+								? `<div class="far-physician-credentials">${escapeHTML(
 										credentials
 								  )}</div>`
 								: ""
 						}
 						${
 							oit !== ""
-								? `<div class="oit-status">Practices Oral Immunotherapy (OIT)?: ${oit}</div>`
+								? `<div class="far-oit-status">Practices Oral Immunotherapy (OIT)?: ${oit}</div>`
 								: ""
 						}
 					</div>
-					<div class="organization-info">
-						<strong class="org-name">${escapeHTML(orgName)}</strong>
-						${orgAddress ? `<div class="org-address">${escapeHTML(orgAddress)}</div>` : ""}
+					<div class="far-org-info">
+						<strong class="far-org-name">${escapeHTML(orgName)}</strong>
+						${
+							orgAddressName
+								? `<div class="far-org-address">${escapeHTML(
+										orgAddressName
+								  )}</div>`
+								: ""
+						}
+						${
+							cityState
+								? `<div class="far-org-city-state">${escapeHTML(
+										cityState
+								  )}</div>`
+								: ""
+						}
+						${orgPostal ? `<div class="far-org-postal">${escapeHTML(orgPostal)}</div>` : ""}
 					</div>
 				</div>`;
 		})
@@ -125,7 +147,7 @@ function generateOrganizationsHTML(organizations, physicianInfo = {}) {
 		.join("");
 
 	return organizationsList
-		? `<div class="organizations">${organizationsList}</div>`
+		? `<div class="far-orgs">${organizationsList}</div>`
 		: "";
 }
 
@@ -175,7 +197,7 @@ function renderResults(payload) {
 			);
 
 			return `
-        <li class="search-result-item">
+        <li class="far-list-item">
           ${organizationsHTML}
         </li>`;
 		})
@@ -183,7 +205,7 @@ function renderResults(payload) {
 
 	setResultsHTML(`
     <p>Found ${count} result${count === 1 ? "" : "s"}.</p>
-    <ul>${list}</ul>
+    <ul class="far-list">${list}</ul>
   `);
 }
 
