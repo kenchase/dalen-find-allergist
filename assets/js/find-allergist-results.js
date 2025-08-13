@@ -19,6 +19,15 @@ document.addEventListener("DOMContentLoaded", function () {
 			handleSearchSubmit();
 		});
 	}
+
+	// Handle clear button click
+	const btnClear = document.getElementById("btn-clear");
+	if (btnClear) {
+		btnClear.addEventListener("click", function (e) {
+			e.preventDefault();
+			allergistForm.reset();
+		});
+	}
 });
 
 const ENDPOINT = "/wp-json/my/v1/physicians/search";

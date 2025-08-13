@@ -106,7 +106,7 @@ function find_allergist_results_shortcode($atts)
 
             <div class="grid-column-two">
                 <button type="submit" id="btn-search" class="btn_search et_pb_contact_submit et_pb_button"><?php _e('Search', 'dalen-find-allergist'); ?></button>
-                <button onclick="searchClear(); return false;"><?php _e('Clear Search', 'dalen-find-allergist'); ?></button>
+                <button type="button" id="btn-clear"><?php _e('Clear Search', 'dalen-find-allergist'); ?></button>
             </div>
         </form>
     </div>

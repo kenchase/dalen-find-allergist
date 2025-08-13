@@ -49,33 +49,51 @@ function my_physician_search(WP_REST_Request $req)
     $meta_query = ['relation' => 'AND'];
 
     // Map your form fields to ACF keys. (Change these to YOUR actual ACF field names.)
+    // Map request params -> your ACF meta keys
     $acf_keys = [
-        'practices_oral_immunotherapy_oit'      => 'phy_oit',      // ACF true/false is stored as '1' or '0'
-        'physician_city'     => 'phy_city',
-        'physician_province' => 'phy_province',
-        'physician_zipcode'   => 'phy_postal',
+        'oit'      => 'practices_oral_immunotherapy_oit',
+        'city'     => 'physician_city',
+        'province' => 'physician_province',
+        'postal'   => 'physician_zipcode',
     ];
 
-    // OIT (boolean exact match)
+    // OIT (checkbox field - value is "OIT" when checked, empty when unchecked)
     if (null !== $req['oit']) {
-        $meta_query[] = [
-            'key'     => 'practices_oral_immunotherapy_oit',
-            'value'   => $req['oit'] ? '1' : '0',
-            'compare' => '=',
-        ];
+        if ($req['oit']) {
+            // Looking for physicians who DO practice OIT
+            $meta_query[] = [
+                'key'     => $acf_keys['oit'],
+                'value'   => 'OIT',
+                'compare' => '='
+            ];
+        } else {
+            // Looking for physicians who DON'T practice OIT (empty or not set)
+            $meta_query[] = [
+                'relation' => 'OR',
+                [
+                    'key'     => $acf_keys['oit'],
+                    'value'   => '',
+                    'compare' => '='
+                ],
+                [
+                    'key'     => $acf_keys['oit'],
+                    'compare' => 'NOT EXISTS'
+                ]
+            ];
+        }
     }
 
     // City/province: exact or partial; choose one. Here we do case-insensitive partial:
     if (!empty($req['city'])) {
         $meta_query[] = [
-            'key'     => 'physician_city',
+            'key'     => $acf_keys['city'],
             'value'   => $req['city'],
             'compare' => 'LIKE',
         ];
     }
     if (!empty($req['province'])) {
         $meta_query[] = [
-            'key'     => 'physician_province',
+            'key'     => $acf_keys['province'],
             'value'   => $req['province'],
             'compare' => 'LIKE',
         ];
@@ -84,7 +102,7 @@ function my_physician_search(WP_REST_Request $req)
     // Postal: allow match without space (store normalized; use LIKE for flexibility)
     if (!empty($req['postal'])) {
         $meta_query[] = [
-            'key'     => 'physician_zipcode',
+            'key'     => $acf_keys['postal'],
             'value'   => $req['postal'],
             'compare' => 'LIKE',
         ];
@@ -151,6 +169,7 @@ function my_physician_search(WP_REST_Request $req)
                 'city'     => get_post_meta($p->ID, 'physician_city', true),
                 'province' => get_post_meta($p->ID, 'physician_province', true),
                 'postal'   => get_post_meta($p->ID, 'physician_zipcode', true),
+                'organizations_details' => get_field('organizations_details', $p->ID) ?: [],
             ],
         ];
     }, $posts);
