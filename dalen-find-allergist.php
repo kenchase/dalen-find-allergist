@@ -8,7 +8,7 @@
  * Author URI:      https://www.dalendesign.com/
  * Text Domain:     dalen-find-allergist
  * Domain Path:     /languages
- * Version:         0.1.0
+ * Version:         0.2.0
  *
  * @package         Dalen_Find_Allergist
  */
@@ -31,3 +31,8 @@ include_once plugin_dir_path(__FILE__) . 'includes/shortcodes.php';
 include_once plugin_dir_path(__FILE__) . 'includes/rest-api-search.php';
 // include_once plugin_dir_path(__FILE__) . 'includes/helper-functions.php';
 // include_once plugin_dir_path(__FILE__) . 'includes/login-redirect.php';
+
+// Include admin functionality
+if (is_admin()) {
+    include_once plugin_dir_path(__FILE__) . 'admin/class-admin.php';
+}
