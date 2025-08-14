@@ -1,0 +1,302 @@
+# Dalen Find Allergist
+
+A WordPress plugin for the Canadian Society of Allergy and Clinical Immunology (CSACI) that provides an advanced allergist/immunologist finder with location-based search capabilities.
+
+## Description
+
+This plugin creates a comprehensive directory system for allergists and immunologists across Canada, featuring:
+
+-   **Custom Post Type**: Physician profiles with detailed information
+-   **Advanced Search**: Multi-criteria search with name, location, and specialty filters
+-   **Distance-Based Filtering**: Find physicians within a specified radius of a postal code
+-   **Interactive Maps**: Google Maps integration for location visualization
+-   **REST API**: Robust API endpoints for flexible frontend implementations
+-   **ACF Integration**: Advanced Custom Fields for rich physician data management
+
+## Features
+
+### 🔍 Search Capabilities
+
+-   **Name Search**: Search by first name, last name, or full name
+-   **Location Search**: Filter by city, province, or postal code
+-   **Distance Filtering**: Find physicians within X kilometers of a postal code
+-   **Specialty Filtering**: Filter by treatments offered (e.g., OIT - Oral Immunotherapy)
+-   **Combined Searches**: Mix and match multiple search criteria
+
+### 🗺️ Geographic Features
+
+-   **Postal Code Geocoding**: Automatic conversion of Canadian postal codes to coordinates
+-   **Distance Calculation**: Haversine formula for accurate distance measurements
+-   **Radius Search**: Configurable search radius in kilometers
+-   **Map Integration**: Google Maps display with physician locations
+
+### 🏥 Physician Profiles
+
+-   **Comprehensive Information**: Credentials, specialties, contact details
+-   **Multiple Locations**: Support for physicians with multiple practice locations
+-   **Organization Details**: Hospital/clinic affiliations with full address information
+-   **Coordinates Storage**: Latitude/longitude for accurate mapping
+
+### 🔧 Technical Features
+
+-   **REST API Endpoints**: `/wp-json/my/v1/physicians/search`
+-   **Efficient Queries**: Optimized database queries with post-query filtering
+-   **ACF Integration**: Leverages Advanced Custom Fields for data management
+-   **Role Management**: Custom user roles for physician management
+-   **Responsive Design**: Mobile-friendly search interface
+
+## Installation
+
+1. **Upload the plugin files** to the `/wp-content/plugins/dalen-find-allergist` directory
+2. **Activate the plugin** through the 'Plugins' screen in WordPress
+3. **Configure ACF fields** (if not already present)
+4. **Add your Google Maps API key** in the plugin settings
+5. **Import physician data** or create physician profiles manually
+
+## Requirements
+
+-   WordPress 5.0 or higher
+-   PHP 7.4 or higher
+-   Advanced Custom Fields (ACF) plugin
+-   Google Maps API key (for geocoding and mapping features)
+
+## API Documentation
+
+### Search Endpoint
+
+**URL**: `GET /wp-json/my/v1/physicians/search`
+
+**Parameters**:
+
+-   `fname` (string): First name search
+-   `lname` (string): Last name search
+-   `city` (string): City filter
+-   `province` (string): Province filter
+-   `postal` (string): Postal code (for distance filtering)
+-   `kms` (integer): Search radius in kilometers
+-   `oit` (boolean): Filter for OIT specialists
+
+**Example Requests**:
+
+```bash
+# Search by name
+GET /wp-json/my/v1/physicians/search?fname=John&lname=Smith
+
+# Distance-based search (50km radius from Toronto downtown)
+GET /wp-json/my/v1/physicians/search?postal=M5V3M6&kms=50
+
+# Combined search
+GET /wp-json/my/v1/physicians/search?city=Toronto&oit=true
+
+# Province-wide search
+GET /wp-json/my/v1/physicians/search?province=Ontario
+```
+
+**Response Format**:
+
+```json
+{
+	"count": 25,
+	"results": [
+		{
+			"id": 1234,
+			"title": "Dr. John Smith",
+			"link": "https://example.com/physicians/john-smith/",
+			"acf": {
+				"city": "Toronto",
+				"province": "Ontario",
+				"postal": "M5V 3M6",
+				"credentials": "MD, FRCPC",
+				"oit": "OIT",
+				"organizations_details": [
+					{
+						"institutation_name": "Hospital for Sick Children",
+						"institution_city": "Toronto",
+						"institution_latitude": "43.6570",
+						"institution_longitude": "-79.3914",
+						"institution_phone": "416-813-1500"
+					}
+				]
+			},
+			"distance": 1.2
+		}
+	]
+}
+```
+
+## Shortcodes
+
+### Find Allergist Form
+
+```
+[find_allergist_form]
+```
+
+Displays the search form with all filter options.
+
+### Find Allergist Results
+
+```
+[find_allergist_results]
+```
+
+Displays the search results container (populated via AJAX).
+
+## ACF Field Structure
+
+### Physician Fields
+
+-   `city` (Text): Physician's primary city
+-   `province` (Text): Physician's primary province
+-   `postal` (Text): Physician's primary postal code
+-   `credentials` (Text): Medical credentials
+-   `practices_oral_immunotherapy_oit` (Checkbox): OIT specialization
+-   `immunologist_online_search_tool` (Select): Search visibility
+
+### Organization Details (Repeater)
+
+-   `institutation_name` (Text): Organization name
+-   `address_line_1` (Text): Street address
+-   `address_line_2` (Text): Address line 2
+-   `institution_city` (Text): Organization city
+-   `institution_state` (Text): Organization province/state
+-   `institution_zipcode` (Text): Organization postal code
+-   `institution_phone` (Text): Phone number
+-   `institution_fax` (Text): Fax number
+-   `institution_latitude` (Number): Latitude coordinate
+-   `institution_longitude` (Number): Longitude coordinate
+-   `institution_gmap` (Google Map): Map field (optional)
+
+## File Structure
+
+```
+dalen-find-allergist/
+├── README.md
+├── dalen-find-allergist.php          # Main plugin file
+├── includes/
+│   ├── custom-post.php               # Physician post type
+│   ├── custom-role.php               # User role management
+│   ├── rest-api-search.php           # Search API endpoints
+│   ├── shortcodes.php                # Frontend shortcodes
+│   └── login-redirect.php            # User management
+├── assets/
+│   ├── css/
+│   │   └── find-allergist-results.css
+│   └── js/
+│       └── find-allergist-results.js # Frontend JavaScript
+├── tests/                            # Unit tests
+└── .circleci/                        # CI/CD configuration
+```
+
+## Configuration
+
+### Google Maps API Key
+
+The plugin requires a Google Maps API key for geocoding and mapping features. Update the key in `dalen-find-allergist.php`:
+
+```php
+function my_acf_google_map_api($api) {
+    $api['key'] = 'YOUR_GOOGLE_MAPS_API_KEY';
+    return $api;
+}
+```
+
+**Required Google APIs**:
+
+-   Geocoding API
+-   Maps JavaScript API
+-   Places API (optional)
+
+### Search Configuration
+
+The search behavior can be customized in `includes/rest-api-search.php`:
+
+-   **Default radius**: Modify default distance filtering radius
+-   **Search criteria requirements**: Adjust minimum search criteria
+-   **Result limits**: Configure maximum results returned
+
+## Development
+
+### Local Development Setup
+
+1. Clone the repository
+2. Install WordPress locally
+3. Install ACF plugin
+4. Configure Google Maps API key
+5. Import sample physician data
+
+### Testing
+
+```bash
+# Run PHP unit tests
+composer test
+
+# Run JavaScript tests
+npm test
+
+# PHP Code Sniffer
+composer lint
+```
+
+### API Testing
+
+```bash
+# Test basic search
+curl "http://localhost/wp-json/my/v1/physicians/search?fname=test"
+
+# Test distance filtering
+curl "http://localhost/wp-json/my/v1/physicians/search?postal=M5V3M6&kms=50"
+
+# Test combined search
+curl "http://localhost/wp-json/my/v1/physicians/search?city=Toronto&oit=true"
+```
+
+## Key Functions
+
+### Distance Filtering
+
+-   `my_geocode_postal($postal_code)`: Converts Canadian postal codes to coordinates
+-   `my_haversine_distance($lat1, $lng1, $lat2, $lng2)`: Calculates distance between two points
+-   Distance filtering logic in `my_physician_search()` function
+
+### Search Logic
+
+-   **Name Search**: Title-based fuzzy matching
+-   **Meta Field Search**: ACF field queries with LIKE comparisons
+-   **Post-Query Filtering**: Postal code and distance filtering after initial query
+-   **Hybrid Approach**: Combines physician-level and organization-level location data
+
+## Performance Considerations
+
+-   **Efficient Queries**: Uses WP_Query with optimized meta queries
+-   **Post-Query Filtering**: Distance calculations only on relevant results
+-   **Geocoding Caching**: Consider implementing geocoding result caching
+-   **Database Indexing**: Ensure proper indexing on frequently queried meta fields
+
+## Support
+
+For support, feature requests, or bug reports:
+
+-   **Developer**: Dalen Design
+-   **Website**: https://www.dalendesign.com/
+-   **Email**: [Contact through website]
+
+## License
+
+This plugin is developed for the Canadian Society of Allergy and Clinical Immunology (CSACI). All rights reserved.
+
+## Changelog
+
+### Version 0.1.0
+
+-   Initial release
+-   Basic physician directory functionality
+-   Distance-based search implementation
+-   REST API endpoints
+-   Google Maps integration
+-   ACF field structure
+-   Responsive search interface
+
+---
+
+**Note**: This plugin is specifically designed for the Canadian healthcare system and uses Canadian postal code formatting and geographic conventions.
