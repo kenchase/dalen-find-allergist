@@ -28,6 +28,9 @@ var DalenFindAllergistAdmin = {
 
 		// API key testing
 		this.initApiKeyTesting();
+
+		// Reset settings functionality
+		this.initResetSettings();
 	},
 
 	/**
@@ -43,7 +46,8 @@ var DalenFindAllergistAdmin = {
 			if (apiKey && !apiKey.match(/^AIza[0-9A-Za-z-_]{35}$/)) {
 				isValid = false;
 				errors.push(
-					"Google Maps API key format appears to be invalid."
+					dalenAdmin.strings.invalidApiKey ||
+						"Google Maps API key format appears to be invalid."
 				);
 			}
 
@@ -51,7 +55,10 @@ var DalenFindAllergistAdmin = {
 			var limit = parseInt($("#search_results_limit").val());
 			if (limit < 1 || limit > 100) {
 				isValid = false;
-				errors.push("Search results limit must be between 1 and 100.");
+				errors.push(
+					dalenAdmin.strings.invalidResultsLimit ||
+						"Search results limit must be between 1 and 100."
+				);
 			}
 
 			// Validate search radius
@@ -59,14 +66,18 @@ var DalenFindAllergistAdmin = {
 			if (radius < 1 || radius > 500) {
 				isValid = false;
 				errors.push(
-					"Default search radius must be between 1 and 500 km."
+					dalenAdmin.strings.invalidRadius ||
+						"Default search radius must be between 1 and 500 km."
 				);
 			}
 
 			if (!isValid) {
 				e.preventDefault();
 				alert(
-					"Please fix the following errors:\n\n" + errors.join("\n")
+					(dalenAdmin.strings.validationErrors ||
+						"Please fix the following errors:") +
+						"\n\n" +
+						errors.join("\n")
 				);
 			}
 		});
@@ -79,23 +90,68 @@ var DalenFindAllergistAdmin = {
 		// Add test button after API key field
 		if ($("#google_maps_api_key").length) {
 			var testButton = $(
-				'<button type="button" class="button button-secondary" id="test-api-key" style="margin-left: 10px;">Test API Key</button>'
+				'<button type="button" class="button button-secondary" id="test-api-key" style="margin-left: 10px;">' +
+					dalenAdmin.strings.testApiKey +
+					"</button>"
 			);
 			$("#google_maps_api_key").after(testButton);
 
 			$("#test-api-key").on("click", function () {
 				var apiKey = $("#google_maps_api_key").val();
 				if (!apiKey) {
-					alert("Please enter an API key first.");
+					alert(dalenAdmin.strings.apiKeyRequired);
 					return;
 				}
 
-				$(this).prop("disabled", true).text("Testing...");
+				$(this).prop("disabled", true).text(dalenAdmin.strings.testing);
 
 				// Test the API key by making a simple geocoding request
 				DalenFindAllergistAdmin.testGoogleMapsApiKey(apiKey, $(this));
 			});
 		}
+	},
+
+	/**
+	 * Initialize reset settings functionality
+	 */
+	initResetSettings: function () {
+		$(".dalen-reset-settings").on("click", function () {
+			if (confirm(dalenAdmin.strings.confirmReset)) {
+				var button = $(this);
+				button
+					.prop("disabled", true)
+					.text(dalenAdmin.strings.resetting);
+
+				// Get nonce value
+				var nonce = $("#dalen_reset_nonce").val();
+
+				$.ajax({
+					url: dalenAdmin.ajaxurl,
+					type: "POST",
+					data: {
+						action: "dalen_reset_settings",
+						nonce: nonce,
+					},
+					success: function (response) {
+						if (response.success) {
+							alert(dalenAdmin.strings.resetSuccess);
+							location.reload();
+						} else {
+							alert("Error: " + response.data);
+							button
+								.prop("disabled", false)
+								.text("Reset to Defaults");
+						}
+					},
+					error: function () {
+						alert(dalenAdmin.strings.resetError);
+						button
+							.prop("disabled", false)
+							.text("Reset to Defaults");
+					},
+				});
+			}
+		});
 	},
 
 	/**
@@ -116,19 +172,21 @@ var DalenFindAllergistAdmin = {
 					button
 						.removeClass("button-secondary")
 						.addClass("button-primary")
-						.text("✓ API Key Valid");
+						.text(dalenAdmin.strings.apiKeyValid);
 					setTimeout(function () {
 						button
 							.removeClass("button-primary")
 							.addClass("button-secondary")
-							.text("Test API Key")
+							.text(dalenAdmin.strings.testApiKey)
 							.prop("disabled", false);
 					}, 3000);
 				} else {
-					button.text("✗ API Key Invalid").css("color", "#dc3232");
+					button
+						.text(dalenAdmin.strings.apiKeyInvalid)
+						.css("color", "#dc3232");
 					setTimeout(function () {
 						button
-							.text("Test API Key")
+							.text(dalenAdmin.strings.testApiKey)
 							.css("color", "")
 							.prop("disabled", false);
 					}, 3000);
@@ -140,10 +198,12 @@ var DalenFindAllergistAdmin = {
 				}
 			})
 			.fail(function (xhr, status, error) {
-				button.text("✗ Test Failed").css("color", "#dc3232");
+				button
+					.text(dalenAdmin.strings.testFailed)
+					.css("color", "#dc3232");
 				setTimeout(function () {
 					button
-						.text("Test API Key")
+						.text(dalenAdmin.strings.testApiKey)
 						.css("color", "")
 						.prop("disabled", false);
 				}, 3000);
