@@ -29,82 +29,210 @@ document.addEventListener("DOMContentLoaded", function () {
 		elements.clearBtn.addEventListener("click", function (e) {
 			e.preventDefault();
 			elements.form?.reset();
+			// Reset pagination state
+			currentSearchData = null;
+			currentPage = 1;
+			allSearchResults = [];
+			// Clear results
+			setResultsHTML("");
 		});
 	}
 });
 
 const ENDPOINT = "/wp-json/my/v1/physicians/search";
 
-// Global variables for map functionality
+// Global variables for map functionality and pagination
 let allergistMap = null;
 let mapMarkers = [];
 let mapInfoWindow = null;
 let orgIndexCounter = 0;
 let searchController = null; // For aborting previous requests
+let currentSearchData = null; // Store current search parameters
+let currentPage = 1; // Track current page
+let allSearchResults = []; // Store complete result set for client-side pagination
+let resultsPerPage = 20; // Results per page
 
 /**
- * Handle search form submission
+ * Handle search form submission - only makes API call for new searches
  */
-async function handleSearchSubmit() {
+async function handleSearchSubmit(page = 1) {
 	console.log("Search submitted");
-
-	// Abort previous request if still pending
-	if (searchController) {
-		searchController.abort();
-	}
-
-	// Create new abort controller for this request
-	searchController = new AbortController();
 
 	// Get all form data
 	const formData = getAllFormData();
 
-	// Build query params (send only what’s filled)
-	const params = new URLSearchParams();
-	if (formData.phy_fname) params.set("fname", formData.phy_fname);
-	if (formData.phy_lname) params.set("lname", formData.phy_lname);
-	if (typeof formData.phy_oit === "boolean")
-		params.set("oit", String(!!formData.phy_oit));
-	if (formData.phy_city) params.set("city", formData.phy_city);
-	if (formData.phy_province) params.set("province", formData.phy_province);
-	if (formData.phy_postal)
-		params.set("postal", normalizePostal(formData.phy_postal));
-	if (formData.phy_kms) params.set("kms", formData.phy_kms);
+	// Check if this is a new search (different parameters)
+	const isNewSearch =
+		!currentSearchData ||
+		JSON.stringify(currentSearchData) !== JSON.stringify(formData);
 
-	// Optional pagination defaults
-	params.set("per_page", "10");
-	params.set("page", "1");
+	if (isNewSearch) {
+		// New search - make API call
+		console.log("New search - making API call");
 
-	// UI: basic loading state
-	setResultsHTML("<p>Searching…</p>");
-
-	try {
-		const nonce = window.wpApiSettings?.nonce;
-		const res = await fetch(`${ENDPOINT}?${params.toString()}`, {
-			headers: nonce ? { "X-WP-Nonce": nonce } : undefined,
-			signal: searchController.signal,
-		});
-
-		if (!res.ok) {
-			throw new Error(`REST request failed (${res.status})`);
+		// Abort previous request if still pending
+		if (searchController) {
+			searchController.abort();
 		}
 
-		const data = await res.json();
-		renderResults(data);
-	} catch (err) {
-		// Don't show error for aborted requests
-		if (err.name === "AbortError") {
-			console.log("Request was aborted");
-			return;
-		}
+		// Create new abort controller for this request
+		searchController = new AbortController();
 
-		console.error("Search error:", err);
-		setResultsHTML(
-			'<p role="alert">Sorry, something went wrong. Please try again.</p>'
-		);
-	} finally {
-		searchController = null;
+		currentSearchData = formData;
+		currentPage = 1;
+
+		// Build query params (send only what's filled)
+		const params = new URLSearchParams();
+		if (formData.phy_fname) params.set("fname", formData.phy_fname);
+		if (formData.phy_lname) params.set("lname", formData.phy_lname);
+		if (typeof formData.phy_oit === "boolean")
+			params.set("oit", String(!!formData.phy_oit));
+		if (formData.phy_city) params.set("city", formData.phy_city);
+		if (formData.phy_province)
+			params.set("province", formData.phy_province);
+		if (formData.phy_postal)
+			params.set("postal", normalizePostal(formData.phy_postal));
+		if (formData.phy_kms) params.set("kms", formData.phy_kms);
+
+		// UI: basic loading state
+		setResultsHTML("<p>Searching…</p>");
+
+		try {
+			const nonce = window.wpApiSettings?.nonce;
+			const res = await fetch(`${ENDPOINT}?${params.toString()}`, {
+				headers: nonce ? { "X-WP-Nonce": nonce } : undefined,
+				signal: searchController.signal,
+			});
+
+			if (!res.ok) {
+				throw new Error(`REST request failed (${res.status})`);
+			}
+
+			const data = await res.json();
+
+			// Store all results for client-side pagination
+			allSearchResults = data.results || [];
+
+			// Render first page
+			renderPaginatedResults(1);
+		} catch (err) {
+			// Don't show error for aborted requests
+			if (err.name === "AbortError") {
+				console.log("Request was aborted");
+				return;
+			}
+
+			console.error("Search error:", err);
+			setResultsHTML(
+				'<p role="alert">Sorry, something went wrong. Please try again.</p>'
+			);
+			allSearchResults = [];
+		} finally {
+			searchController = null;
+		}
+	} else {
+		// Same search - just navigate to different page (client-side)
+		console.log("Page navigation - client-side");
+		currentPage = page;
+		renderPaginatedResults(page);
 	}
+}
+
+/**
+ * Render paginated results using client-side pagination
+ * @param {number} page - Page number to render
+ */
+function renderPaginatedResults(page) {
+	console.log(
+		`Rendering page ${page} of ${Math.ceil(
+			allSearchResults.length / resultsPerPage
+		)}`
+	);
+
+	if (!Array.isArray(allSearchResults) || allSearchResults.length === 0) {
+		setResultsHTML("<p>No matches found.</p>");
+		return;
+	}
+
+	// Calculate pagination
+	const totalResults = allSearchResults.length;
+	const totalPages = Math.ceil(totalResults / resultsPerPage);
+	const startIndex = (page - 1) * resultsPerPage;
+	const endIndex = Math.min(startIndex + resultsPerPage, totalResults);
+	const currentPageResults = allSearchResults.slice(startIndex, endIndex);
+
+	// Reset organization counter for consistent indexing
+	orgIndexCounter = 0;
+
+	// Build results HTML efficiently
+	const resultParts = [
+		'<div id="allergist-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px;"></div>',
+		`<div class="search-results-info">`,
+		`<p>Found ${totalResults} result${totalResults === 1 ? "" : "s"}${
+			totalResults > resultsPerPage
+				? ` - showing ${startIndex + 1} to ${endIndex}`
+				: ""
+		}</p>`,
+		`</div>`,
+	];
+
+	// Add pagination controls at the top if there are multiple pages
+	if (totalPages > 1) {
+		const prevPage = page > 1 ? page - 1 : null;
+		const nextPage = page < totalPages ? page + 1 : null;
+		resultParts.push(
+			generatePaginationHTML(page, totalPages, prevPage, nextPage)
+		);
+	}
+
+	resultParts.push('<ul class="far-list">');
+
+	for (const item of currentPageResults) {
+		const city = item.acf?.city || "";
+		const prov = item.acf?.province || "";
+		const credentials = item.acf?.credentials || "";
+
+		// Map OIT field value to Yes/No
+		// OIT is either "" (No) or an array (Yes)
+		const oitValue = item.acf?.oit;
+		const oit = Array.isArray(oitValue) ? "Yes" : "No";
+
+		// Prepare physician info for organizations
+		const physicianInfo = {
+			title: item.title,
+			credentials,
+			oit,
+			link: item.link,
+		};
+
+		// Generate organizations HTML using separate function
+		const organizationsHTML = generateOrganizationsHTML(
+			item.acf?.organizations_details,
+			physicianInfo
+		);
+
+		if (organizationsHTML) {
+			resultParts.push(
+				`<li class="far-list-item">${organizationsHTML}</li>`
+			);
+		}
+	}
+
+	resultParts.push("</ul>");
+
+	// Add pagination controls at the bottom if there are multiple pages
+	if (totalPages > 1) {
+		const prevPage = page > 1 ? page - 1 : null;
+		const nextPage = page < totalPages ? page + 1 : null;
+		resultParts.push(
+			generatePaginationHTML(page, totalPages, prevPage, nextPage)
+		);
+	}
+
+	setResultsHTML(resultParts.join(""));
+
+	// Initialize the map after HTML is rendered - use all results for map markers
+	setTimeout(() => initializeMap(allSearchResults), 100);
 }
 
 /**
@@ -173,285 +301,165 @@ function initializeMap(results) {
 	});
 
 	// Add markers efficiently
-	createMapMarkers(locations);
-
-	// Fit map to show all markers
-	if (locations.length > 1) {
-		allergistMap.fitBounds(bounds);
-	} else {
-		allergistMap.setCenter(bounds.getCenter());
-		allergistMap.setZoom(15);
-	}
-}
-
-/**
- * Clean up existing map resources to prevent memory leaks
- */
-function cleanupMap() {
-	if (mapMarkers.length > 0) {
-		mapMarkers.forEach(({ marker }) => {
-			if (marker.setMap) marker.setMap(null);
-		});
-		mapMarkers = [];
-	}
-	if (mapInfoWindow) {
-		mapInfoWindow.close();
-	}
-}
-
-/**
- * Create map markers efficiently
- * @param {Array} locations - Array of location objects
- */
-function createMapMarkers(locations) {
-	const infoContents = new Map(); // Cache info window content
-
-	locations.forEach((location) => {
+	for (const location of locations) {
 		const marker = new google.maps.Marker({
 			position: { lat: location.lat, lng: location.lng },
 			map: allergistMap,
 			title: location.title,
-			animation: google.maps.Animation.DROP,
+			icon: {
+				url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+				scaledSize: new google.maps.Size(32, 32),
+			},
 		});
 
-		// Generate and cache info content
-		const infoContent = generateInfoWindowContent(location);
-		infoContents.set(location.orgId, infoContent);
-
+		// Add click listener for info window
 		marker.addListener("click", () => {
-			mapInfoWindow.setContent(infoContent);
+			const content = createInfoWindowContent(location);
+			mapInfoWindow.setContent(content);
 			mapInfoWindow.open(allergistMap, marker);
 		});
 
-		mapMarkers.push({
-			marker,
-			infoContent,
-			orgId: location.orgId,
-		});
-	});
+		mapMarkers.push(marker);
+	}
+
+	// Fit map to show all markers
+	if (locations.length === 1) {
+		allergistMap.setCenter(bounds.getCenter());
+		allergistMap.setZoom(15);
+	} else {
+		allergistMap.fitBounds(bounds);
+	}
 }
 
 /**
- * Generate info window content
- * @param {Object} location - Location object
- * @returns {string} HTML content for info window
+ * Create HTML content for map info window
+ * @param {Object} location - Location data
+ * @returns {string} HTML content
  */
-function generateInfoWindowContent(location) {
+function createInfoWindowContent(location) {
 	const parts = [
 		`<div class="map-info-window">`,
 		`<h4>${escapeHTML(location.title)}</h4>`,
-		`<p><strong>${escapeHTML(location.physicianName)}</strong>`,
 	];
 
-	if (location.physicianCredentials) {
-		parts.push(`<br><em>${escapeHTML(location.physicianCredentials)}</em>`);
-	}
-
-	parts.push(`</p>`);
-
 	if (location.address) {
-		parts.push(`<p>${escapeHTML(location.address)}</p>`);
+		parts.push(
+			`<p><strong>Address:</strong> ${escapeHTML(location.address)}</p>`
+		);
 	}
 
 	if (location.cityState) {
-		parts.push(`<p>${escapeHTML(location.cityState)}</p>`);
+		parts.push(
+			`<p><strong>Location:</strong> ${escapeHTML(
+				location.cityState
+			)}</p>`
+		);
+	}
+
+	if (location.physicianName) {
+		parts.push(
+			`<p><strong>Physician:</strong> ${escapeHTML(
+				location.physicianName
+			)}${
+				location.physicianCredentials
+					? `, ${escapeHTML(location.physicianCredentials)}`
+					: ""
+			}</p>`
+		);
 	}
 
 	parts.push(`</div>`);
-
 	return parts.join("");
 }
 
 /**
- * Show marker info window and scroll to map
- * @param {string} orgId - Organization ID to show on map
+ * Clean up existing map resources
  */
-function showOnMap(orgId) {
-	const markerData = mapMarkers.find((m) => m.orgId === orgId);
-	if (markerData && mapInfoWindow && allergistMap) {
-		// Set info window content and open it
-		mapInfoWindow.setContent(markerData.infoContent);
-		mapInfoWindow.open(allergistMap, markerData.marker);
-
-		// Center map on the marker
-		allergistMap.setCenter(markerData.marker.getPosition());
-
-		// Scroll to map
-		const mapContainer = document.getElementById("allergist-map");
-		if (mapContainer) {
-			mapContainer.scrollIntoView({
-				behavior: "smooth",
-				block: "center",
-			});
+function cleanupMap() {
+	if (mapMarkers) {
+		for (const marker of mapMarkers) {
+			marker.setMap(null);
 		}
+		mapMarkers = [];
 	}
+
+	if (mapInfoWindow) {
+		mapInfoWindow.close();
+	}
+
+	allergistMap = null;
 }
 
 /**
- * Generate organizations HTML from repeater field data
- * @param {Array} organizations - Array of organization objects from ACF repeater
- * @param {Object} physicianInfo - Object containing physician's basic info
- * @returns {string} HTML string for organizations
+ * Generate organizations HTML
+ * @param {Array} organizations - Organizations data
+ * @param {Object} physicianInfo - Physician information
+ * @returns {string} HTML string
  */
-function generateOrganizationsHTML(organizations, physicianInfo = {}) {
+function generateOrganizationsHTML(organizations, physicianInfo) {
 	if (!Array.isArray(organizations) || organizations.length === 0) {
 		return "";
 	}
 
-	const { title = "", credentials = "", oit = "", link = "" } = physicianInfo;
-	const organizationParts = [];
+	const parts = [];
+
+	// Physician header
+	parts.push(`
+		<div class="far-physician-info">
+			<h3 class="far-physician-name">
+				<a href="${escapeHTML(physicianInfo.link)}" target="_blank">
+					${escapeHTML(physicianInfo.title)}
+				</a>
+				${physicianInfo.credentials ? `, ${escapeHTML(physicianInfo.credentials)}` : ""}
+			</h3>
+			<p><strong>Practices OIT:</strong> ${physicianInfo.oit}</p>
+		</div>
+	`);
+
+	// Organizations container
+	parts.push(`<div class="far-orgs">`);
 
 	for (const org of organizations) {
-		const orgName = org.institutation_name || "";
-		if (!orgName) continue; // Skip if no organization name
-
-		const orgAddressName = org.institution_gmap?.name || "";
-		const orgCity = org.institution_gmap?.city || "";
-		const orgState = org.institution_gmap?.state || "";
-		const orgPostal = org.institution_gmap?.post_code || "";
-		const lat = parseFloat(org.institution_gmap?.lat);
-		const lng = parseFloat(org.institution_gmap?.lng);
-		const distance = org.distance_km || null;
-
-		// Create unique org ID using global counter
 		const orgId = `org-${orgIndexCounter++}`;
-		const hasValidCoords = !isNaN(lat) && !isNaN(lng);
-		const cityState = [orgCity, orgState].filter(Boolean).join(", ");
+		const orgName = org.institutation_name || "Organization";
+		const address = org.institution_gmap?.name || "";
+		const city = org.institution_gmap?.city || "";
+		const state = org.institution_gmap?.state || "";
+		const postalCode = org.institution_gmap?.post_code || "";
+		const phone = org.institution_phone || "";
+		const distance = org.distance_km;
 
-		// Build HTML parts array for better performance
-		const htmlParts = [
-			'<div class="far-org">',
-			'<div class="far-physician-info">',
-			`<a href="${link}" rel="bookmark" class="far-physician-name">${escapeHTML(
-				title
-			)}</a>`,
-		];
+		parts.push(`<div class="far-org" id="${orgId}">`);
+		parts.push(`<h4>${escapeHTML(orgName)}</h4>`);
 
-		if (credentials) {
-			htmlParts.push(
-				`<div class="far-physician-credentials">${escapeHTML(
-					credentials
-				)}</div>`
+		if (address) {
+			parts.push(
+				`<p><strong>Address:</strong> ${escapeHTML(address)}</p>`
 			);
 		}
 
-		if (oit) {
-			htmlParts.push(
-				`<div class="far-oit-status">Practices Oral Immunotherapy (OIT)?: ${oit}</div>`
+		if (city || state || postalCode) {
+			const locationParts = [city, state, postalCode].filter(Boolean);
+			parts.push(
+				`<p><strong>Location:</strong> ${escapeHTML(
+					locationParts.join(", ")
+				)}</p>`
 			);
 		}
 
-		if (distance !== null) {
-			htmlParts.push(
-				`<div class="far-distance">Distance: ${distance} km</div>`
-			);
+		if (phone) {
+			parts.push(`<p><strong>Phone:</strong> ${escapeHTML(phone)}</p>`);
 		}
 
-		htmlParts.push(
-			"</div>",
-			'<div class="far-org-info">',
-			`<strong class="far-org-name">${escapeHTML(orgName)}</strong>`
-		);
-
-		if (orgAddressName) {
-			htmlParts.push(
-				`<div class="far-org-address">${escapeHTML(
-					orgAddressName
-				)}</div>`
-			);
+		if (distance !== undefined) {
+			parts.push(`<p><strong>Distance:</strong> ${distance} km</p>`);
 		}
 
-		if (cityState) {
-			htmlParts.push(
-				`<div class="far-org-city-state">${escapeHTML(cityState)}</div>`
-			);
-		}
-
-		if (orgPostal) {
-			htmlParts.push(
-				`<div class="far-org-postal">${escapeHTML(orgPostal)}</div>`
-			);
-		}
-
-		if (hasValidCoords) {
-			htmlParts.push(
-				`<div class="far-view-map"><a href="#" onclick="showOnMap('${orgId}'); return false;" class="far-map-link">📍 View on Map</a></div>`
-			);
-		}
-
-		htmlParts.push("</div>", "</div>");
-		organizationParts.push(htmlParts.join(""));
+		parts.push(`</div>`);
 	}
 
-	return organizationParts.length > 0
-		? `<div class="far-orgs">${organizationParts.join("")}</div>`
-		: "";
-}
-
-/**
- * Render results into #results
- * Expects the response shape from the earlier PHP example:
- * { page, per_page, count, results: [{id,title,link,acf:{...}}] }
- */
-function renderResults(payload) {
-	// Reset organization counter for consistent indexing
-	orgIndexCounter = 0;
-
-	const container = document.getElementById("results");
-	if (!container) {
-		console.log("Results:", payload);
-		return;
-	}
-
-	const { results = [], count = 0 } = payload || {};
-	if (!Array.isArray(results) || results.length === 0) {
-		setResultsHTML("<p>No matches found.</p>");
-		return;
-	}
-
-	// Build results HTML efficiently
-	const resultParts = [
-		'<div id="allergist-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px;"></div>',
-		`<p>Found ${count} result${count === 1 ? "" : "s"}.</p>`,
-		'<ul class="far-list">',
-	];
-
-	for (const item of results) {
-		const city = item.acf?.city || "";
-		const prov = item.acf?.province || "";
-		const credentials = item.acf?.credentials || "";
-
-		// Map OIT field value to Yes/No
-		// OIT is either "" (No) or an array (Yes)
-		const oitValue = item.acf?.oit;
-		const oit = Array.isArray(oitValue) ? "Yes" : "No";
-
-		// Prepare physician info for organizations
-		const physicianInfo = {
-			title: item.title,
-			credentials,
-			oit,
-			link: item.link,
-		};
-
-		// Generate organizations HTML using separate function
-		const organizationsHTML = generateOrganizationsHTML(
-			item.acf?.organizations_details,
-			physicianInfo
-		);
-
-		if (organizationsHTML) {
-			resultParts.push(
-				`<li class="far-list-item">${organizationsHTML}</li>`
-			);
-		}
-	}
-
-	resultParts.push("</ul>");
-	setResultsHTML(resultParts.join(""));
-
-	// Initialize the map after HTML is rendered
-	setTimeout(() => initializeMap(results), 100);
+	parts.push(`</div>`);
+	return parts.join("");
 }
 
 /**
@@ -482,16 +490,6 @@ function getAllFormData() {
 }
 
 /**
- * Get field value safely (legacy function for backward compatibility)
- * @param {string} fieldId - The ID of the field
- * @returns {string} Field value or empty string
- */
-function getFieldValue(fieldId) {
-	const field = document.getElementById(fieldId);
-	return field ? field.value.trim() : "";
-}
-
-/**
  * Normalize Canadian postal (uppercase, no spaces)
  */
 function normalizePostal(v) {
@@ -507,6 +505,124 @@ function setResultsHTML(html) {
 	const container = document.getElementById("results");
 	if (container) container.innerHTML = html;
 }
+
+/**
+ * Generate pagination HTML
+ * @param {number} currentPage - Current page number
+ * @param {number} totalPages - Total number of pages
+ * @param {number|null} prevPage - Previous page number
+ * @param {number|null} nextPage - Next page number
+ * @returns {string} HTML string for pagination
+ */
+function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
+	const paginationParts = ['<div class="pagination-container">'];
+
+	// Previous page button
+	if (prevPage) {
+		paginationParts.push(
+			`<button type="button" class="pagination-btn" data-page="${prevPage}">← Previous</button>`
+		);
+	} else {
+		paginationParts.push(
+			`<button type="button" class="pagination-btn disabled" disabled>← Previous</button>`
+		);
+	}
+
+	// Page numbers
+	paginationParts.push('<span class="pagination-info">');
+
+	// Show page numbers with ellipsis for large page counts
+	const maxVisible = 5;
+	let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+	let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+	// Adjust if we're near the end
+	if (endPage - startPage < maxVisible - 1) {
+		startPage = Math.max(1, endPage - maxVisible + 1);
+	}
+
+	// Show first page if not in range
+	if (startPage > 1) {
+		paginationParts.push(
+			`<button type="button" class="pagination-btn page-number" data-page="1">1</button>`
+		);
+		if (startPage > 2) {
+			paginationParts.push(
+				'<span class="pagination-ellipsis">...</span>'
+			);
+		}
+	}
+
+	// Show page numbers in range
+	for (let i = startPage; i <= endPage; i++) {
+		if (i === currentPage) {
+			paginationParts.push(
+				`<button type="button" class="pagination-btn page-number current" disabled>${i}</button>`
+			);
+		} else {
+			paginationParts.push(
+				`<button type="button" class="pagination-btn page-number" data-page="${i}">${i}</button>`
+			);
+		}
+	}
+
+	// Show last page if not in range
+	if (endPage < totalPages) {
+		if (endPage < totalPages - 1) {
+			paginationParts.push(
+				'<span class="pagination-ellipsis">...</span>'
+			);
+		}
+		paginationParts.push(
+			`<button type="button" class="pagination-btn page-number" data-page="${totalPages}">${totalPages}</button>`
+		);
+	}
+
+	paginationParts.push("</span>");
+
+	// Next page button
+	if (nextPage) {
+		paginationParts.push(
+			`<button type="button" class="pagination-btn" data-page="${nextPage}">Next →</button>`
+		);
+	} else {
+		paginationParts.push(
+			`<button type="button" class="pagination-btn disabled" disabled>Next →</button>`
+		);
+	}
+
+	paginationParts.push("</div>");
+
+	return paginationParts.join("");
+}
+
+/**
+ * Handle pagination button clicks
+ */
+function handlePaginationClick(event) {
+	if (
+		event.target.classList.contains("pagination-btn") &&
+		!event.target.disabled
+	) {
+		const page = parseInt(event.target.dataset.page);
+		if (page && currentSearchData) {
+			// Scroll to top of results
+			const resultsContainer = document.getElementById("results");
+			if (resultsContainer) {
+				resultsContainer.scrollIntoView({
+					behavior: "smooth",
+					block: "start",
+				});
+			}
+
+			// Perform search for the selected page (client-side navigation)
+			handleSearchSubmit(page);
+		}
+	}
+}
+
+// Add event listener for pagination clicks using event delegation
+document.addEventListener("click", handlePaginationClick);
 
 /**
  * Optimized HTML escaper for titles/strings we render

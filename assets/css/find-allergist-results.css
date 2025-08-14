@@ -180,3 +180,94 @@
 	color: #666;
 	font-style: italic;
 }
+
+/* Pagination Styles */
+.entry-content .pagination-container,
+.pagination-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 1.5rem 0;
+	padding: 1rem 0;
+}
+
+.entry-content .pagination-btn,
+.pagination-btn {
+	padding: 0.5rem 1rem;
+	border: 1px solid #007cba;
+	background-color: #fff;
+	color: #007cba;
+	cursor: pointer;
+	border-radius: 4px;
+	font-size: 0.9rem;
+	transition: all 0.2s ease;
+	min-width: 44px;
+	text-align: center;
+}
+
+.entry-content .pagination-btn:hover:not(.disabled):not(.current),
+.pagination-btn:hover:not(.disabled):not(.current) {
+	background-color: #007cba;
+	color: #fff;
+}
+
+.entry-content .pagination-btn.current,
+.pagination-btn.current {
+	background-color: #007cba;
+	color: #fff;
+	font-weight: bold;
+}
+
+.entry-content .pagination-btn.disabled,
+.pagination-btn.disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	color: #999;
+	border-color: #ddd;
+}
+
+.entry-content .pagination-info,
+.pagination-info {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.entry-content .pagination-ellipsis,
+.pagination-ellipsis {
+	padding: 0.5rem 0.25rem;
+	color: #666;
+}
+
+.entry-content .search-results-info,
+.search-results-info {
+	margin-bottom: 1rem;
+	padding: 0.75rem;
+	background-color: #f0f8ff;
+	border: 1px solid #007cba;
+	border-radius: 4px;
+}
+
+.entry-content .search-results-info p,
+.search-results-info p {
+	margin: 0;
+	color: #333;
+	font-weight: 500;
+}
+
+/* Responsive pagination for mobile */
+@media (max-width: 768px) {
+	.entry-content .pagination-container,
+	.pagination-container {
+		flex-wrap: wrap;
+		gap: 0.25rem;
+	}
+	
+	.entry-content .pagination-btn,
+	.pagination-btn {
+		padding: 0.4rem 0.7rem;
+		font-size: 0.8rem;
+		min-width: 36px;
+	}
+}

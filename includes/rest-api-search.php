@@ -358,7 +358,7 @@ function my_physician_search(WP_REST_Request $req)
     }, $posts);
 
     return rest_ensure_response([
-        'count'     => count($out),
-        'results'   => $out,
+        'total_results' => count($out),
+        'results'       => $out,
     ]);
 }
