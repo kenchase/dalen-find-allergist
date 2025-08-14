@@ -140,7 +140,6 @@ if (!defined('ABSPATH')) {
                     <p><strong>Parameters:</strong></p>
                     <ul>
                         <li><code>style</code> - Form style (default, compact, minimal)</li>
-                        <li><code>show_map</code> - Show map toggle (true/false)</li>
                         <li><code>default_radius</code> - Default search radius in km</li>
                     </ul>
                     <p><strong>Example:</strong> <code>[allergist_search style="compact" default_radius="25"]</code></p>
@@ -152,10 +151,8 @@ if (!defined('ABSPATH')) {
                     <p><strong>Parameters:</strong></p>
                     <ul>
                         <li><code>limit</code> - Maximum number of results</li>
-                        <li><code>show_map</code> - Include map with results (true/false)</li>
-                        <li><code>show_contact</code> - Show contact information (true/false)</li>
                     </ul>
-                    <p><strong>Example:</strong> <code>[allergist_results limit="15" show_map="true"]</code></p>
+                    <p><strong>Example:</strong> <code>[allergist_results limit="15"]</code></p>
                 </div>
 
                 <div class="dalen-shortcode-item">

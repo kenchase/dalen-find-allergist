@@ -56,11 +56,6 @@ if (!defined('ABSPATH')) {
                 <h4>Default Search Radius</h4>
                 <p>When users search for allergists, this is the default radius (in kilometers) that will be used if they don't specify one. Users can still adjust this in the search form.</p>
             </div>
-
-            <div class="dalen-help-item">
-                <h4>Display Options</h4>
-                <p>These settings control what information is shown in the search results. You can toggle the map display and contact information visibility based on your needs.</p>
-            </div>
         </div>
     </div>
 

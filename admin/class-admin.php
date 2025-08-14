@@ -100,32 +100,6 @@ class Dalen_Find_Allergist_Admin
             'dalen-find-allergist-settings',
             'dalen_find_allergist_general'
         );
-
-        // Display Settings Section
-        add_settings_section(
-            'dalen_find_allergist_display',
-            'Display Settings',
-            array($this, 'settings_section_display_callback'),
-            'dalen-find-allergist-settings'
-        );
-
-        // Show Map
-        add_settings_field(
-            'show_map',
-            'Show Map',
-            array($this, 'show_map_callback'),
-            'dalen-find-allergist-settings',
-            'dalen_find_allergist_display'
-        );
-
-        // Show Contact Info
-        add_settings_field(
-            'show_contact_info',
-            'Show Contact Information',
-            array($this, 'show_contact_info_callback'),
-            'dalen-find-allergist-settings',
-            'dalen_find_allergist_display'
-        );
     }
 
     /**
@@ -186,11 +160,6 @@ class Dalen_Find_Allergist_Admin
         echo '<p>Configure general settings for the Find Allergist plugin.</p>';
     }
 
-    public function settings_section_display_callback()
-    {
-        echo '<p>Configure how the allergist search results are displayed.</p>';
-    }
-
     /**
      * Settings field callbacks
      */
@@ -216,22 +185,6 @@ class Dalen_Find_Allergist_Admin
         $value = isset($options['default_search_radius']) ? $options['default_search_radius'] : '50';
         echo '<input type="number" id="default_search_radius" name="dalen_find_allergist_options[default_search_radius]" value="' . esc_attr($value) . '" min="1" max="500" />';
         echo '<p class="description">Default search radius in kilometers.</p>';
-    }
-
-    public function show_map_callback()
-    {
-        $options = get_option('dalen_find_allergist_options');
-        $value = isset($options['show_map']) ? $options['show_map'] : '1';
-        echo '<input type="checkbox" id="show_map" name="dalen_find_allergist_options[show_map]" value="1" ' . checked(1, $value, false) . ' />';
-        echo '<label for="show_map">Display map with search results</label>';
-    }
-
-    public function show_contact_info_callback()
-    {
-        $options = get_option('dalen_find_allergist_options');
-        $value = isset($options['show_contact_info']) ? $options['show_contact_info'] : '1';
-        echo '<input type="checkbox" id="show_contact_info" name="dalen_find_allergist_options[show_contact_info]" value="1" ' . checked(1, $value, false) . ' />';
-        echo '<label for="show_contact_info">Display contact information in results</label>';
     }
 }
 
