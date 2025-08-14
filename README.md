@@ -12,6 +12,7 @@ This plugin creates a comprehensive directory system for allergists and immunolo
 -   **Interactive Maps**: Google Maps integration for location visualization
 -   **REST API**: Robust API endpoints for flexible frontend implementations
 -   **ACF Integration**: Advanced Custom Fields for rich physician data management
+-   **Admin Panel**: Comprehensive admin interface for plugin configuration and management
 
 ## Features
 
@@ -44,14 +45,45 @@ This plugin creates a comprehensive directory system for allergists and immunolo
 -   **ACF Integration**: Leverages Advanced Custom Fields for data management
 -   **Role Management**: Custom user roles for physician management
 -   **Responsive Design**: Mobile-friendly search interface
+-   **Admin Dashboard**: Complete administrative interface with settings management
+-   **API Key Management**: Secure Google Maps API key configuration
+-   **Plugin Settings**: Configurable search parameters and display options
 
 ## Installation
 
 1. **Upload the plugin files** to the `/wp-content/plugins/dalen-find-allergist` directory
 2. **Activate the plugin** through the 'Plugins' screen in WordPress
 3. **Configure ACF fields** (if not already present)
-4. **Add your Google Maps API key** in the plugin settings
-5. **Import physician data** or create physician profiles manually
+4. **Configure plugin settings** through the admin panel (Find Allergist → Settings)
+5. **Add your Google Maps API key** in the plugin settings
+6. **Adjust search parameters** as needed (search results limit, default radius)
+7. **Import physician data** or create physician profiles manually
+
+## Admin Panel
+
+The plugin includes a comprehensive admin panel accessible via **Find Allergist** in the WordPress admin menu:
+
+### Dashboard
+
+-   **Quick Stats**: Overview of total physicians and recent activity
+-   **Recent Activity**: Latest physician profile updates
+-   **Quick Actions**: Direct links to add physicians and manage settings
+-   **System Status**: API key validation and plugin health checks
+
+### Settings
+
+-   **Google Maps API Key**: Secure configuration for mapping functionality
+-   **Search Results Limit**: Control maximum results returned (1-100)
+-   **Default Search Radius**: Set default distance filter in kilometers (1-500km)
+-   **Settings Validation**: Real-time form validation and API key testing
+
+### Help Documentation
+
+-   **Getting Started Guide**: Step-by-step setup instructions
+-   **Shortcode Reference**: Complete documentation for all available shortcodes
+-   **FAQ Section**: Common questions and troubleshooting
+-   **API Documentation**: REST endpoint usage examples
+-   **Best Practices**: Optimization tips and recommendations
 
 ## Requirements
 
@@ -173,6 +205,12 @@ Displays the search results container (populated via AJAX).
 dalen-find-allergist/
 ├── README.md
 ├── dalen-find-allergist.php          # Main plugin file
+├── admin/
+│   ├── class-admin.php               # Admin panel controller
+│   └── partials/
+│       ├── admin-main.php            # Dashboard template
+│       ├── admin-settings.php        # Settings page template
+│       └── admin-help.php            # Help documentation template
 ├── includes/
 │   ├── custom-post.php               # Physician post type
 │   ├── custom-role.php               # User role management
@@ -181,8 +219,10 @@ dalen-find-allergist/
 │   └── login-redirect.php            # User management
 ├── assets/
 │   ├── css/
-│   │   └── find-allergist-results.css
+│   │   ├── admin.css                 # Admin panel styles
+│   │   └── find-allergist-results.css # Frontend styles
 │   └── js/
+│       ├── admin.js                  # Admin panel functionality
 │       └── find-allergist-results.js # Frontend JavaScript
 ├── tests/                            # Unit tests
 └── .circleci/                        # CI/CD configuration
@@ -192,11 +232,22 @@ dalen-find-allergist/
 
 ### Google Maps API Key
 
-The plugin requires a Google Maps API key for geocoding and mapping features. Update the key in `dalen-find-allergist.php`:
+The plugin requires a Google Maps API key for geocoding and mapping features. Configure this through the admin panel:
+
+1. Navigate to **Find Allergist → Settings** in WordPress admin
+2. Enter your Google Maps API key in the provided field
+3. Click **Test API Key** to validate the key
+4. Save the settings
+
+Alternatively, you can still configure it programmatically in `dalen-find-allergist.php`:
 
 ```php
 function my_acf_google_map_api($api) {
-    $api['key'] = 'YOUR_GOOGLE_MAPS_API_KEY';
+    // Get API key from admin settings
+    $api_key = dalen_get_google_maps_api_key();
+    if (!empty($api_key)) {
+        $api['key'] = $api_key;
+    }
     return $api;
 }
 ```
@@ -207,13 +258,21 @@ function my_acf_google_map_api($api) {
 -   Maps JavaScript API
 -   Places API (optional)
 
+### Plugin Settings
+
+Configure the plugin behavior through **Find Allergist → Settings**:
+
+-   **Search Results Limit**: Maximum results per search (default: 20, range: 1-100)
+-   **Default Search Radius**: Default distance filter in kilometers (default: 50km, range: 1-500km)
+-   **Google Maps API Key**: API key for mapping and geocoding functionality
+
 ### Search Configuration
 
-The search behavior can be customized in `includes/rest-api-search.php`:
+Advanced search behavior can still be customized in `includes/rest-api-search.php`:
 
--   **Default radius**: Modify default distance filtering radius
 -   **Search criteria requirements**: Adjust minimum search criteria
--   **Result limits**: Configure maximum results returned
+-   **Custom filters**: Add additional search parameters
+-   **Result formatting**: Modify API response structure
 
 ## Development
 
@@ -222,8 +281,10 @@ The search behavior can be customized in `includes/rest-api-search.php`:
 1. Clone the repository
 2. Install WordPress locally
 3. Install ACF plugin
-4. Configure Google Maps API key
-5. Import sample physician data
+4. Activate the Dalen Find Allergist plugin
+5. Configure settings through the admin panel (Find Allergist → Settings)
+6. Add Google Maps API key via admin interface
+7. Import sample physician data
 
 ### Testing
 
@@ -253,6 +314,13 @@ curl "http://localhost/wp-json/my/v1/physicians/search?city=Toronto&oit=true"
 
 ## Key Functions
 
+### Admin Panel Functions
+
+-   **Settings Management**: Centralized configuration through WordPress admin
+-   **API Key Integration**: `dalen_get_google_maps_api_key()` - Retrieves configured API key
+-   **Settings Validation**: Real-time validation of admin settings
+-   **Dashboard Analytics**: Overview of plugin usage and physician data
+
 ### Distance Filtering
 
 -   `my_geocode_postal($postal_code)`: Converts Canadian postal codes to coordinates
@@ -265,6 +333,7 @@ curl "http://localhost/wp-json/my/v1/physicians/search?city=Toronto&oit=true"
 -   **Meta Field Search**: ACF field queries with LIKE comparisons
 -   **Post-Query Filtering**: Postal code and distance filtering after initial query
 -   **Hybrid Approach**: Combines physician-level and organization-level location data
+-   **Configurable Limits**: Admin-controlled result limits and search radius
 
 ## Performance Considerations
 
@@ -272,6 +341,8 @@ curl "http://localhost/wp-json/my/v1/physicians/search?city=Toronto&oit=true"
 -   **Post-Query Filtering**: Distance calculations only on relevant results
 -   **Geocoding Caching**: Consider implementing geocoding result caching
 -   **Database Indexing**: Ensure proper indexing on frequently queried meta fields
+-   **Admin Settings Caching**: Plugin settings cached for improved performance
+-   **API Key Validation**: Efficient validation with caching to reduce API calls
 
 ## Support
 
@@ -286,6 +357,18 @@ For support, feature requests, or bug reports:
 This plugin is developed for the Canadian Society of Allergy and Clinical Immunology (CSACI). All rights reserved.
 
 ## Changelog
+
+### Version 1.0.0
+
+-   **NEW**: Complete admin panel with dashboard, settings, and help documentation
+-   **NEW**: Centralized Google Maps API key management through admin interface
+-   **NEW**: Configurable search parameters (results limit, default radius)
+-   **NEW**: Real-time settings validation and API key testing
+-   **NEW**: Admin dashboard with quick stats and recent activity
+-   **NEW**: Comprehensive help documentation with examples
+-   **IMPROVED**: Enhanced file structure with dedicated admin components
+-   **IMPROVED**: Better error handling and user feedback
+-   **IMPROVED**: Responsive admin interface design
 
 ### Version 0.1.0
 

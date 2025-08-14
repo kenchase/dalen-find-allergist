@@ -5,24 +5,34 @@ Tags: directory, search, allergist, physician, medical, location, distance, maps
 Requires at least: 5.0
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Advanced allergist and immunologist directory with location-based search, distance filtering, and interactive maps for Canadian healthcare professionals.
+Advanced allergist and immunologist directory with comprehensive admin panel, location-based search, distance filtering, and interactive maps for Canadian healthcare professionals.
 
 == Description ==
 
-The Dalen Find Allergist plugin provides a comprehensive directory system for allergists and immunologists across Canada. Built specifically for the Canadian Society of Allergy and Clinical Immunology (CSACI), this plugin offers advanced search capabilities with location-based filtering.
+The Dalen Find Allergist plugin provides a comprehensive directory system for allergists and immunologists across Canada. Built specifically for the Canadian Society of Allergy and Clinical Immunology (CSACI), this plugin offers advanced search capabilities with location-based filtering and a complete admin panel for centralized management.
 
 = Key Features =
 
+* **Comprehensive Admin Panel** - Full-featured admin interface with dashboard, settings, and help documentation
+* **Centralized API Management** - Google Maps API key configuration through admin interface
 * **Advanced Search Engine** - Multi-criteria search by name, location, specialty, and distance
 * **Distance-Based Filtering** - Find physicians within a specified radius using Canadian postal codes
 * **Interactive Maps** - Google Maps integration for location visualization
 * **REST API** - Robust API endpoints for flexible frontend implementations
 * **Mobile Responsive** - Optimized for all device types
 * **ACF Integration** - Advanced Custom Fields support for rich physician data
+
+= Admin Panel Features =
+
+* **Dashboard** - Quick stats overview and recent activity tracking
+* **Settings Management** - Centralized configuration for API keys and search parameters
+* **Help Documentation** - Comprehensive help with examples and troubleshooting guides
+* **Real-time Validation** - Instant API key testing and settings validation
+* **User-friendly Interface** - Clean, responsive admin design
 
 = Search Capabilities =
 
@@ -73,9 +83,19 @@ This plugin is specifically designed for the Canadian healthcare system and uses
 = Post-Installation Setup =
 
 1. **Install Advanced Custom Fields (ACF)** - Required for physician data management
-2. **Configure Google Maps API Key** - Add your API key in the plugin settings
-3. **Import Physician Data** - Add physician profiles manually or via import
-4. **Add Shortcodes** - Use `[find_allergist_form]` and `[find_allergist_results]` on your pages
+2. **Access Admin Panel** - Navigate to "Find Allergist" in your WordPress admin menu
+3. **Configure Google Maps API Key** - Add your API key through Settings → API Configuration
+4. **Adjust Search Parameters** - Set default search radius and result limits in admin settings
+5. **Add Physician Data** - Create physician profiles manually or via import
+6. **Add Shortcodes** - Use `[find_allergist_form]` and `[find_allergist_results]` on your pages
+
+= Admin Panel Configuration =
+
+After activation, access the admin panel through "Find Allergist" in your WordPress admin menu:
+
+* **Dashboard** - View plugin statistics and recent activity
+* **Settings** - Configure Google Maps API key and search parameters
+* **Help** - Access documentation and troubleshooting guides
 
 = Google Maps API Setup =
 
@@ -85,7 +105,7 @@ This plugin is specifically designed for the Canadian healthcare system and uses
    * Geocoding API
    * Maps JavaScript API
    * Places API (optional)
-4. Create an API key and add it to your plugin configuration
+4. Create an API key and add it through the admin panel Settings page
 
 == Frequently Asked Questions ==
 
@@ -109,13 +129,21 @@ Currently, the plugin supports filtering for Oral Immunotherapy (OIT) specialist
 
 Yes, the plugin is fully responsive and optimized for mobile devices. The search interface adapts to different screen sizes for optimal user experience.
 
+= Can I configure the plugin settings? =
+
+Yes! The plugin includes a comprehensive admin panel accessible through "Find Allergist" in your WordPress admin menu. You can configure Google Maps API keys, set default search parameters, view statistics, and access help documentation all from the admin interface.
+
+= How do I set up the Google Maps API? =
+
+Navigate to the admin panel Settings page where you can enter your Google Maps API key and test it in real-time. The admin interface provides step-by-step guidance for API setup and validation.
+
 = Can I customize the search form? =
 
-Yes, the plugin provides hooks and filters for customization. Developers can modify the search form appearance, add custom fields, or integrate with existing themes.
+Yes, the plugin provides hooks and filters for customization. Developers can modify the search form appearance, add custom fields, or integrate with existing themes. The admin panel also allows configuration of search parameters without coding.
 
 = Does this work with any theme? =
 
-The plugin is designed to work with any properly coded WordPress theme. It uses shortcodes for display, making it compatible with most page builders and theme structures.
+The plugin is designed to work with any properly coded WordPress theme. It uses shortcodes for display, making it compatible with most page builders and theme structures. The admin panel provides additional configuration options for better theme integration.
 
 = Is there an API for developers? =
 
@@ -127,10 +155,23 @@ Yes! The plugin provides a REST API endpoint at `/wp-json/my/v1/physicians/searc
 2. **Search Results** - Physician listings with contact information and distance display
 3. **Interactive Map** - Google Maps integration showing physician locations
 4. **Distance Filtering** - Results filtered by proximity to postal code
-5. **Admin Interface** - Physician profile management in WordPress admin
-6. **Mobile View** - Responsive design optimized for mobile devices
+5. **Admin Dashboard** - Plugin statistics and management overview
+6. **Admin Settings** - API configuration and search parameter management
+7. **Admin Help** - Comprehensive documentation and troubleshooting
+8. **Mobile View** - Responsive design optimized for mobile devices
 
 == Changelog ==
+
+= 1.0.0 (2025-08-14) =
+* **NEW:** Complete admin panel with dashboard, settings, and help documentation
+* **NEW:** Centralized Google Maps API key management through admin interface
+* **NEW:** Configurable search parameters (results limit, default radius)
+* **NEW:** Real-time settings validation and API key testing
+* **NEW:** Admin dashboard with quick stats and recent activity
+* **NEW:** Comprehensive help documentation with examples
+* **IMPROVED:** Enhanced file structure with dedicated admin components
+* **IMPROVED:** Better error handling and user feedback
+* **IMPROVED:** Responsive admin interface design
 
 = 0.1.0 (2025-08-14) =
 * Initial release
@@ -148,6 +189,9 @@ Yes! The plugin provides a REST API endpoint at `/wp-json/my/v1/physicians/searc
 * **New:** Optimized database queries for performance
 
 == Upgrade Notice ==
+
+= 1.0.0 =
+Major update with comprehensive admin panel. Upgrade to access centralized settings management, dashboard analytics, and enhanced configuration options.
 
 = 0.1.0 =
 Initial release of the Dalen Find Allergist plugin. Install to begin using the advanced physician directory with distance-based search capabilities.
