@@ -40,12 +40,16 @@ $total_allergists = wp_count_posts('physicians')->publish;
 
             <div class="dalen-card">
                 <h3>Google Maps API</h3>
-                <?php
-                $options = get_option('dalen_find_allergist_options');
-                $api_key = isset($options['google_maps_api_key']) ? $options['google_maps_api_key'] : '';
-                ?>
+                <?php $api_key = dalen_get_google_maps_api_key(); ?>
                 <div class="dalen-stat-number"><?php echo $api_key ? '✓' : '⚠'; ?></div>
-                <p><?php echo $api_key ? 'API Key Configured' : 'API Key Not Set'; ?></p>
+                <p>
+                    <?php if ($api_key) : ?>
+                        API Key Configured
+                    <?php else : ?>
+                        <span style="color: #dc3232;">API Key Not Set</span><br>
+                        <small><a href="<?php echo admin_url('admin.php?page=dalen-find-allergist-settings'); ?>">Configure in Settings</a></small>
+                    <?php endif; ?>
+                </p>
             </div>
         </div>
 
@@ -127,8 +131,7 @@ $total_allergists = wp_count_posts('physicians')->publish;
                 <div class="dalen-info-item">
                     <strong>Google Maps API:</strong>
                     <?php
-                    $options = get_option('dalen_find_allergist_options');
-                    $api_key = isset($options['google_maps_api_key']) ? $options['google_maps_api_key'] : '';
+                    $api_key = dalen_get_google_maps_api_key();
                     echo $api_key ? '<span class="dalen-status-good">Configured</span>' : '<span class="dalen-status-warning">Not Configured</span>';
                     ?>
                 </div>

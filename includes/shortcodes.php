@@ -9,20 +9,25 @@
  */
 function find_allergist_results_shortcode($atts)
 {
-    // Enqueue Google Maps API
-    wp_enqueue_script(
-        'google-maps-api',
-        'https://maps.google.com/maps/api/js?key=AIzaSyDxGyqMkrVCU7C65nKSHqaI0pXKGhgCW1Q',
-        array(),
-        null,
-        true
-    );
+    // Get API key from admin settings
+    $api_key = dalen_get_google_maps_api_key();
+
+    // Only enqueue Google Maps API if key is configured
+    if (!empty($api_key)) {
+        wp_enqueue_script(
+            'google-maps-api',
+            'https://maps.google.com/maps/api/js?key=' . esc_attr($api_key),
+            array(),
+            null,
+            true
+        );
+    }
 
     // Enqueue the JavaScript file for this shortcode
     wp_enqueue_script(
         'find-allergist-results-js',
         plugin_dir_url(__FILE__) . '../assets/js/find-allergist-results.js',
-        array('jquery', 'google-maps-api'),
+        array('jquery', !empty($api_key) ? 'google-maps-api' : 'jquery'),
         '1.0.0',
         true
     );

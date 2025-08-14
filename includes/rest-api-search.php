@@ -52,7 +52,13 @@ function my_geocode_postal($postal_code)
     }
 
     // Use Google Geocoding API
-    $api_key = 'AIzaSyDxGyqMkrVCU7C65nKSHqaI0pXKGhgCW1Q'; // Same key from shortcodes.php
+    $api_key = dalen_get_google_maps_api_key();
+    
+    // Return null if no API key is configured
+    if (empty($api_key)) {
+        return null;
+    }
+    
     $address = urlencode($formatted_postal . ', Canada');
     $url = "https://maps.googleapis.com/maps/api/geocode/json?address={$address}&key={$api_key}";
 
