@@ -59,31 +59,6 @@ if (!defined('ABSPATH')) {
         </div>
     </div>
 
-    <div class="dalen-settings-export-import">
-        <h3>Export/Import Settings</h3>
-        <div class="dalen-export-import-grid">
-            <div class="dalen-export-section">
-                <h4>Export Settings</h4>
-                <p>Download your current plugin settings as a JSON file for backup or transfer to another site.</p>
-                <button type="button" class="button button-secondary" id="dalen-export-settings">
-                    <span class="dashicons dashicons-download"></span>
-                    Export Settings
-                </button>
-            </div>
-
-            <div class="dalen-import-section">
-                <h4>Import Settings</h4>
-                <p>Upload a previously exported settings file to restore your configuration.</p>
-                <input type="file" id="dalen-import-file" accept=".json" style="margin-bottom: 10px;">
-                <br>
-                <button type="button" class="button button-secondary" id="dalen-import-settings">
-                    <span class="dashicons dashicons-upload"></span>
-                    Import Settings
-                </button>
-            </div>
-        </div>
-    </div>
-
     <div class="dalen-settings-reset">
         <h3>Reset Settings</h3>
         <p><strong>Warning:</strong> This will reset all plugin settings to their default values. This action cannot be undone.</p>
@@ -96,55 +71,6 @@ if (!defined('ABSPATH')) {
 
 <script>
     jQuery(document).ready(function($) {
-        // Export settings functionality
-        $('#dalen-export-settings').on('click', function() {
-            var settings = {
-                <?php
-                $options = get_option('dalen_find_allergist_options', array());
-                echo 'options: ' . json_encode($options) . ',';
-                ?>
-                export_date: '<?php echo current_time('mysql'); ?>',
-                plugin_version: '<?php echo get_plugin_data(plugin_dir_path(__FILE__) . '../../dalen-find-allergist.php')['Version']; ?>'
-            };
-
-            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(settings, null, 2));
-            var downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "dalen-find-allergist-settings-" + new Date().getTime() + ".json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        });
-
-        // Import settings functionality
-        $('#dalen-import-settings').on('click', function() {
-            var fileInput = document.getElementById('dalen-import-file');
-            if (fileInput.files.length === 0) {
-                alert('Please select a file to import.');
-                return;
-            }
-
-            var file = fileInput.files[0];
-            var reader = new FileReader();
-
-            reader.onload = function(e) {
-                try {
-                    var settings = JSON.parse(e.target.result);
-                    if (settings.options) {
-                        // Here you would normally send an AJAX request to save the settings
-                        // For now, we'll just show a message
-                        alert('Import functionality requires additional backend implementation.');
-                    } else {
-                        alert('Invalid settings file format.');
-                    }
-                } catch (error) {
-                    alert('Error reading settings file: ' + error.message);
-                }
-            };
-
-            reader.readAsText(file);
-        });
-
         // Reset settings functionality
         $('.dalen-reset-settings').on('click', function() {
             if (confirm('Are you sure you want to reset all settings? This cannot be undone.')) {

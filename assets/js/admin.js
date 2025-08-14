@@ -28,9 +28,6 @@ var DalenFindAllergistAdmin = {
 
 		// API key testing
 		this.initApiKeyTesting();
-
-		// Import/Export functionality
-		this.initImportExport();
 	},
 
 	/**
@@ -152,61 +149,6 @@ var DalenFindAllergistAdmin = {
 				}, 3000);
 				console.error("API Key test failed:", status, error);
 			});
-	},
-
-	/**
-	 * Initialize import/export functionality
-	 */
-	initImportExport: function () {
-		// Export settings
-		$(document).on("click", "#dalen-export-settings", function () {
-			// This functionality is implemented in the PHP template
-		});
-
-		// Import settings
-		$(document).on("click", "#dalen-import-settings", function () {
-			// This functionality is implemented in the PHP template
-		});
-
-		// Reset settings
-		$(document).on("click", ".dalen-reset-settings", function () {
-			if (
-				confirm(
-					"Are you sure you want to reset all settings to default values? This action cannot be undone."
-				)
-			) {
-				DalenFindAllergistAdmin.resetSettings();
-			}
-		});
-	},
-
-	/**
-	 * Reset settings to defaults
-	 */
-	resetSettings: function () {
-		// Send AJAX request to reset settings
-		$.ajax({
-			url: ajaxurl,
-			type: "POST",
-			data: {
-				action: "dalen_reset_settings",
-				nonce: dalenAdminNonce,
-			},
-			success: function (response) {
-				if (response.success) {
-					alert("Settings have been reset to default values.");
-					location.reload();
-				} else {
-					alert(
-						"Error resetting settings: " +
-							(response.data || "Unknown error")
-					);
-				}
-			},
-			error: function () {
-				alert("Error communicating with server.");
-			},
-		});
 	},
 
 	/**

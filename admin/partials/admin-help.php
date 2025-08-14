@@ -121,7 +121,6 @@ if (!defined('ABSPATH')) {
                         <p>To backup your data:</p>
                         <ul>
                             <li>Use WordPress's built-in export tool (Tools → Export)</li>
-                            <li>Export plugin settings from the Settings page</li>
                             <li>Use a backup plugin that includes database content</li>
                             <li>Contact your hosting provider for full site backups</li>
                         </ul>

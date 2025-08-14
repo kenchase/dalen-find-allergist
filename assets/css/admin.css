@@ -204,39 +204,6 @@
     color: #23282d;
 }
 
-/* Export/Import */
-.dalen-export-import-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-}
-
-.dalen-export-section,
-.dalen-import-section {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 3px;
-    border: 1px solid #ddd;
-}
-
-.dalen-export-section h4,
-.dalen-import-section h4 {
-    margin: 0 0 10px 0;
-    color: #23282d;
-}
-
-.dalen-export-buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.dalen-export-buttons .button {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
 /* Settings Help */
 .dalen-settings-help {
     background: #fff;
@@ -451,15 +418,6 @@
     }
 
     .dalen-action-buttons .button {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .dalen-export-buttons {
-        flex-direction: column;
-    }
-
-    .dalen-export-buttons .button {
         width: 100%;
         justify-content: center;
     }
