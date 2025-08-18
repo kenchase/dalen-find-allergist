@@ -1038,13 +1038,13 @@ function remove_slug_metabox_for_wa_users()
             break;
         }
     }
-    
+
     if ($is_wa_user) {
         // Remove slug metabox from physicians post type
         remove_meta_box('slugdiv', 'physicians', 'normal');
         remove_meta_box('slugdiv', 'physicians', 'side');
         remove_meta_box('slugdiv', 'physicians', 'advanced');
-        
+
         // Also remove any custom slug metaboxes
         remove_meta_box('slug-metabox', 'physicians', 'normal');
         remove_meta_box('slug-metabox', 'physicians', 'side');
