@@ -500,6 +500,20 @@ class WA_User_Manager
                     }
                 </style>';
             }
+            
+            // Hide posts filter for wa_level users
+            echo '<style>
+                #posts-filter,
+                .posts-filter,
+                .subsubsub,
+                .tablenav-pages,
+                .view-switch,
+                .search-box,
+                .tablenav .actions,
+                .bulkactions {
+                    display: none !important;
+                }
+            </style>';
         }
 
         // Hide author and slug editing elements
