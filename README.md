@@ -13,6 +13,7 @@ This plugin creates a comprehensive directory system for allergists and immunolo
 -   **REST API**: Robust API endpoints for flexible frontend implementations
 -   **ACF Integration**: Advanced Custom Fields for rich physician data management
 -   **Admin Panel**: Comprehensive admin interface for plugin configuration and management
+-   **User Role Management**: Wild Apricot SSO integration with custom access controls for physician profile management
 
 ## Features
 
@@ -40,7 +41,17 @@ This plugin creates a comprehensive directory system for allergists and immunolo
 -   **Organization Details**: Hospital/clinic affiliations with full address information
 -   **Coordinates Storage**: Latitude/longitude for accurate mapping
 
-### 🔧 Technical Features
+### � Wild Apricot User Management
+
+-   **SSO Integration**: Seamless integration with Wild Apricot single sign-on system
+-   **Dynamic Role Assignment**: Automatic role creation and assignment for wa*level* users
+-   **Access Control**: Granular permissions for physician profile management
+-   **Content Restrictions**: Users can only edit their own physician profiles
+-   **Security Controls**: Prevents unauthorized modifications to author, slug, and sensitive fields
+-   **UI Customization**: Streamlined admin interface with hidden unnecessary elements
+-   **Profile Limitations**: One physician profile per wa_level user to maintain data integrity
+
+### �🔧 Technical Features
 
 -   **REST API Endpoints**: `/wp-json/my/v1/physicians/search`
 -   **Client-Side Pagination**: Instant page navigation without additional API calls
@@ -48,6 +59,8 @@ This plugin creates a comprehensive directory system for allergists and immunolo
 -   **Smart Search Caching**: Results cached in browser memory for instant pagination
 -   **ACF Integration**: Leverages Advanced Custom Fields for data management
 -   **Role Management**: Custom user roles for physician management
+-   **Wild Apricot Integration**: Seamless SSO integration with access controls for wa_level users
+-   **Content Security**: Prevents unauthorized profile modifications and ensures data integrity
 -   **Responsive Design**: Mobile-friendly search interface with responsive pagination
 -   **Admin Dashboard**: Complete administrative interface with settings management
 -   **API Key Management**: Secure Google Maps API key configuration
@@ -95,6 +108,7 @@ The plugin includes a comprehensive admin panel accessible via **Find Allergist*
 -   PHP 7.4 or higher
 -   Advanced Custom Fields (ACF) plugin
 -   Google Maps API key (for geocoding and mapping features)
+-   Wild Apricot SSO integration (for user role management features)
 
 ## API Documentation
 
@@ -235,7 +249,7 @@ dalen-find-allergist/
 │       └── admin-help.php            # Help documentation template
 ├── includes/
 │   ├── custom-post.php               # Physician post type
-│   ├── custom-role.php               # User role management
+│   ├── custom-role.php               # Wild Apricot user role management & access controls
 │   ├── rest-api-search.php           # Search API endpoints
 │   ├── shortcodes.php                # Frontend shortcodes
 │   └── login-redirect.php            # User management
@@ -295,6 +309,93 @@ Advanced search behavior can still be customized in `includes/rest-api-search.ph
 -   **Search criteria requirements**: Adjust minimum search criteria
 -   **Custom filters**: Add additional search parameters
 -   **Result formatting**: Modify API response structure
+
+## Wild Apricot User Management
+
+The plugin includes comprehensive Wild Apricot SSO integration with advanced access controls for physician profile management.
+
+### Features
+
+-   **Automatic Role Detection**: Recognizes users with roles beginning with `wa_level_`
+-   **Granular Access Control**: wa_level users can only access and edit their own physician profiles
+-   **Content Security**: Prevents modifications to sensitive fields (author, slug, post status)
+-   **UI Streamlining**: Hides unnecessary admin elements for a cleaner interface
+-   **Profile Limitations**: Enforces one physician profile per wa_level user
+
+### Access Controls
+
+#### What wa_level Users CAN Do:
+
+-   Edit their own physician profile content
+-   Delete their own physician profile
+-   Upload and manage media for their profile
+-   Access the physician post edit screen
+
+#### What wa_level Users CANNOT Do:
+
+-   Access other users' physician profiles
+-   Change post author or slug
+-   Access WordPress admin profile settings
+-   Create multiple physician profiles
+-   Access admin menus outside of their physician profile
+-   See the WordPress admin bar
+-   Bulk edit or manage other posts
+
+### Technical Implementation
+
+The user management system is implemented in `includes/custom-role.php` using the `WA_User_Manager` class:
+
+```php
+// Initialize the WA User Management system
+WA_User_Manager::init();
+```
+
+#### Key Methods:
+
+-   **`manage_physicians_capabilities()`**: Controls access to physician post editing
+-   **`restrict_posts_query()`**: Limits query results to user's own posts
+-   **`prevent_unauthorized_changes()`**: Blocks unauthorized field modifications
+-   **`hide_ui_elements()`**: Removes unnecessary admin interface elements
+-   **`validate_physicians_post()`**: Ensures data integrity on save
+
+#### Security Features:
+
+-   **Capability Mapping**: Custom capabilities for physician post management
+-   **Query Filtering**: Automatic filtering of posts to show only user's content
+-   **Data Validation**: Server-side validation of all post modifications
+-   **UI Restrictions**: CSS and JavaScript to hide inaccessible elements
+-   **AJAX Blocking**: Prevents unauthorized AJAX operations
+
+### Configuration
+
+No additional configuration is required. The system automatically:
+
+1. Detects Wild Apricot SSO users with `wa_level_` roles
+2. Assigns appropriate capabilities for physician post management
+3. Applies access restrictions and UI modifications
+4. Enforces content security rules
+
+### Troubleshooting
+
+#### Common Issues:
+
+**Users can't access physician posts:**
+
+-   Verify the user role begins with `wa_level_`
+-   Check that the physicians custom post type exists
+-   Ensure the user has been assigned to a physician profile
+
+**UI elements still visible:**
+
+-   Clear browser cache
+-   Check for theme conflicts with admin styles
+-   Verify JavaScript is loading properly
+
+**Permission errors:**
+
+-   Confirm user ownership of the physician profile
+-   Check WordPress user capabilities
+-   Review error logs for specific capability issues
 
 ## Development
 
@@ -398,6 +499,19 @@ For support, feature requests, or bug reports:
 This plugin is developed for the Canadian Society of Allergy and Clinical Immunology (CSACI). All rights reserved.
 
 ## Changelog
+
+### Version 1.2.0
+
+-   **NEW**: Wild Apricot SSO integration with comprehensive user role management
+-   **NEW**: Granular access controls for wa_level users on physician profiles
+-   **NEW**: Automated capability assignment and query filtering for secure content access
+-   **NEW**: UI streamlining with hidden admin elements for simplified user experience
+-   **NEW**: Content security preventing unauthorized modifications to sensitive fields
+-   **NEW**: Profile limitation system ensuring one physician profile per wa_level user
+-   **NEW**: WA_User_Manager class for centralized user management functionality
+-   **IMPROVED**: Enhanced security with server-side validation and AJAX blocking
+-   **IMPROVED**: Optimized code structure with OOP approach and reduced redundancy
+-   **IMPROVED**: Better user experience with clean, focused admin interface for physicians
 
 ### Version 1.1.0
 
