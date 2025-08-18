@@ -1,62 +1,126 @@
 <?php
-/*
-* Custom WordPress role for Allergist
-*/
 
 /**
- * Register the 'Allergist' role with limited capabilities.
+ * Ensure wa_level_* users can access physicians edit page
  */
-function register_allergist_role()
+function dalen_wa_level_physicians_admin_access($allcaps, $caps, $args, $user)
 {
-    if (!get_role('allergist')) {
-        add_role(
-            'allergist',
-            'Allergist',
-            [
-                'read' => true,
-                'edit_physicians' => true,
-                'edit_own_physicians' => true,
-                'delete_own_physicians' => true,
-                'publish_physicians' => true,
-                'edit_others_physicians' => false,
-                'delete_others_physicians' => false,
-                'read_private_physicians' => false,
-                'edit_physician' => true,
-                'read_physician' => true,
-                'delete_physician' => true,
-                'create_physicians' => true,
-            ]
-        );
+    if (!is_admin()) return $allcaps;
+    if (empty($user->roles)) return $allcaps;
+
+    // Check if this is a physicians-related page
+    $is_physicians_page = false;
+    if (isset($_GET['post_type']) && $_GET['post_type'] === 'physicians') {
+        $is_physicians_page = true;
+    }
+    // Also check for edit.php page with physicians post type
+    global $pagenow;
+    if ($pagenow === 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] === 'physicians') {
+        $is_physicians_page = true;
     }
 
+    if (!$is_physicians_page) return $allcaps;
+
+    foreach ($user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            // Grant necessary capabilities for accessing the physicians edit page
+            $allcaps['edit_physicians'] = true;
+            $allcaps['edit_posts'] = true;  // Core capability for admin edit page access
+            $allcaps['read'] = true;
+            break;
+        }
+    }
+    return $allcaps;
+}
+add_filter('user_has_cap', 'dalen_wa_level_physicians_admin_access', 9, 4);
+
+/**
+ * Ensure wa_level_* users always have minimum required capabilities
+ * This is a backup to ensure access even if roles are not properly set up
+ */
+function dalen_wa_level_minimum_caps($allcaps, $caps, $args, $user)
+{
+    if (empty($user->roles)) return $allcaps;
+
+    foreach ($user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            // Ensure minimum capabilities are always present
+            $allcaps['read'] = true;
+            $allcaps['edit_posts'] = true;
+            break;
+        }
+    }
+    return $allcaps;
+}
+add_filter('user_has_cap', 'dalen_wa_level_minimum_caps', 8, 4);
+
+/*
+* Custom WordPress role for Wild Apricot users (roles that begin with "wa_level_")
+* Note that these roles are dynamically created based on the Wild Apricot membership levels.
+* This is part of Wild Apricot SSO integration with WordPress.
+*
+* The custom capabilities are to allow Wild Apricot users to manage their own "Allergist" content within WordPress
+* They can create, edit, and delete their own content, but cannot modify content created by others.
+*
+* Notes:
+* Although referred to as Allergists, the custom post type is actually called "Physicians" in the codebase.
+* Ideally, the terminology should be consistent throughout the codebase to avoid confusion, but this is a legacy issue.
+*/
+
+function dalen_find_allergist_add_caps_to_wa_roles()
+{
+    $allergist_caps = [
+        'read',
+        'edit_posts',  // Core capability needed to access admin edit pages
+        'edit_physicians',
+        'edit_own_physicians',
+        'delete_own_physicians',
+        'publish_physicians',
+        'edit_others_physicians',
+        'delete_others_physicians',
+        'read_private_physicians',
+        'edit_physician',
+        'read_physician',
+        'delete_physician',
+        'create_physicians',
+    ];
+    global $wp_roles;
+    if (! isset($wp_roles)) {
+        $wp_roles = wp_roles();
+    }
+    foreach ($wp_roles->roles as $role_key => $role) {
+        if (strpos($role_key, 'wa_level_') === 0) {
+            $role_obj = get_role($role_key);
+            if ($role_obj) {
+                foreach ($allergist_caps as $cap) {
+                    $role_obj->add_cap($cap, true);
+                }
+            }
+        }
+    }
     // Add capabilities to Administrator role (only if not already present)
     $admin = get_role('administrator');
     if ($admin) {
         $caps = [
-            // Plural capabilities (for managing multiple posts)
             'edit_physicians',
             'edit_others_physicians',
             'publish_physicians',
             'read_private_physicians',
             'delete_physicians',
             'delete_others_physicians',
-            // Singular capabilities (for individual post actions)
             'edit_physician',
             'read_physician',
             'delete_physician',
-            // Additional capabilities for full management
             'edit_published_physicians',
             'delete_published_physicians',
             'create_physicians',
-            // User management capabilities for allergist role
             'list_users',
             'edit_users',
             'delete_users',
             'create_users',
             'promote_users',
-            // Additional user management capabilities
             'remove_users',
-            'manage_options', // Often needed for user management
+            'manage_options',
         ];
         foreach ($caps as $cap) {
             if (!$admin->has_cap($cap)) {
@@ -65,35 +129,8 @@ function register_allergist_role()
         }
     }
 }
-add_action('init', 'register_allergist_role', 10);
+add_action('init', 'dalen_find_allergist_add_caps_to_wa_roles', 10);
 
-/**
- * Allow administrators to edit users with allergist role
- */
-function allow_admin_edit_allergist_users($caps, $cap, $user_id, $args)
-{
-    // Check if we're dealing with user editing capabilities
-    if ($cap === 'edit_user' || $cap === 'delete_user' || $cap === 'promote_user') {
-        // Get the current user (the one trying to perform the action)
-        $current_user = wp_get_current_user();
-
-        // If current user is administrator
-        if (in_array('administrator', $current_user->roles)) {
-            // If we have a target user ID
-            if (isset($args[0])) {
-                $target_user = get_userdata($args[0]);
-
-                // If target user has allergist role, allow the action
-                if ($target_user && in_array('allergist', $target_user->roles)) {
-                    return array('exist'); // Grant permission
-                }
-            }
-        }
-    }
-
-    return $caps; // Return original capabilities
-}
-add_filter('map_meta_cap', 'allow_admin_edit_allergist_users', 10, 4);
 
 /**
  * Restrict allergist users to only see their own physicians posts
@@ -107,9 +144,15 @@ function restrict_allergist_posts_query($query)
         return;
     }
 
-    // Check if current user is allergist
     $current_user = wp_get_current_user();
-    if (!in_array('allergist', $current_user->roles)) {
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    if (!$is_wa_user) {
         return;
     }
 
@@ -127,8 +170,14 @@ function hide_admin_menus_from_allergist()
 {
     $current_user = wp_get_current_user();
 
-    // Only apply to allergist users
-    if (!in_array('allergist', $current_user->roles)) {
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    if (!$is_wa_user) {
         return;
     }
 
@@ -191,8 +240,14 @@ function hide_add_new_for_allergist()
 {
     $current_user = wp_get_current_user();
 
-    // Only apply to allergist users
-    if (!in_array('allergist', $current_user->roles)) {
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    if (!$is_wa_user) {
         return;
     }
 
@@ -248,8 +303,17 @@ function can_allergist_create_physicians_post($user_id = null)
     }
 
     $user = get_userdata($user_id);
-    if (!$user || !in_array('allergist', $user->roles)) {
-        return true; // Not an allergist, no restriction
+    $is_wa_user = false;
+    if ($user && is_array($user->roles)) {
+        foreach ($user->roles as $role) {
+            if (strpos($role, 'wa_level_') === 0) {
+                $is_wa_user = true;
+                break;
+            }
+        }
+    }
+    if (!$is_wa_user) {
+        return true; // Not a wa_level_* user, no restriction
     }
 
     // Check if user already has any physicians post
@@ -281,8 +345,14 @@ function restrict_allergist_physicians_creation($post_data, $postarr)
 
     $current_user = wp_get_current_user();
 
-    // Only apply to allergist users
-    if (!in_array('allergist', $current_user->roles)) {
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    if (!$is_wa_user) {
         return $post_data;
     }
 
@@ -306,9 +376,15 @@ add_filter('wp_insert_post_data', 'restrict_allergist_physicians_creation', 10, 
 function restrict_allergist_create_posts_capability($allcaps, $caps, $args, $user)
 {
     // Check if we're dealing with create_posts capability for physicians
-    if (in_array('create_physicians', $caps) && isset($user->roles) && in_array('allergist', $user->roles)) {
-        // If they already have a physicians post, remove the create capability
-        if (!can_allergist_create_physicians_post($user->ID)) {
+    $is_wa_user = false;
+    if (in_array('create_physicians', $caps) && isset($user->roles)) {
+        foreach ($user->roles as $role) {
+            if (strpos($role, 'wa_level_') === 0) {
+                $is_wa_user = true;
+                break;
+            }
+        }
+        if ($is_wa_user && !can_allergist_create_physicians_post($user->ID)) {
             $allcaps['create_physicians'] = false;
         }
     }
@@ -334,8 +410,16 @@ function validate_allergist_physicians_post($post_id, $post, $update)
 
     $author = get_userdata($post->post_author);
 
-    // Only apply to allergist users
-    if (!$author || !in_array('allergist', $author->roles)) {
+    $is_wa_user = false;
+    if ($author && is_array($author->roles)) {
+        foreach ($author->roles as $role) {
+            if (strpos($role, 'wa_level_') === 0) {
+                $is_wa_user = true;
+                break;
+            }
+        }
+    }
+    if (!$is_wa_user) {
         return;
     }
 
@@ -391,8 +475,14 @@ function restrict_allergist_post_access()
 
     $current_user = wp_get_current_user();
 
-    // Only apply to allergist users
-    if (!in_array('allergist', $current_user->roles)) {
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    if (!$is_wa_user) {
         return;
     }
 
@@ -431,8 +521,14 @@ function hide_admin_bar_items_from_allergist()
 {
     $current_user = wp_get_current_user();
 
-    // Only apply to allergist users
-    if (!in_array('allergist', $current_user->roles)) {
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    if (!$is_wa_user) {
         return;
     }
 
@@ -453,26 +549,3 @@ function hide_admin_bar_items_from_allergist()
     $wp_admin_bar->remove_node('edit');
 }
 add_action('wp_before_admin_bar_render', 'hide_admin_bar_items_from_allergist', 999);
-
-/**
- * Redirect allergist users to physicians list on login
- */
-function redirect_allergist_after_login($redirect_to, $request, $user)
-{
-    // Check if user has allergist role
-    if (isset($user->roles) && is_array($user->roles) && in_array('allergist', $user->roles)) {
-        return admin_url('edit.php?post_type=physicians');
-    }
-
-    return $redirect_to;
-}
-add_filter('login_redirect', 'redirect_allergist_after_login', 10, 3);
-
-/**
- * Remove the 'Allergist' role on plugin deactivation.
- */
-function remove_allergist_role()
-{
-    remove_role('allergist');
-}
-register_deactivation_hook(__FILE__, 'remove_allergist_role');

@@ -23,6 +23,8 @@ This plugin creates a comprehensive directory system for allergists and immunolo
 -   **Distance Filtering**: Find physicians within X kilometers of a postal code
 -   **Specialty Filtering**: Filter by treatments offered (e.g., OIT - Oral Immunotherapy)
 -   **Combined Searches**: Mix and match multiple search criteria
+-   **Client-Side Pagination**: Instant page navigation with 20 results per page
+-   **Smart Result Management**: Single API call per search with client-side page handling
 
 ### 🗺️ Geographic Features
 
@@ -41,10 +43,12 @@ This plugin creates a comprehensive directory system for allergists and immunolo
 ### 🔧 Technical Features
 
 -   **REST API Endpoints**: `/wp-json/my/v1/physicians/search`
+-   **Client-Side Pagination**: Instant page navigation without additional API calls
 -   **Efficient Queries**: Optimized database queries with post-query filtering
+-   **Smart Search Caching**: Results cached in browser memory for instant pagination
 -   **ACF Integration**: Leverages Advanced Custom Fields for data management
 -   **Role Management**: Custom user roles for physician management
--   **Responsive Design**: Mobile-friendly search interface
+-   **Responsive Design**: Mobile-friendly search interface with responsive pagination
 -   **Admin Dashboard**: Complete administrative interface with settings management
 -   **API Key Management**: Secure Google Maps API key configuration
 -   **Plugin Settings**: Configurable search parameters and display options
@@ -128,7 +132,7 @@ GET /wp-json/my/v1/physicians/search?province=Ontario
 
 ```json
 {
-	"count": 25,
+	"total_results": 25,
 	"results": [
 		{
 			"id": 1234,
@@ -139,22 +143,28 @@ GET /wp-json/my/v1/physicians/search?province=Ontario
 				"province": "Ontario",
 				"postal": "M5V 3M6",
 				"credentials": "MD, FRCPC",
-				"oit": "OIT",
+				"oit": ["OIT"],
 				"organizations_details": [
 					{
 						"institutation_name": "Hospital for Sick Children",
-						"institution_city": "Toronto",
-						"institution_latitude": "43.6570",
-						"institution_longitude": "-79.3914",
-						"institution_phone": "416-813-1500"
+						"institution_gmap": {
+							"city": "Toronto",
+							"state": "Ontario",
+							"post_code": "M5G 1X8",
+							"lat": "43.6570",
+							"lng": "-79.3914"
+						},
+						"institution_phone": "416-813-1500",
+						"distance_km": 1.2
 					}
 				]
-			},
-			"distance": 1.2
+			}
 		}
 	]
 }
 ```
+
+**Note**: The API returns all matching results in a single response. Pagination is handled client-side for improved performance, allowing instant page navigation without additional API requests.
 
 ## Shortcodes
 
@@ -169,10 +179,22 @@ Displays the search form with all filter options.
 ### Find Allergist Results
 
 ```
-[find_allergist_results]
+[find_allergists]
 ```
 
-Displays the search results container (populated via AJAX).
+Displays the complete search interface including:
+
+-   Search form with all filter options
+-   Results container with client-side pagination
+-   Interactive Google Maps integration
+-   Responsive design for mobile devices
+
+**Features**:
+
+-   **Instant Pagination**: Navigate between pages without loading delays
+-   **Smart Search**: Detects new searches vs. page navigation
+-   **Memory Efficient**: Automatic cleanup of cached results
+-   **Mobile Responsive**: Optimized pagination controls for mobile devices
 
 ## ACF Field Structure
 
@@ -337,12 +359,31 @@ curl "http://localhost/wp-json/my/v1/physicians/search?city=Toronto&oit=true"
 
 ## Performance Considerations
 
+### Client-Side Pagination Benefits
+
+-   **Instant Page Navigation**: No loading time between pages after initial search
+-   **Reduced Server Load**: Single API call per search instead of one per page
+-   **Better User Experience**: Seamless browsing with smooth scrolling
+-   **Enhanced Map Integration**: All locations visible on map regardless of current page
+
+### Search Optimization
+
 -   **Efficient Queries**: Uses WP_Query with optimized meta queries
 -   **Post-Query Filtering**: Distance calculations only on relevant results
+-   **Smart Result Caching**: Browser memory caching for instant pagination
 -   **Geocoding Caching**: Consider implementing geocoding result caching
 -   **Database Indexing**: Ensure proper indexing on frequently queried meta fields
+
+### Admin Performance
+
 -   **Admin Settings Caching**: Plugin settings cached for improved performance
 -   **API Key Validation**: Efficient validation with caching to reduce API calls
+
+### Memory Management
+
+-   **Automatic Cleanup**: Results cleared when starting new searches
+-   **Efficient Storage**: Optimized data structure for browser memory
+-   **Mobile Optimization**: Responsive pagination controls for all devices
 
 ## Support
 
@@ -357,6 +398,17 @@ For support, feature requests, or bug reports:
 This plugin is developed for the Canadian Society of Allergy and Clinical Immunology (CSACI). All rights reserved.
 
 ## Changelog
+
+### Version 1.1.0
+
+-   **NEW**: Client-side pagination for instant page navigation
+-   **NEW**: Smart search detection (new search vs. page navigation)
+-   **NEW**: Enhanced map integration showing all results regardless of current page
+-   **NEW**: Responsive pagination controls optimized for mobile devices
+-   **IMPROVED**: Search performance with single API call per search
+-   **IMPROVED**: User experience with instant page changes and smooth scrolling
+-   **IMPROVED**: Memory management with automatic result cleanup
+-   **IMPROVED**: JavaScript architecture with better error handling
 
 ### Version 1.0.0
 

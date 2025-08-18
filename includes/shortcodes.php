@@ -7,7 +7,7 @@
  * Find An Allergist Results Shortcode
  * Usage: [find_allergist_results]
  */
-function find_allergist_results_shortcode($atts)
+function find_allergist_form_shortcode($atts)
 {
     // Get API key from admin settings
     $api_key = dalen_get_google_maps_api_key();
@@ -45,18 +45,13 @@ function find_allergist_results_shortcode($atts)
 
 ?>
 
-    <?php
-    global $wp;
-    $current_url = home_url(add_query_arg(array(), $wp->request));
-    $form_action = esc_url($current_url . '#search');
-    ?>
-
     <!-- Search Form -->
     <div class="physicians_search" id="allergist-search-container">
         <h1><?php _e('Find An Allergist', 'dalen-find-allergist'); ?></h1>
         <p><?php _e('Welcome to CSACI Find an Allergist. The search options below can be used to locate an allergist/immunologist close to you.', 'dalen-find-allergist'); ?></p>
         <p><?php _e('Please either enter a name, city and/or postal code to start your search.', 'dalen-find-allergist'); ?></p>
-        <form action="<?php echo ($form_action); ?>" onsubmit="allergistSearch(this); return false;" method="post" id="allergistfrm">
+        <!-- Form submission is handled via JavaScript -->
+        <form action="javascript:void(0);" id="allergistfrm">
             <input type="hidden" name="Find" value="Physician" />
 
             <div class="grid-field-box grid-column-one">
@@ -123,9 +118,6 @@ function find_allergist_results_shortcode($atts)
             </div>
         </form>
     </div>
-    <!-- Search Results -->
-    <div id="results" class="find-allergists-results"></div>
-
 
 
 <?php
@@ -134,5 +126,23 @@ function find_allergist_results_shortcode($atts)
     return ob_get_clean();
 }
 
+function find_allergist_results_shortcode($atts)
+{
+    // Start output buffering
+    ob_start();
+?>
+
+    <!-- Search Results -->
+    <div id="results" class="find-allergists-results"></div>
+
+<?php
+
+    // Return the buffered content
+    return ob_get_clean();
+}
+
 // Register the shortcode
-add_shortcode('find_allergists', 'find_allergist_results_shortcode');
+// Ideally this would use a single shortcode. However, because of how Divi was setup, we need to use two.
+// TO-DO: Refactor to use a single shortcode
+add_shortcode('find_allergists_form', 'find_allergist_form_shortcode');
+add_shortcode('find_allergists_results', 'find_allergist_results_shortcode');
