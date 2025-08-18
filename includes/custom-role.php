@@ -18,6 +18,14 @@ function dalen_wa_level_physicians_admin_access($allcaps, $caps, $args, $user)
     if ($pagenow === 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] === 'physicians') {
         $is_physicians_page = true;
     }
+    // Check for post.php editing individual physicians posts
+    if ($pagenow === 'post.php' && isset($_GET['post'])) {
+        $post_id = intval($_GET['post']);
+        $post = get_post($post_id);
+        if ($post && $post->post_type === 'physicians') {
+            $is_physicians_page = true;
+        }
+    }
 
     if (!$is_physicians_page) return $allcaps;
 
@@ -27,6 +35,16 @@ function dalen_wa_level_physicians_admin_access($allcaps, $caps, $args, $user)
             $allcaps['edit_physicians'] = true;
             $allcaps['edit_posts'] = true;  // Core capability for admin edit page access
             $allcaps['read'] = true;
+            $allcaps['publish_posts'] = true;  // General publish capability
+            $allcaps['publish_physicians'] = true;
+            
+            // If editing a specific post, check ownership and grant edit capabilities
+            if (isset($post) && $post->post_author == $user->ID) {
+                $allcaps['edit_post'] = true;
+                $allcaps['edit_physician'] = true;
+                $allcaps['edit_own_physicians'] = true;
+                $allcaps['edit_published_physicians'] = true;
+            }
             break;
         }
     }
@@ -47,12 +65,194 @@ function dalen_wa_level_minimum_caps($allcaps, $caps, $args, $user)
             // Ensure minimum capabilities are always present
             $allcaps['read'] = true;
             $allcaps['edit_posts'] = true;
+            $allcaps['publish_posts'] = true;
+            $allcaps['edit_physicians'] = true;
+            $allcaps['publish_physicians'] = true;
+            
+            // Handle specific capability checks for physicians posts
+            if (!empty($caps)) {
+                foreach ($caps as $cap) {
+                    // If checking for edit_post capability and we have context
+                    if ($cap === 'edit_post' && !empty($args) && isset($args[0])) {
+                        $post_id = $args[0];
+                        $post = get_post($post_id);
+                        if ($post && $post->post_type === 'physicians' && $post->post_author == $user->ID) {
+                            $allcaps['edit_post'] = true;
+                            $allcaps['edit_published_physicians'] = true;
+                        }
+                    }
+                    // Handle physician-specific capabilities
+                    if (in_array($cap, ['edit_physician', 'edit_physicians', 'edit_own_physicians', 'publish_physicians', 'edit_published_physicians'])) {
+                        $allcaps[$cap] = true;
+                    }
+                }
+            }
             break;
         }
     }
     return $allcaps;
 }
 add_filter('user_has_cap', 'dalen_wa_level_minimum_caps', 8, 4);
+
+/**
+ * Map meta capabilities for wa_level users editing physicians posts
+ */
+function dalen_map_physicians_meta_cap($caps, $cap, $user_id, $args)
+{
+    $user = get_userdata($user_id);
+    if (!$user) return $caps;
+
+    $is_wa_user = false;
+    foreach ($user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    if (!$is_wa_user) return $caps;
+
+    // Handle edit_post capability for physicians posts
+    if ($cap === 'edit_post' && !empty($args)) {
+        $post_id = $args[0];
+        $post = get_post($post_id);
+        
+        if ($post && $post->post_type === 'physicians') {
+            // If the post belongs to the current user, allow editing
+            if ($post->post_author == $user_id) {
+                // Return the minimal capability they need
+                return ['edit_physicians'];
+            } else {
+                // If not their post, deny access
+                return ['do_not_allow'];
+            }
+        }
+    }
+
+    // Handle published post editing
+    if ($cap === 'edit_published_post' && !empty($args)) {
+        $post_id = $args[0];
+        $post = get_post($post_id);
+        
+        if ($post && $post->post_type === 'physicians' && $post->post_author == $user_id) {
+            return ['edit_physicians'];
+        }
+    }
+
+    // Handle other physicians-related capabilities
+    if (in_array($cap, ['edit_physician', 'read_physician', 'delete_physician'])) {
+        if (!empty($args)) {
+            $post_id = $args[0];
+            $post = get_post($post_id);
+            
+            if ($post && $post->post_type === 'physicians' && $post->post_author == $user_id) {
+                return ['edit_physicians'];
+            }
+        }
+    }
+
+    return $caps;
+}
+add_filter('map_meta_cap', 'dalen_map_physicians_meta_cap', 10, 4);
+
+/**
+ * Debug function to log capability checks (temporary - remove in production)
+ */
+function dalen_debug_capability_check($allcaps, $caps, $args, $user)
+{
+    // Only debug for wa_level users
+    if (empty($user->roles)) return $allcaps;
+    
+    $is_wa_user = false;
+    foreach ($user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    
+    if ($is_wa_user && !empty($caps) && is_admin()) {
+        // Log capability checks for debugging
+        error_log('WA User Capability Check - Caps: ' . implode(', ', $caps) . ' | Args: ' . print_r($args, true));
+        
+        // If checking edit_post on a physicians post
+        if (in_array('edit_post', $caps) && !empty($args)) {
+            $post_id = $args[0];
+            $post = get_post($post_id);
+            if ($post && $post->post_type === 'physicians') {
+                error_log('Edit Post Check - Post Type: ' . $post->post_type . ' | Author: ' . $post->post_author . ' | Current User: ' . $user->ID);
+            }
+        }
+    }
+    
+    return $allcaps;
+}
+// Uncomment the next line to enable debugging
+add_filter('user_has_cap', 'dalen_debug_capability_check', 1, 4);
+
+/**
+ * Test function to display user capabilities (add ?test_caps=1 to any admin URL)
+ */
+function dalen_test_user_capabilities()
+{
+    if (!is_admin() || !isset($_GET['test_caps'])) {
+        return;
+    }
+    
+    $current_user = wp_get_current_user();
+    $is_wa_user = false;
+    
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    
+    if (!$is_wa_user) {
+        return;
+    }
+    
+    echo '<div class="notice notice-info" style="padding: 20px; margin: 20px 0; background: #fff; border-left: 4px solid #0073aa;">';
+    echo '<h3>User Capability Test Results</h3>';
+    echo '<p><strong>User ID:</strong> ' . $current_user->ID . '</p>';
+    echo '<p><strong>User Roles:</strong> ' . implode(', ', $current_user->roles) . '</p>';
+    
+    $test_caps = [
+        'read',
+        'edit_posts',
+        'publish_posts',
+        'edit_physicians',
+        'edit_published_physicians',
+        'publish_physicians',
+        'edit_physician',
+        'edit_own_physicians'
+    ];
+    
+    echo '<p><strong>Capabilities:</strong></p>';
+    echo '<ul>';
+    foreach ($test_caps as $cap) {
+        $has_cap = current_user_can($cap) ? '✅' : '❌';
+        echo '<li>' . $has_cap . ' ' . $cap . '</li>';
+    }
+    echo '</ul>';
+    
+    // Test edit capability for user's own physicians posts
+    $user_posts = get_posts([
+        'author' => $current_user->ID,
+        'post_type' => 'physicians',
+        'post_status' => 'any',
+        'numberposts' => 1
+    ]);
+    
+    if (!empty($user_posts)) {
+        $post = $user_posts[0];
+        $can_edit = current_user_can('edit_post', $post->ID);
+        echo '<p><strong>Can edit own physicians post (ID: ' . $post->ID . '):</strong> ' . ($can_edit ? '✅ Yes' : '❌ No') . '</p>';
+    }
+    
+    echo '</div>';
+}
+add_action('admin_notices', 'dalen_test_user_capabilities');
 
 /*
 * Custom WordPress role for Wild Apricot users (roles that begin with "wa_level_")
@@ -83,6 +283,8 @@ function dalen_find_allergist_add_caps_to_wa_roles()
         'read_physician',
         'delete_physician',
         'create_physicians',
+        'edit_published_physicians',  // Important for editing published posts
+        'publish_posts',  // General publish capability
     ];
     global $wp_roles;
     if (! isset($wp_roles)) {
