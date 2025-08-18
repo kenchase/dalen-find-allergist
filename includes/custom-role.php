@@ -34,9 +34,11 @@ function dalen_wa_level_physicians_admin_access($allcaps, $caps, $args, $user)
             // Grant necessary capabilities for accessing the physicians edit page
             $allcaps['edit_physicians'] = true;
             $allcaps['edit_posts'] = true;  // Core capability for admin edit page access
+            $allcaps['delete_posts'] = true;  // Core capability for deletion
             $allcaps['read'] = true;
             $allcaps['publish_posts'] = true;  // General publish capability
             $allcaps['publish_physicians'] = true;
+            $allcaps['delete_physicians'] = true;  // Physician deletion capability
 
             // If editing a specific post, check ownership and grant edit capabilities
             if (isset($post) && $post->post_author == $user->ID) {
@@ -44,6 +46,9 @@ function dalen_wa_level_physicians_admin_access($allcaps, $caps, $args, $user)
                 $allcaps['edit_physician'] = true;
                 $allcaps['edit_own_physicians'] = true;
                 $allcaps['edit_published_physicians'] = true;
+                $allcaps['delete_post'] = true;
+                $allcaps['delete_physician'] = true;
+                $allcaps['delete_published_physicians'] = true;
             }
             break;
         }
@@ -65,8 +70,10 @@ function dalen_wa_level_minimum_caps($allcaps, $caps, $args, $user)
             // Ensure minimum capabilities are always present
             $allcaps['read'] = true;
             $allcaps['edit_posts'] = true;
+            $allcaps['delete_posts'] = true;  // Core deletion capability
             $allcaps['publish_posts'] = true;
             $allcaps['edit_physicians'] = true;
+            $allcaps['delete_physicians'] = true;  // Physician deletion capability
             $allcaps['publish_physicians'] = true;
 
             // Handle specific capability checks for physicians posts
@@ -81,8 +88,17 @@ function dalen_wa_level_minimum_caps($allcaps, $caps, $args, $user)
                             $allcaps['edit_published_physicians'] = true;
                         }
                     }
+                    // If checking for delete_post capability and we have context
+                    if ($cap === 'delete_post' && !empty($args) && isset($args[0])) {
+                        $post_id = $args[0];
+                        $post = get_post($post_id);
+                        if ($post && $post->post_type === 'physicians' && $post->post_author == $user->ID) {
+                            $allcaps['delete_post'] = true;
+                            $allcaps['delete_published_physicians'] = true;
+                        }
+                    }
                     // Handle physician-specific capabilities
-                    if (in_array($cap, ['edit_physician', 'edit_physicians', 'edit_own_physicians', 'publish_physicians', 'edit_published_physicians'])) {
+                    if (in_array($cap, ['edit_physician', 'edit_physicians', 'edit_own_physicians', 'publish_physicians', 'edit_published_physicians', 'delete_physician', 'delete_physicians', 'delete_published_physicians'])) {
                         $allcaps[$cap] = true;
                     }
                 }
@@ -128,6 +144,22 @@ function dalen_map_physicians_meta_cap($caps, $cap, $user_id, $args)
         }
     }
 
+    // Handle delete_post capability for physicians posts
+    if ($cap === 'delete_post' && !empty($args)) {
+        $post_id = $args[0];
+        $post = get_post($post_id);
+
+        if ($post && $post->post_type === 'physicians') {
+            // If the post belongs to the current user, allow deletion
+            if ($post->post_author == $user_id) {
+                return ['delete_physicians'];
+            } else {
+                // If not their post, deny access
+                return ['do_not_allow'];
+            }
+        }
+    }
+
     // Handle published post editing
     if ($cap === 'edit_published_post' && !empty($args)) {
         $post_id = $args[0];
@@ -138,6 +170,16 @@ function dalen_map_physicians_meta_cap($caps, $cap, $user_id, $args)
         }
     }
 
+    // Handle published post deletion
+    if ($cap === 'delete_published_post' && !empty($args)) {
+        $post_id = $args[0];
+        $post = get_post($post_id);
+
+        if ($post && $post->post_type === 'physicians' && $post->post_author == $user_id) {
+            return ['delete_physicians'];
+        }
+    }
+
     // Handle other physicians-related capabilities
     if (in_array($cap, ['edit_physician', 'read_physician', 'delete_physician'])) {
         if (!empty($args)) {
@@ -145,7 +187,11 @@ function dalen_map_physicians_meta_cap($caps, $cap, $user_id, $args)
             $post = get_post($post_id);
 
             if ($post && $post->post_type === 'physicians' && $post->post_author == $user_id) {
-                return ['edit_physicians'];
+                if ($cap === 'delete_physician') {
+                    return ['delete_physicians'];
+                } else {
+                    return ['edit_physicians'];
+                }
             }
         }
     }
@@ -172,9 +218,12 @@ function dalen_find_allergist_add_caps_to_wa_roles()
     $allergist_caps = [
         'read',
         'edit_posts',  // Core capability needed to access admin edit pages
+        'delete_posts',  // Core capability needed to delete posts
         'edit_physicians',
         'edit_own_physicians',
         'delete_own_physicians',
+        'delete_physicians',
+        'delete_published_physicians',  // Important for deleting published posts
         'publish_physicians',
         'edit_others_physicians',
         'delete_others_physicians',
