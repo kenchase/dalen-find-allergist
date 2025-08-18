@@ -37,7 +37,7 @@ function dalen_wa_level_physicians_admin_access($allcaps, $caps, $args, $user)
             $allcaps['read'] = true;
             $allcaps['publish_posts'] = true;  // General publish capability
             $allcaps['publish_physicians'] = true;
-            
+
             // If editing a specific post, check ownership and grant edit capabilities
             if (isset($post) && $post->post_author == $user->ID) {
                 $allcaps['edit_post'] = true;
@@ -68,7 +68,7 @@ function dalen_wa_level_minimum_caps($allcaps, $caps, $args, $user)
             $allcaps['publish_posts'] = true;
             $allcaps['edit_physicians'] = true;
             $allcaps['publish_physicians'] = true;
-            
+
             // Handle specific capability checks for physicians posts
             if (!empty($caps)) {
                 foreach ($caps as $cap) {
@@ -115,7 +115,7 @@ function dalen_map_physicians_meta_cap($caps, $cap, $user_id, $args)
     if ($cap === 'edit_post' && !empty($args)) {
         $post_id = $args[0];
         $post = get_post($post_id);
-        
+
         if ($post && $post->post_type === 'physicians') {
             // If the post belongs to the current user, allow editing
             if ($post->post_author == $user_id) {
@@ -132,7 +132,7 @@ function dalen_map_physicians_meta_cap($caps, $cap, $user_id, $args)
     if ($cap === 'edit_published_post' && !empty($args)) {
         $post_id = $args[0];
         $post = get_post($post_id);
-        
+
         if ($post && $post->post_type === 'physicians' && $post->post_author == $user_id) {
             return ['edit_physicians'];
         }
@@ -143,7 +143,7 @@ function dalen_map_physicians_meta_cap($caps, $cap, $user_id, $args)
         if (!empty($args)) {
             $post_id = $args[0];
             $post = get_post($post_id);
-            
+
             if ($post && $post->post_type === 'physicians' && $post->post_author == $user_id) {
                 return ['edit_physicians'];
             }
