@@ -687,3 +687,48 @@ function block_wa_user_profile_access()
     }
 }
 add_action('admin_init', 'block_wa_user_profile_access', 1);
+
+/**
+ * Hide admin bar completely for wa_level users
+ */
+function hide_admin_bar_for_wa_users()
+{
+    $current_user = wp_get_current_user();
+
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    
+    if ($is_wa_user) {
+        // Hide admin bar on frontend and backend
+        show_admin_bar(false);
+        
+        // Also remove it via filter as backup
+        add_filter('show_admin_bar', '__return_false');
+        
+        // Remove admin bar CSS and JS
+        remove_action('wp_head', '_admin_bar_bump_cb');
+        
+        // Additional CSS to ensure it's completely hidden
+        add_action('wp_head', function() {
+            echo '<style type="text/css">
+                #wpadminbar { display: none !important; }
+                html { margin-top: 0 !important; }
+                * html body { margin-top: 0 !important; }
+            </style>';
+        });
+        
+        add_action('admin_head', function() {
+            echo '<style type="text/css">
+                #wpadminbar { display: none !important; }
+                html { margin-top: 0 !important; }
+            </style>';
+        });
+    }
+}
+add_action('init', 'hide_admin_bar_for_wa_users');
+add_action('admin_init', 'hide_admin_bar_for_wa_users');
