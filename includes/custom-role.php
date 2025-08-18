@@ -702,27 +702,27 @@ function hide_admin_bar_for_wa_users()
             break;
         }
     }
-    
+
     if ($is_wa_user) {
         // Hide admin bar on frontend and backend
         show_admin_bar(false);
-        
+
         // Also remove it via filter as backup
         add_filter('show_admin_bar', '__return_false');
-        
+
         // Remove admin bar CSS and JS
         remove_action('wp_head', '_admin_bar_bump_cb');
-        
+
         // Additional CSS to ensure it's completely hidden
-        add_action('wp_head', function() {
+        add_action('wp_head', function () {
             echo '<style type="text/css">
                 #wpadminbar { display: none !important; }
                 html { margin-top: 0 !important; }
                 * html body { margin-top: 0 !important; }
             </style>';
         });
-        
-        add_action('admin_head', function() {
+
+        add_action('admin_head', function () {
             echo '<style type="text/css">
                 #wpadminbar { display: none !important; }
                 html { margin-top: 0 !important; }
