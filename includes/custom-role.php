@@ -294,11 +294,9 @@ function hide_admin_menus_from_allergist()
 
         $menu_slug = $menu_item[2];
 
-        // Keep only physicians post type menu and user profile
+        // Keep only physicians post type menu (remove profile access)
         if (
-            $menu_slug !== 'edit.php?post_type=physicians' &&
-            $menu_slug !== 'profile.php' &&
-            $menu_slug !== 'users.php' // Keep users menu but we'll filter it in submenu
+            $menu_slug !== 'edit.php?post_type=physicians'
         ) {
             remove_menu_page($menu_slug);
         }
@@ -649,5 +647,43 @@ function hide_admin_bar_items_from_allergist()
     $wp_admin_bar->remove_node('comments');
     $wp_admin_bar->remove_node('new-content');
     $wp_admin_bar->remove_node('edit');
+    $wp_admin_bar->remove_node('my-account');
+    $wp_admin_bar->remove_node('user-actions');
+    $wp_admin_bar->remove_node('user-info');
+    $wp_admin_bar->remove_node('edit-profile');
 }
 add_action('wp_before_admin_bar_render', 'hide_admin_bar_items_from_allergist', 999);
+
+/**
+ * Block wa_level users from accessing user management and profile pages
+ */
+function block_wa_user_profile_access()
+{
+    $current_user = wp_get_current_user();
+
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    if (!$is_wa_user) {
+        return;
+    }
+
+    global $pagenow;
+
+    // Block access to user-related pages
+    $blocked_pages = [
+        'profile.php',
+        'user-edit.php', 
+        'users.php',
+        'user-new.php'
+    ];
+
+    if (in_array($pagenow, $blocked_pages)) {
+        wp_die(__('You do not have permission to access this page.'), __('Access Denied'), array('response' => 403));
+    }
+}
+add_action('admin_init', 'block_wa_user_profile_access', 1);
