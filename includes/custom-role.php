@@ -677,7 +677,7 @@ function block_wa_user_profile_access()
     // Block access to user-related pages
     $blocked_pages = [
         'profile.php',
-        'user-edit.php', 
+        'user-edit.php',
         'users.php',
         'user-new.php'
     ];
