@@ -834,13 +834,13 @@ function hide_author_metabox_for_wa_users()
             break;
         }
     }
-    
+
     if ($is_wa_user) {
         // Remove the author metabox from physicians post type
         remove_meta_box('authordiv', 'physicians', 'normal');
-        
+
         // Also hide it via CSS as backup
-        add_action('admin_head', function() {
+        add_action('admin_head', function () {
             echo '<style type="text/css">
                 #authordiv,
                 #author,
@@ -868,12 +868,172 @@ function remove_author_column_for_wa_users($columns)
             break;
         }
     }
-    
+
     if ($is_wa_user) {
         // Remove the author column
         unset($columns['author']);
     }
-    
+
     return $columns;
 }
 add_filter('manage_physicians_posts_columns', 'remove_author_column_for_wa_users');
+
+/**
+ * Prevent wa_level users from changing post slug
+ */
+function prevent_wa_user_slug_change($post_data, $postarr)
+{
+    // Only apply to physicians post type
+    if ($post_data['post_type'] !== 'physicians') {
+        return $post_data;
+    }
+
+    $current_user = wp_get_current_user();
+
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    if (!$is_wa_user) {
+        return $post_data;
+    }
+
+    // If this is an existing post, prevent slug changes
+    if (!empty($postarr['ID'])) {
+        $existing_post = get_post($postarr['ID']);
+        if ($existing_post) {
+            // Force the slug to remain the same as the original
+            $post_data['post_name'] = $existing_post->post_name;
+        }
+    }
+    // For new posts, let WordPress auto-generate the slug from title
+    // but don't allow manual override
+
+    return $post_data;
+}
+add_filter('wp_insert_post_data', 'prevent_wa_user_slug_change', 11, 2);
+
+/**
+ * Hide slug editing UI for wa_level users
+ */
+function hide_slug_editing_for_wa_users()
+{
+    $current_user = wp_get_current_user();
+
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    
+    if ($is_wa_user) {
+        global $pagenow;
+        
+        // Only on physicians post editing pages
+        if ($pagenow === 'post.php' || $pagenow === 'post-new.php') {
+            if (isset($_GET['post_type']) && $_GET['post_type'] === 'physicians' || 
+                (isset($_GET['post']) && get_post_type($_GET['post']) === 'physicians')) {
+                
+                // Hide slug editing elements via CSS and JavaScript
+                add_action('admin_head', function() {
+                    echo '<style type="text/css">
+                        #edit-slug-box,
+                        #editable-post-name,
+                        #editable-post-name-full,
+                        .edit-slug,
+                        #sample-permalink,
+                        .sample-permalink,
+                        #post-slug-edit,
+                        .view-post-links .edit-slug {
+                            display: none !important;
+                        }
+                        
+                        /* Hide the "Edit" button next to permalink */
+                        .sample-permalink .edit-slug {
+                            display: none !important;
+                        }
+                        
+                        /* Hide permalink editing area */
+                        #edit-slug-buttons {
+                            display: none !important;
+                        }
+                    </style>';
+                    
+                    echo '<script type="text/javascript">
+                        jQuery(document).ready(function($) {
+                            // Remove any slug editing functionality
+                            $("#edit-slug-box").remove();
+                            $(".edit-slug").remove();
+                            $("#editable-post-name").parent().find("button").remove();
+                            
+                            // Disable slug field if it exists
+                            $("#post_name").prop("readonly", true).css("background-color", "#f6f7f7");
+                            
+                            // Remove click handlers on permalink
+                            $("#sample-permalink a").off("click");
+                            $(".edit-slug").off("click");
+                        });
+                    </script>';
+                });
+            }
+        }
+    }
+}
+add_action('admin_head', 'hide_slug_editing_for_wa_users');
+
+/**
+ * Remove slug column from physicians post list for wa_level users
+ */
+function remove_slug_column_for_wa_users($columns)
+{
+    $current_user = wp_get_current_user();
+
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    
+    if ($is_wa_user) {
+        // Remove the slug column if it exists
+        unset($columns['slug']);
+        unset($columns['name']);
+    }
+    
+    return $columns;
+}
+add_filter('manage_physicians_posts_columns', 'remove_slug_column_for_wa_users');
+
+/**
+ * Block AJAX requests for slug changes from wa_level users
+ */
+function block_wa_user_slug_ajax()
+{
+    $current_user = wp_get_current_user();
+
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    
+    if ($is_wa_user) {
+        // Block the inline-save and sample-permalink AJAX actions
+        if (isset($_POST['action']) && in_array($_POST['action'], ['inline-save', 'sample-permalink'])) {
+            if (isset($_POST['post_type']) && $_POST['post_type'] === 'physicians') {
+                wp_die(__('You do not have permission to change the post slug.'), __('Permission Denied'), array('response' => 403));
+            }
+        }
+    }
+}
+add_action('wp_ajax_inline-save', 'block_wa_user_slug_ajax', 1);
+add_action('wp_ajax_sample-permalink', 'block_wa_user_slug_ajax', 1);
