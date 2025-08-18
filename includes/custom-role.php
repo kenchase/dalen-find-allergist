@@ -225,8 +225,7 @@ function dalen_find_allergist_add_caps_to_wa_roles()
         'delete_physicians',
         'delete_published_physicians',  // Important for deleting published posts
         'publish_physicians',
-        'edit_others_physicians',
-        'delete_others_physicians',
+        // Removed 'edit_others_physicians' and 'delete_others_physicians' to prevent author changes
         'read_private_physicians',
         'edit_physician',
         'read_physician',
@@ -781,3 +780,100 @@ function hide_admin_bar_for_wa_users()
 }
 add_action('init', 'hide_admin_bar_for_wa_users');
 add_action('admin_init', 'hide_admin_bar_for_wa_users');
+
+/**
+ * Prevent wa_level users from changing post author
+ */
+function prevent_wa_user_author_change($post_data, $postarr)
+{
+    // Only apply to physicians post type
+    if ($post_data['post_type'] !== 'physicians') {
+        return $post_data;
+    }
+
+    $current_user = wp_get_current_user();
+
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    if (!$is_wa_user) {
+        return $post_data;
+    }
+
+    // If this is an existing post, prevent author changes
+    if (!empty($postarr['ID'])) {
+        $existing_post = get_post($postarr['ID']);
+        if ($existing_post) {
+            // Force the author to remain the same as the original
+            $post_data['post_author'] = $existing_post->post_author;
+        }
+    } else {
+        // For new posts, ensure the author is the current user
+        $post_data['post_author'] = $current_user->ID;
+    }
+
+    return $post_data;
+}
+add_filter('wp_insert_post_data', 'prevent_wa_user_author_change', 10, 2);
+
+/**
+ * Hide author metabox for wa_level users
+ */
+function hide_author_metabox_for_wa_users()
+{
+    $current_user = wp_get_current_user();
+
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    
+    if ($is_wa_user) {
+        // Remove the author metabox from physicians post type
+        remove_meta_box('authordiv', 'physicians', 'normal');
+        
+        // Also hide it via CSS as backup
+        add_action('admin_head', function() {
+            echo '<style type="text/css">
+                #authordiv,
+                #author,
+                .misc-pub-post-author,
+                .misc-pub-section.misc-pub-author {
+                    display: none !important;
+                }
+            </style>';
+        });
+    }
+}
+add_action('admin_menu', 'hide_author_metabox_for_wa_users');
+
+/**
+ * Remove author column from physicians post list for wa_level users
+ */
+function remove_author_column_for_wa_users($columns)
+{
+    $current_user = wp_get_current_user();
+
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    
+    if ($is_wa_user) {
+        // Remove the author column
+        unset($columns['author']);
+    }
+    
+    return $columns;
+}
+add_filter('manage_physicians_posts_columns', 'remove_author_column_for_wa_users');

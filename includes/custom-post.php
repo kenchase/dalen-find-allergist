@@ -47,7 +47,7 @@ function csaci_custom_allergist_post()
             'create_posts'          => 'create_physicians',
         ],
         'hierarchical' => false,
-        'supports' => array('title', 'editor', 'author'),
+        'supports' => array('title', 'author'),
         'taxonomies' => array('physiciantypes'),
     );
     // Although named 'physicians', this post type is for Allergists.
