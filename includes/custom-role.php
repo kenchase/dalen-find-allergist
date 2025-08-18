@@ -930,18 +930,21 @@ function hide_slug_editing_for_wa_users()
             break;
         }
     }
-    
+
     if ($is_wa_user) {
         global $pagenow;
-        
+
         // Only on physicians post editing pages
         if ($pagenow === 'post.php' || $pagenow === 'post-new.php') {
-            if (isset($_GET['post_type']) && $_GET['post_type'] === 'physicians' || 
-                (isset($_GET['post']) && get_post_type($_GET['post']) === 'physicians')) {
-                
+            if (
+                isset($_GET['post_type']) && $_GET['post_type'] === 'physicians' ||
+                (isset($_GET['post']) && get_post_type($_GET['post']) === 'physicians')
+            ) {
+
                 // Hide slug editing elements via CSS and JavaScript
-                add_action('admin_head', function() {
+                add_action('admin_head', function () {
                     echo '<style type="text/css">
+                        /* Hide all slug editing elements */
                         #edit-slug-box,
                         #editable-post-name,
                         #editable-post-name-full,
@@ -949,7 +952,28 @@ function hide_slug_editing_for_wa_users()
                         #sample-permalink,
                         .sample-permalink,
                         #post-slug-edit,
-                        .view-post-links .edit-slug {
+                        .view-post-links .edit-slug,
+                        
+                        /* Hide specific slug field and related elements */
+                        #post_name,
+                        input[name="post_name"],
+                        label[for="post_name"],
+                        .form-field.slug,
+                        .form-table .slug,
+                        tr.slug,
+                        
+                        /* Hide slug metabox if it exists */
+                        #slugdiv,
+                        #slug-metabox,
+                        
+                        /* Hide quick edit slug field */
+                        .inline-edit-col .slug,
+                        .quick-edit-row .slug,
+                        fieldset.inline-edit-slug,
+                        
+                        /* Hide any permalink editing areas */
+                        #edit-slug-buttons,
+                        .edit-slug-buttons {
                             display: none !important;
                         }
                         
@@ -958,12 +982,13 @@ function hide_slug_editing_for_wa_users()
                             display: none !important;
                         }
                         
-                        /* Hide permalink editing area */
-                        #edit-slug-buttons {
+                        /* Hide slug field in any forms */
+                        .form-field.term-slug-wrap,
+                        .form-field.slug-wrap {
                             display: none !important;
                         }
                     </style>';
-                    
+
                     echo '<script type="text/javascript">
                         jQuery(document).ready(function($) {
                             // Remove any slug editing functionality
@@ -971,12 +996,25 @@ function hide_slug_editing_for_wa_users()
                             $(".edit-slug").remove();
                             $("#editable-post-name").parent().find("button").remove();
                             
-                            // Disable slug field if it exists
-                            $("#post_name").prop("readonly", true).css("background-color", "#f6f7f7");
+                            // Hide and disable all slug-related fields
+                            $("#post_name, input[name=\"post_name\"]").hide().prop("readonly", true);
+                            $("label[for=\"post_name\"]").hide();
+                            
+                            // Remove slug field from quick edit
+                            $(".inline-edit-col .slug").remove();
+                            
+                            // Remove any slug metaboxes
+                            $("#slugdiv, #slug-metabox").remove();
                             
                             // Remove click handlers on permalink
                             $("#sample-permalink a").off("click");
                             $(".edit-slug").off("click");
+                            
+                            // Hide any dynamically loaded slug fields
+                            setTimeout(function() {
+                                $("input[name=\"post_name\"], #post_name").hide();
+                                $(".form-field.slug, .slug").hide();
+                            }, 1000);
                         });
                     </script>';
                 });
@@ -985,6 +1023,35 @@ function hide_slug_editing_for_wa_users()
     }
 }
 add_action('admin_head', 'hide_slug_editing_for_wa_users');
+
+/**
+ * Remove slug metabox for wa_level users
+ */
+function remove_slug_metabox_for_wa_users()
+{
+    $current_user = wp_get_current_user();
+
+    $is_wa_user = false;
+    foreach ($current_user->roles as $role) {
+        if (strpos($role, 'wa_level_') === 0) {
+            $is_wa_user = true;
+            break;
+        }
+    }
+    
+    if ($is_wa_user) {
+        // Remove slug metabox from physicians post type
+        remove_meta_box('slugdiv', 'physicians', 'normal');
+        remove_meta_box('slugdiv', 'physicians', 'side');
+        remove_meta_box('slugdiv', 'physicians', 'advanced');
+        
+        // Also remove any custom slug metaboxes
+        remove_meta_box('slug-metabox', 'physicians', 'normal');
+        remove_meta_box('slug-metabox', 'physicians', 'side');
+        remove_meta_box('slug-metabox', 'physicians', 'advanced');
+    }
+}
+add_action('admin_menu', 'remove_slug_metabox_for_wa_users');
 
 /**
  * Remove slug column from physicians post list for wa_level users
@@ -1000,13 +1067,13 @@ function remove_slug_column_for_wa_users($columns)
             break;
         }
     }
-    
+
     if ($is_wa_user) {
         // Remove the slug column if it exists
         unset($columns['slug']);
         unset($columns['name']);
     }
-    
+
     return $columns;
 }
 add_filter('manage_physicians_posts_columns', 'remove_slug_column_for_wa_users');
@@ -1025,7 +1092,7 @@ function block_wa_user_slug_ajax()
             break;
         }
     }
-    
+
     if ($is_wa_user) {
         // Block the inline-save and sample-permalink AJAX actions
         if (isset($_POST['action']) && in_array($_POST['action'], ['inline-save', 'sample-permalink'])) {
