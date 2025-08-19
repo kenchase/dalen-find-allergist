@@ -45,7 +45,7 @@ const ENDPOINT = "/wp-json/my/v1/physicians/search";
 let allergistMap = null;
 let mapMarkers = [];
 let mapInfoWindow = null;
-let orgIndexCounter = 0;
+let orgMarkerMap = new Map(); // Maps organization IDs to their markers
 let searchController = null; // For aborting previous requests
 let currentSearchData = null; // Store current search parameters
 let currentPage = 1; // Track current page
@@ -114,7 +114,7 @@ async function handleSearchSubmit(page = 1) {
 			allSearchResults = data.results || [];
 
 			// Render first page
-			renderPaginatedResults(1);
+			renderPaginatedResults(1, true); // isNewSearch = true
 		} catch (err) {
 			// Don't show error for aborted requests
 			if (err.name === "AbortError") {
@@ -134,15 +134,43 @@ async function handleSearchSubmit(page = 1) {
 		// Same search - just navigate to different page (client-side)
 		console.log("Page navigation - client-side");
 		currentPage = page;
-		renderPaginatedResults(page);
+		renderPaginatedResults(page, false); // isNewSearch = false
 	}
+}
+
+/**
+ * Pre-analyze results to determine which organizations will have markers
+ * @param {Array} results - Array of search results
+ * @returns {Set} Set of organization IDs that will have markers
+ */
+function getOrganizationsWithMarkers(results) {
+	const orgIdsWithMarkers = new Set();
+
+	for (const item of results) {
+		if (!item.acf?.organizations_details) continue;
+
+		for (const org of item.acf.organizations_details) {
+			const lat = parseFloat(org.institution_gmap?.lat);
+			const lng = parseFloat(org.institution_gmap?.lng);
+			const orgName = org.institutation_name || "";
+
+			if (isNaN(lat) || isNaN(lng) || !orgName) continue;
+
+			// This organization will have a marker
+			const orgId = `org-${generateOrgId(org, item.title)}`;
+			orgIdsWithMarkers.add(orgId);
+		}
+	}
+
+	return orgIdsWithMarkers;
 }
 
 /**
  * Render paginated results using client-side pagination
  * @param {number} page - Page number to render
+ * @param {boolean} isNewSearch - Whether this is a new search (requires map initialization)
  */
-function renderPaginatedResults(page) {
+function renderPaginatedResults(page, isNewSearch = false) {
 	console.log(
 		`Rendering page ${page} of ${Math.ceil(
 			allSearchResults.length / resultsPerPage
@@ -150,7 +178,17 @@ function renderPaginatedResults(page) {
 	);
 
 	if (!Array.isArray(allSearchResults) || allSearchResults.length === 0) {
-		setResultsHTML("<p>No matches found.</p>");
+		if (isNewSearch) {
+			// For new searches, set up the complete structure even with no results
+			const fullResultParts = [
+				'<div id="allergist-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px; display: none;"></div>',
+				'<div id="search-results-content"><p>No matches found.</p></div>',
+			];
+			setResultsHTML(fullResultParts.join(""));
+		} else {
+			// For pagination, just update the content area
+			setSearchResultsContentHTML("<p>No matches found.</p>");
+		}
 		return;
 	}
 
@@ -161,12 +199,21 @@ function renderPaginatedResults(page) {
 	const endIndex = Math.min(startIndex + resultsPerPage, totalResults);
 	const currentPageResults = allSearchResults.slice(startIndex, endIndex);
 
-	// Reset organization counter for consistent indexing
-	orgIndexCounter = 0;
+	// Pre-analyze which organizations will have markers (using all results, not just current page)
+	const orgIdsWithMarkers = getOrganizationsWithMarkers(allSearchResults);
 
-	// Build results HTML efficiently
+	// For new searches, ensure we have a map container
+	if (isNewSearch) {
+		// Create the complete layout with map container
+		const fullResultParts = [
+			'<div id="allergist-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px;"></div>',
+			'<div id="search-results-content"></div>',
+		];
+		setResultsHTML(fullResultParts.join(""));
+	}
+
+	// Build the paginated content (without map container)
 	const resultParts = [
-		'<div id="allergist-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px;"></div>',
 		`<div class="search-results-info">`,
 		`<p>Found ${totalResults} result${totalResults === 1 ? "" : "s"}${
 			totalResults > resultsPerPage
@@ -208,7 +255,8 @@ function renderPaginatedResults(page) {
 		// Generate organizations HTML using separate function
 		const organizationsHTML = generateOrganizationsHTML(
 			item.acf?.organizations_details,
-			physicianInfo
+			physicianInfo,
+			orgIdsWithMarkers
 		);
 
 		if (organizationsHTML) {
@@ -229,10 +277,12 @@ function renderPaginatedResults(page) {
 		);
 	}
 
-	setResultsHTML(resultParts.join(""));
+	setSearchResultsContentHTML(resultParts.join(""));
 
-	// Initialize the map after HTML is rendered - use all results for map markers
-	setTimeout(() => initializeMap(allSearchResults), 100);
+	// Initialize the map only for new searches, not for pagination
+	if (isNewSearch) {
+		setTimeout(() => initializeMap(allSearchResults), 100);
+	}
 }
 
 /**
@@ -251,10 +301,10 @@ function initializeMap(results) {
 
 	// Initialize map components
 	mapMarkers = [];
+	orgMarkerMap.clear(); // Clear the organization-marker mapping
 	mapInfoWindow = new google.maps.InfoWindow();
 	const bounds = new google.maps.LatLngBounds();
 	const locations = [];
-	let orgIndex = 0;
 
 	// Single loop to collect locations and calculate bounds
 	for (const item of results) {
@@ -267,6 +317,8 @@ function initializeMap(results) {
 
 			if (isNaN(lat) || isNaN(lng) || !orgName) continue;
 
+			// Create a unique org ID based on organization data to ensure consistency
+			const orgId = `org-${generateOrgId(org, item.title)}`;
 			const location = {
 				lat,
 				lng,
@@ -280,7 +332,7 @@ function initializeMap(results) {
 					.join(", "),
 				physicianName: item.title,
 				physicianCredentials: item.acf?.credentials || "",
-				orgId: `org-${orgIndex++}`,
+				orgId: orgId,
 			};
 
 			locations.push(location);
@@ -320,6 +372,9 @@ function initializeMap(results) {
 		});
 
 		mapMarkers.push(marker);
+
+		// Store the mapping between organization ID and marker
+		orgMarkerMap.set(location.orgId, marker);
 	}
 
 	// Fit map to show all markers
@@ -373,6 +428,26 @@ function createInfoWindowContent(location) {
 }
 
 /**
+ * Generate a consistent organization ID based on organization data
+ * @param {Object} org - Organization data
+ * @param {string} physicianName - Physician name for uniqueness
+ * @returns {string} Unique organization ID
+ */
+function generateOrgId(org, physicianName) {
+	// Create a simple hash from organization name, address, and physician name
+	const key = `${org.institutation_name || ""}-${
+		org.institution_gmap?.name || ""
+	}-${physicianName || ""}`;
+	let hash = 0;
+	for (let i = 0; i < key.length; i++) {
+		const char = key.charCodeAt(i);
+		hash = (hash << 5) - hash + char;
+		hash = hash & hash; // Convert to 32-bit integer
+	}
+	return Math.abs(hash).toString();
+}
+
+/**
  * Clean up existing map resources
  */
 function cleanupMap() {
@@ -387,6 +462,9 @@ function cleanupMap() {
 		mapInfoWindow.close();
 	}
 
+	// Clear the organization-marker mapping
+	orgMarkerMap.clear();
+
 	allergistMap = null;
 }
 
@@ -394,9 +472,14 @@ function cleanupMap() {
  * Generate organizations HTML
  * @param {Array} organizations - Organizations data
  * @param {Object} physicianInfo - Physician information
+ * @param {Set} orgIdsWithMarkers - Set of organization IDs that will have markers
  * @returns {string} HTML string
  */
-function generateOrganizationsHTML(organizations, physicianInfo) {
+function generateOrganizationsHTML(
+	organizations,
+	physicianInfo,
+	orgIdsWithMarkers
+) {
 	if (!Array.isArray(organizations) || organizations.length === 0) {
 		return "";
 	}
@@ -420,7 +503,8 @@ function generateOrganizationsHTML(organizations, physicianInfo) {
 	parts.push(`<div class="far-orgs">`);
 
 	for (const org of organizations) {
-		const orgId = `org-${orgIndexCounter++}`;
+		// Generate the same org ID used in map initialization
+		const orgId = `org-${generateOrgId(org, physicianInfo.title)}`;
 		const orgName = org.institutation_name || "Organization";
 		const address = org.institution_gmap?.name || "";
 		const city = org.institution_gmap?.city || "";
@@ -428,6 +512,9 @@ function generateOrganizationsHTML(organizations, physicianInfo) {
 		const postalCode = org.institution_gmap?.post_code || "";
 		const phone = org.institution_phone || "";
 		const distance = org.distance_km;
+
+		// Check if this organization will have a marker on the map
+		const hasMapMarker = orgIdsWithMarkers.has(orgId);
 
 		parts.push(`<div class="far-org" id="${orgId}">`);
 		parts.push(`<h4>${escapeHTML(orgName)}</h4>`);
@@ -461,6 +548,14 @@ function generateOrganizationsHTML(organizations, physicianInfo) {
 				`<li class="far-org-list-item"><strong>Distance:</strong> ${distance} km</li>`
 			);
 		}
+
+		// Add "Show on map" link if this organization has a marker
+		if (hasMapMarker) {
+			parts.push(
+				`<li class="far-org-list-item"><a href="#" class="show-on-map-link" data-org-id="${orgId}">📍 Show on map</a></li>`
+			);
+		}
+
 		parts.push(`</ul>`);
 		parts.push(`</div>`);
 	}
@@ -511,6 +606,19 @@ function normalizePostal(v) {
 function setResultsHTML(html) {
 	const container = document.getElementById("results");
 	if (container) container.innerHTML = html;
+}
+
+/**
+ * Helper to set search results content HTML (for pagination updates)
+ */
+function setSearchResultsContentHTML(html) {
+	const container = document.getElementById("search-results-content");
+	if (container) {
+		container.innerHTML = html;
+	} else {
+		// Fallback to main results container if sub-container doesn't exist
+		setResultsHTML(html);
+	}
 }
 
 /**
@@ -604,9 +712,38 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
 }
 
 /**
- * Handle pagination button clicks
+ * Handle "Show on map" link clicks
+ * @param {string} orgId - Organization ID
  */
-function handlePaginationClick(event) {
+function showMarkerOnMap(orgId) {
+	const marker = orgMarkerMap.get(orgId);
+	if (!marker || !allergistMap) {
+		console.log("Marker or map not found for org ID:", orgId);
+		return;
+	}
+
+	// Center the map on the marker
+	allergistMap.setCenter(marker.getPosition());
+	allergistMap.setZoom(15);
+
+	// Trigger the marker click event to show the info window
+	google.maps.event.trigger(marker, "click");
+
+	// Scroll to the map for better user experience
+	const mapContainer = document.getElementById("allergist-map");
+	if (mapContainer) {
+		mapContainer.scrollIntoView({
+			behavior: "smooth",
+			block: "center",
+		});
+	}
+}
+
+/**
+ * Handle pagination button clicks and show on map links
+ */
+function handleDocumentClick(event) {
+	// Handle pagination button clicks
 	if (
 		event.target.classList.contains("pagination-btn") &&
 		!event.target.disabled
@@ -626,10 +763,19 @@ function handlePaginationClick(event) {
 			handleSearchSubmit(page);
 		}
 	}
+
+	// Handle "Show on map" link clicks
+	if (event.target.classList.contains("show-on-map-link")) {
+		event.preventDefault(); // Prevent default link behavior
+		const orgId = event.target.dataset.orgId;
+		if (orgId) {
+			showMarkerOnMap(orgId);
+		}
+	}
 }
 
-// Add event listener for pagination clicks using event delegation
-document.addEventListener("click", handlePaginationClick);
+// Add event listener for clicks using event delegation
+document.addEventListener("click", handleDocumentClick);
 
 /**
  * Optimized HTML escaper for titles/strings we render
