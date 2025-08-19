@@ -89,6 +89,18 @@
 	background-color: var(--neutral-50);
 }
 
+.entry-content .far-org-list,
+.far-org-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.entry-content .far-org-list-item--map-link,
+.far-org-list-item--map-link {
+	margin-top: var(--spacing-2);
+}
+
 .entry-content .far-physician-info,
 .far-physician-info {
 	margin-bottom: var(--spacing-3);

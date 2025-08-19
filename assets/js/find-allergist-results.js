@@ -526,12 +526,18 @@ function generateOrganizationsHTML(
 			);
 		}
 
-		if (city || state || postalCode) {
-			const locationParts = [city, state, postalCode].filter(Boolean);
+		if (city || state) {
+			const cityStateParts = [city, state].filter(Boolean);
 			parts.push(
 				`<li class="far-org-list-item"> ${escapeHTML(
-					locationParts.join(", ")
+					cityStateParts.join(", ")
 				)}</li>`
+			);
+		}
+
+		if (postalCode) {
+			parts.push(
+				`<li class="far-org-list-item"> ${escapeHTML(postalCode)}</li>`
 			);
 		}
 
@@ -552,7 +558,7 @@ function generateOrganizationsHTML(
 		// Add "Show on map" link if this organization has a marker
 		if (hasMapMarker) {
 			parts.push(
-				`<li class="far-org-list-item"><a href="#" class="show-on-map-link" data-org-id="${orgId}">📍 Show on map</a></li>`
+				`<li class="far-org-list-item far-org-list-item--map-link"><a href="#" class="show-on-map-link" data-org-id="${orgId}">📍 Show on map</a></li>`
 			);
 		}
 
