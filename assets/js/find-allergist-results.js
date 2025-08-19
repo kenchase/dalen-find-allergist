@@ -431,30 +431,37 @@ function generateOrganizationsHTML(organizations, physicianInfo) {
 
 		parts.push(`<div class="far-org" id="${orgId}">`);
 		parts.push(`<h4>${escapeHTML(orgName)}</h4>`);
+		parts.push(`<ul class="far-org-list">`);
 
 		if (address) {
 			parts.push(
-				`<p><strong>Address:</strong> ${escapeHTML(address)}</p>`
+				`<li class="far-org-list-item"> ${escapeHTML(address)}</li>`
 			);
 		}
 
 		if (city || state || postalCode) {
 			const locationParts = [city, state, postalCode].filter(Boolean);
 			parts.push(
-				`<p><strong>Location:</strong> ${escapeHTML(
+				`<li class="far-org-list-item"> ${escapeHTML(
 					locationParts.join(", ")
-				)}</p>`
+				)}</li>`
 			);
 		}
 
 		if (phone) {
-			parts.push(`<p><strong>Phone:</strong> ${escapeHTML(phone)}</p>`);
+			parts.push(
+				`<li class="far-org-list-item"><strong aria-label="Phone">T:</strong> ${escapeHTML(
+					phone
+				)}</li>`
+			);
 		}
 
 		if (distance !== undefined) {
-			parts.push(`<p><strong>Distance:</strong> ${distance} km</p>`);
+			parts.push(
+				`<li class="far-org-list-item"><strong>Distance:</strong> ${distance} km</li>`
+			);
 		}
-
+		parts.push(`</ul>`);
 		parts.push(`</div>`);
 	}
 
