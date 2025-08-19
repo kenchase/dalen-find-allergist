@@ -1,16 +1,65 @@
+/* CSS Custom Properties using Tailwind naming conventions */
+:root {
+	/* Colors */
+	--blue-600: #007cba;
+	--blue-700: #005a87;
+	--blue-50: #f0f8ff;
+
+	--gray-100: #f5f5f5;
+	--gray-200: #e0e0e0;
+	--gray-300: #ddd;
+	--gray-400: #999;
+	--gray-500: #666;
+	--gray-600: #555;
+	--gray-700: #333;
+	--gray-800: #777;
+
+	--red-600: #d63638;
+
+	--slate-50: #f8fafc;
+	--slate-100: #f1f5f9;
+	--slate-200: #f0f0f1;
+	--slate-700: #2271b1;
+
+	--neutral-50: #f9f9f9;
+	--white: #fff;
+
+	/* Spacing */
+	--spacing-1: 0.25rem;
+	--spacing-2: 0.5rem;
+	--spacing-3: 0.75rem;
+	--spacing-4: 1rem;
+	--spacing-6: 1.5rem;
+	--spacing-16: 16px;
+
+	/* Border radius */
+	--rounded: 4px;
+	--rounded-lg: 8px;
+
+	/* Font sizes */
+	--text-xs: 0.8rem;
+	--text-sm: 0.85rem;
+	--text-base: 0.9rem;
+	--text-lg: 1rem;
+	--text-xl: 1.1rem;
+
+	/* Transitions */
+	--transition-all: all 0.2s ease;
+	--transition-bg: background-color 0.2s ease;
+}
+
 /* Target Divi's entry-content specifically to override its styles */
 .entry-content .find-allergists-results,
 .find-allergists-results {
-	border: 1px solid #ccc;
-	padding: 16px;
-	margin-top: 16px;
-	border-radius: 4px;
+	padding: var(--spacing-16);
+	margin-top: var(--spacing-16);
+	border-radius: var(--rounded);
 }
 
 .entry-content .far-list,
 .far-list {
 	display: grid;
-	gap: 1rem;
+	gap: var(--spacing-4);
 	list-style: none;
 	padding: 0;
 	margin: 0;
@@ -19,37 +68,37 @@
 /* Add styles for the new organization structure */
 .entry-content .far-list-item,
 .far-list-item {
-	margin-bottom: 1.5rem;
-	padding: 1rem;
-	border: 1px solid #ddd;
-	border-radius: 8px;
-	background-color: #fff;
+	margin-bottom: var(--spacing-6);
+	padding: var(--spacing-4);
+	border: 1px solid var(--gray-300);
+	border-radius: var(--rounded-lg);
+	background-color: var(--white);
 }
 
 .entry-content .far-orgs,
 .far-orgs {
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
+	gap: var(--spacing-4);
 }
 
 .entry-content .far-org,
 .far-org {
-	padding: 1rem;
-	border-left: 3px solid #007cba;
-	background-color: #f9f9f9;
+	padding: var(--spacing-4);
+	border-left: 3px solid var(--blue-600);
+	background-color: var(--neutral-50);
 }
 
 .entry-content .far-physician-info,
 .far-physician-info {
-	margin-bottom: 0.75rem;
+	margin-bottom: var(--spacing-3);
 }
 
 .entry-content .far-physician-name,
 .far-physician-name {
-	font-size: 1.1rem;
+	font-size: var(--text-xl);
 	font-weight: bold;
-	color: #007cba;
+	color: var(--blue-600);
 	text-decoration: none;
 }
 
@@ -60,91 +109,91 @@
 
 .entry-content .far-physician-credentials,
 .far-physician-credentials {
-	font-size: 0.9rem;
-	color: #666;
-	margin-top: 0.25rem;
+	font-size: var(--text-base);
+	color: var(--gray-500);
+	margin-top: var(--spacing-1);
 }
 
 .entry-content .far-oit-status,
 .far-oit-status {
-	font-size: 0.9rem;
-	color: #2271b1;
-	margin-top: 0.25rem;
+	font-size: var(--text-base);
+	color: var(--slate-700);
+	margin-top: var(--spacing-1);
 	font-weight: 500;
 }
 
 /* Distance Display */
 .entry-content .far-distance,
 .far-distance {
-	font-size: 0.9rem;
-	color: #d63638;
-	margin-top: 0.25rem;
+	font-size: var(--text-base);
+	color: var(--red-600);
+	margin-top: var(--spacing-1);
 	font-weight: 600;
-	background-color: #f0f0f1;
-	padding: 0.25rem 0.5rem;
-	border-radius: 4px;
+	background-color: var(--slate-200);
+	padding: var(--spacing-1) var(--spacing-2);
+	border-radius: var(--rounded);
 	display: inline-block;
 }
 
 .entry-content .far-org-info,
 .far-org-info {
-	border-top: 1px solid #e0e0e0;
-	padding-top: 0.5rem;
+	border-top: 1px solid var(--gray-200);
+	padding-top: var(--spacing-2);
 }
 
 .entry-content .far-org-name,
 .far-org-name {
-	font-size: 1rem;
-	color: #333;
+	font-size: var(--text-lg);
+	color: var(--gray-700);
 	display: block;
-	margin-bottom: 0.25rem;
+	margin-bottom: var(--spacing-1);
 }
 
 .entry-content .far-org-address,
 .far-org-address {
-	font-size: 0.9rem;
-	color: #555;
-	margin-bottom: 0.25rem;
+	font-size: var(--text-base);
+	color: var(--gray-600);
+	margin-bottom: var(--spacing-1);
 }
 
 .entry-content .far-org-city-state,
 .far-org-city-state {
-	font-size: 0.9rem;
-	color: #777;
+	font-size: var(--text-base);
+	color: var(--gray-800);
 	font-style: italic;
-	margin-bottom: 0.25rem;
+	margin-bottom: var(--spacing-1);
 }
 
 .entry-content .far-org-postal,
 .far-org-postal {
-	font-size: 0.9rem;
-	color: #777;
+	font-size: var(--text-base);
+	color: var(--gray-800);
 	font-weight: 500;
 }
 
 /* View on Map Link */
 .entry-content .far-view-map,
 .far-view-map {
-	margin-top: 0.5rem;
+	margin-top: var(--spacing-2);
 }
 
 .entry-content .far-map-link,
 .far-map-link {
 	display: inline-block;
-	padding: 0.25rem 0.5rem;
-	background-color: #007cba;
-	color: white !important;
+	padding: var(--spacing-1) var(--spacing-2);
+	background-color: var(--blue-600);
+	color: var(--white) !important;
 	text-decoration: none;
-	border-radius: 4px;
-	font-size: 0.85rem;
-	transition: background-color 0.2s ease;
+	border-radius: var(--rounded);
+	font-size: var(--text-sm);
+	transition: var(--transition-bg);
 }
 
 .entry-content .far-map-link:hover,
 .far-map-link:hover {
-	background-color: #005a87;
+	background-color: var(--blue-700);
 	text-decoration: none;
-	color: white !important;
+	color: var(--white) !important;
 }
 
 /* Google Map Styles */
@@ -153,31 +202,31 @@
 	width: 100%;
 	height: 400px;
 	margin-bottom: 2rem;
-	border: 1px solid #ddd;
-	border-radius: 8px;
-	background-color: #f5f5f5;
+	border: 1px solid var(--gray-300);
+	border-radius: var(--rounded-lg);
+	background-color: var(--gray-100);
 }
 
 /* Map Info Window Styles */
 .map-info-window h4 {
-	margin: 0 0 0.5rem 0;
-	color: #007cba;
-	font-size: 1rem;
+	margin: 0 0 var(--spacing-2) 0;
+	color: var(--blue-600);
+	font-size: var(--text-lg);
 	font-weight: bold;
 }
 
 .map-info-window p {
-	margin: 0.25rem 0;
-	font-size: 0.9rem;
+	margin: var(--spacing-1) 0;
+	font-size: var(--text-base);
 	line-height: 1.4;
 }
 
 .map-info-window strong {
-	color: #333;
+	color: var(--gray-700);
 }
 
 .map-info-window em {
-	color: #666;
+	color: var(--gray-500);
 	font-style: italic;
 }
 
@@ -187,35 +236,35 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	gap: 0.5rem;
-	margin: 1.5rem 0;
-	padding: 1rem 0;
+	gap: var(--spacing-2);
+	margin: var(--spacing-6) 0;
+	padding: var(--spacing-4) 0;
 }
 
 .entry-content .pagination-btn,
 .pagination-btn {
-	padding: 0.5rem 1rem;
-	border: 1px solid #007cba;
-	background-color: #fff;
-	color: #007cba;
+	padding: var(--spacing-2) var(--spacing-4);
+	border: 1px solid var(--blue-600);
+	background-color: var(--white);
+	color: var(--blue-600);
 	cursor: pointer;
-	border-radius: 4px;
-	font-size: 0.9rem;
-	transition: all 0.2s ease;
+	border-radius: var(--rounded);
+	font-size: var(--text-base);
+	transition: var(--transition-all);
 	min-width: 44px;
 	text-align: center;
 }
 
 .entry-content .pagination-btn:hover:not(.disabled):not(.current),
 .pagination-btn:hover:not(.disabled):not(.current) {
-	background-color: #007cba;
-	color: #fff;
+	background-color: var(--blue-600);
+	color: var(--white);
 }
 
 .entry-content .pagination-btn.current,
 .pagination-btn.current {
-	background-color: #007cba;
-	color: #fff;
+	background-color: var(--blue-600);
+	color: var(--white);
 	font-weight: bold;
 }
 
@@ -223,36 +272,36 @@
 .pagination-btn.disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
-	color: #999;
-	border-color: #ddd;
+	color: var(--gray-400);
+	border-color: var(--gray-300);
 }
 
 .entry-content .pagination-info,
 .pagination-info {
 	display: flex;
 	align-items: center;
-	gap: 0.25rem;
+	gap: var(--spacing-1);
 }
 
 .entry-content .pagination-ellipsis,
 .pagination-ellipsis {
-	padding: 0.5rem 0.25rem;
-	color: #666;
+	padding: var(--spacing-2) var(--spacing-1);
+	color: var(--gray-500);
 }
 
 .entry-content .search-results-info,
 .search-results-info {
-	margin-bottom: 1rem;
-	padding: 0.75rem;
-	background-color: #f0f8ff;
-	border: 1px solid #007cba;
-	border-radius: 4px;
+	margin-bottom: var(--spacing-4);
+	padding: var(--spacing-3);
+	background-color: var(--blue-50);
+	border: 1px solid var(--blue-600);
+	border-radius: var(--rounded);
 }
 
 .entry-content .search-results-info p,
 .search-results-info p {
 	margin: 0;
-	color: #333;
+	color: var(--gray-700);
 	font-weight: 500;
 }
 
@@ -261,13 +310,13 @@
 	.entry-content .pagination-container,
 	.pagination-container {
 		flex-wrap: wrap;
-		gap: 0.25rem;
+		gap: var(--spacing-1);
 	}
-	
+
 	.entry-content .pagination-btn,
 	.pagination-btn {
 		padding: 0.4rem 0.7rem;
-		font-size: 0.8rem;
+		font-size: var(--text-xs);
 		min-width: 36px;
 	}
 }
