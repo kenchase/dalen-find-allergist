@@ -49,25 +49,22 @@
 }
 
 /* Target Divi's entry-content specifically to override its styles */
-.entry-content .find-allergists-results,
+#page-container .find-allergists-results,
 .find-allergists-results {
 	padding: var(--spacing-16);
 	margin-top: var(--spacing-16);
 	border-radius: var(--rounded);
 }
 
-.entry-content .far-list,
-.far-list {
+#page-container .far-items,
+.far-items {
 	display: grid;
 	gap: var(--spacing-4);
-	list-style: none;
-	padding: 0;
-	margin: 0;
 }
 
 /* Add styles for the new organization structure */
-.entry-content .far-list-item,
-.far-list-item {
+#page-container .far-item,
+.far-item {
 	margin-bottom: var(--spacing-6);
 	padding: var(--spacing-4);
 	border: 1px solid var(--gray-300);
@@ -75,38 +72,38 @@
 	background-color: var(--white);
 }
 
-.entry-content .far-orgs,
+#page-container .far-orgs,
 .far-orgs {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-4);
 }
 
-.entry-content .far-org,
+#page-container .far-org,
 .far-org {
 	padding: var(--spacing-4);
 	border-left: 3px solid var(--blue-600);
 	background-color: var(--neutral-50);
 }
 
-.entry-content .far-org-list,
+#page-container .far-org-list,
 .far-org-list {
 	list-style: none;
 	padding: 0;
 	margin: 0;
 }
 
-.entry-content .far-org-list-item--map-link,
+#page-container .far-org-list-item--map-link,
 .far-org-list-item--map-link {
 	margin-top: var(--spacing-2);
 }
 
-.entry-content .far-physician-info,
+#page-container .far-physician-info,
 .far-physician-info {
 	margin-bottom: var(--spacing-3);
 }
 
-.entry-content .far-physician-name,
+#page-container .far-physician-name,
 .far-physician-name {
 	font-size: var(--text-xl);
 	font-weight: bold;
@@ -114,19 +111,19 @@
 	text-decoration: none;
 }
 
-.entry-content .far-physician-name:hover,
-.far-physician-name:hover {
+#page-container .far-physician-name a:hover,
+.far-physician-name a:hover {
 	text-decoration: underline;
 }
 
-.entry-content .far-physician-credentials,
+#page-container .far-physician-credentials,
 .far-physician-credentials {
 	font-size: var(--text-base);
 	color: var(--gray-500);
 	margin-top: var(--spacing-1);
 }
 
-.entry-content .far-oit-status,
+#page-container .far-oit-status,
 .far-oit-status {
 	font-size: var(--text-base);
 	color: var(--slate-700);
@@ -135,7 +132,7 @@
 }
 
 /* Distance Display */
-.entry-content .far-distance,
+#page-container .far-distance,
 .far-distance {
 	font-size: var(--text-base);
 	color: var(--red-600);
@@ -147,13 +144,13 @@
 	display: inline-block;
 }
 
-.entry-content .far-org-info,
+#page-container .far-org-info,
 .far-org-info {
 	border-top: 1px solid var(--gray-200);
 	padding-top: var(--spacing-2);
 }
 
-.entry-content .far-org-name,
+#page-container .far-org-name,
 .far-org-name {
 	font-size: var(--text-lg);
 	color: var(--gray-700);
@@ -161,14 +158,14 @@
 	margin-bottom: var(--spacing-1);
 }
 
-.entry-content .far-org-address,
+#page-container .far-org-address,
 .far-org-address {
 	font-size: var(--text-base);
 	color: var(--gray-600);
 	margin-bottom: var(--spacing-1);
 }
 
-.entry-content .far-org-city-state,
+#page-container .far-org-city-state,
 .far-org-city-state {
 	font-size: var(--text-base);
 	color: var(--gray-800);
@@ -176,7 +173,7 @@
 	margin-bottom: var(--spacing-1);
 }
 
-.entry-content .far-org-postal,
+#page-container .far-org-postal,
 .far-org-postal {
 	font-size: var(--text-base);
 	color: var(--gray-800);
@@ -184,12 +181,12 @@
 }
 
 /* View on Map Link */
-.entry-content .far-view-map,
+#page-container .far-view-map,
 .far-view-map {
 	margin-top: var(--spacing-2);
 }
 
-.entry-content .far-map-link,
+#page-container .far-map-link,
 .far-map-link {
 	display: inline-block;
 	padding: var(--spacing-1) var(--spacing-2);
@@ -201,7 +198,7 @@
 	transition: var(--transition-bg);
 }
 
-.entry-content .far-map-link:hover,
+#page-container .far-map-link:hover,
 .far-map-link:hover {
 	background-color: var(--blue-700);
 	text-decoration: none;
@@ -209,7 +206,7 @@
 }
 
 /* Google Map Styles */
-.entry-content #allergist-map,
+#page-container #allergist-map,
 #allergist-map {
 	width: 100%;
 	height: 400px;
@@ -243,7 +240,7 @@
 }
 
 /* Pagination Styles */
-.entry-content .pagination-container,
+#page-container .pagination-container,
 .pagination-container {
 	display: flex;
 	justify-content: center;
@@ -253,7 +250,7 @@
 	padding: var(--spacing-4) 0;
 }
 
-.entry-content .pagination-btn,
+#page-container .pagination-btn,
 .pagination-btn {
 	padding: var(--spacing-2) var(--spacing-4);
 	border: 1px solid var(--blue-600);
@@ -267,20 +264,20 @@
 	text-align: center;
 }
 
-.entry-content .pagination-btn:hover:not(.disabled):not(.current),
+#page-container .pagination-btn:hover:not(.disabled):not(.current),
 .pagination-btn:hover:not(.disabled):not(.current) {
 	background-color: var(--blue-600);
 	color: var(--white);
 }
 
-.entry-content .pagination-btn.current,
+#page-container .pagination-btn.current,
 .pagination-btn.current {
 	background-color: var(--blue-600);
 	color: var(--white);
 	font-weight: bold;
 }
 
-.entry-content .pagination-btn.disabled,
+#page-container .pagination-btn.disabled,
 .pagination-btn.disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
@@ -288,20 +285,20 @@
 	border-color: var(--gray-300);
 }
 
-.entry-content .pagination-info,
+#page-container .pagination-info,
 .pagination-info {
 	display: flex;
 	align-items: center;
 	gap: var(--spacing-1);
 }
 
-.entry-content .pagination-ellipsis,
+#page-container .pagination-ellipsis,
 .pagination-ellipsis {
 	padding: var(--spacing-2) var(--spacing-1);
 	color: var(--gray-500);
 }
 
-.entry-content .search-results-info,
+#page-container .search-results-info,
 .search-results-info {
 	margin-bottom: var(--spacing-4);
 	padding: var(--spacing-3);
@@ -310,7 +307,7 @@
 	border-radius: var(--rounded);
 }
 
-.entry-content .search-results-info p,
+#page-container .search-results-info p,
 .search-results-info p {
 	margin: 0;
 	color: var(--gray-700);
@@ -319,13 +316,13 @@
 
 /* Responsive pagination for mobile */
 @media (max-width: 768px) {
-	.entry-content .pagination-container,
+	#page-container .pagination-container,
 	.pagination-container {
 		flex-wrap: wrap;
 		gap: var(--spacing-1);
 	}
 
-	.entry-content .pagination-btn,
+	#page-container .pagination-btn,
 	.pagination-btn {
 		padding: 0.4rem 0.7rem;
 		font-size: var(--text-xs);

@@ -232,7 +232,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
 		);
 	}
 
-	resultParts.push('<ul class="far-list">');
+	resultParts.push('<div class="far-items">');
 
 	for (const item of currentPageResults) {
 		const city = item.acf?.city || "";
@@ -261,12 +261,12 @@ function renderPaginatedResults(page, isNewSearch = false) {
 
 		if (organizationsHTML) {
 			resultParts.push(
-				`<li class="far-list-item">${organizationsHTML}</li>`
+				`<div class="far-item">${organizationsHTML}</div>`
 			);
 		}
 	}
 
-	resultParts.push("</ul>");
+	resultParts.push("</div>");
 
 	// Add pagination controls at the bottom if there are multiple pages
 	if (totalPages > 1) {
@@ -517,7 +517,7 @@ function generateOrganizationsHTML(
 		const hasMapMarker = orgIdsWithMarkers.has(orgId);
 
 		parts.push(`<div class="far-org" id="${orgId}">`);
-		parts.push(`<h4>${escapeHTML(orgName)}</h4>`);
+		parts.push(`<h4 class="far-org-title">${escapeHTML(orgName)}</h4>`);
 		parts.push(`<ul class="far-org-list">`);
 
 		if (address) {
