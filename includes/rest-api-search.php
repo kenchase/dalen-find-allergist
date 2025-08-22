@@ -1,4 +1,5 @@
 <?php
+
 /**
  * REST API Search Endpoints for Dalen Find Allergist Plugin
  * 
@@ -142,10 +143,13 @@ function dalen_physician_search(WP_REST_Request $req)
     $kms = absint($req->get_param('kms') ?? 0);
     $oit = rest_sanitize_boolean($req->get_param('oit') ?? false);
 
+    // Create full name for title-based search
+    $full = trim($fname . ' ' . $lname);
+
     // Require at least one search criterion
     if (empty($fname) && empty($lname) && empty($city) && empty($province) && empty($postal) && $kms === 0) {
         return new WP_Error(
-            'missing_criteria', 
+            'missing_criteria',
             __('Please provide at least one search criterion.', 'dalen-find-allergist'),
             ['status' => 400]
         );
@@ -160,22 +164,21 @@ function dalen_physician_search(WP_REST_Request $req)
         );
     }
 
-    try {
-        $meta_query = ['relation' => 'AND'];
+    $meta_query = ['relation' => 'AND'];
 
-        // Exclude records where immunologist_online_search_tool is "YES"
-        $meta_query[] = [
-            'relation' => 'OR',
-            [
-                'key'     => 'immunologist_online_search_tool',
-                'value'   => 'YES',
-                'compare' => '!='
-            ],
-            [
-                'key'     => 'immunologist_online_search_tool',
-                'compare' => 'NOT EXISTS'
-            ]
-        ];
+    // Exclude records where immunologist_online_search_tool is "YES"
+    $meta_query[] = [
+        'relation' => 'OR',
+        [
+            'key'     => 'immunologist_online_search_tool',
+            'value'   => 'YES',
+            'compare' => '!='
+        ],
+        [
+            'key'     => 'immunologist_online_search_tool',
+            'compare' => 'NOT EXISTS'
+        ]
+    ];
 
     // Map your form fields to ACF keys. (Change these to YOUR actual ACF field names.)
     // Map request params -> your ACF meta keys

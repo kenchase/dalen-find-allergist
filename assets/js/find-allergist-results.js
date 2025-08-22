@@ -1,9 +1,9 @@
 /**
  * Find Allergist Results JavaScript
- * 
+ *
  * Handles search form submission, pagination, and map functionality
  * for the Dalen Find Allergist plugin.
- * 
+ *
  * @package Dalen_Find_Allergist
  * @since 1.0.0
  */
@@ -24,7 +24,7 @@ const AppState = {
 	currentSearchData: null,
 	currentPage: 1,
 	allSearchResults: [],
-	elements: {}
+	elements: {},
 };
 
 /**
@@ -85,14 +85,14 @@ function bindEventHandlers() {
  */
 function clearForm() {
 	const { form } = AppState.elements;
-	
+
 	form?.reset();
-	
+
 	// Reset pagination state
 	AppState.currentSearchData = null;
 	AppState.currentPage = 1;
 	AppState.allSearchResults = [];
-	
+
 	// Clear results
 	setResultsHTML("");
 }
@@ -108,23 +108,23 @@ async function handleSearchSubmit(page = 1) {
 
 	// Check if this is a new search (different parameters)
 	const isNewSearch =
-		!currentSearchData ||
-		JSON.stringify(currentSearchData) !== JSON.stringify(formData);
+		!AppState.currentSearchData ||
+		JSON.stringify(AppState.currentSearchData) !== JSON.stringify(formData);
 
 	if (isNewSearch) {
 		// New search - make API call
 		console.log("New search - making API call");
 
 		// Abort previous request if still pending
-		if (searchController) {
-			searchController.abort();
+		if (AppState.searchController) {
+			AppState.searchController.abort();
 		}
 
 		// Create new abort controller for this request
-		searchController = new AbortController();
+		AppState.searchController = new AbortController();
 
-		currentSearchData = formData;
-		currentPage = 1;
+		AppState.currentSearchData = formData;
+		AppState.currentPage = 1;
 
 		// Build query params (send only what's filled)
 		const params = new URLSearchParams();
@@ -146,19 +146,23 @@ async function handleSearchSubmit(page = 1) {
 			const nonce = window.wpApiSettings?.nonce;
 			const res = await fetch(`${ENDPOINT}?${params.toString()}`, {
 				headers: nonce ? { "X-WP-Nonce": nonce } : undefined,
-				signal: searchController.signal,
+				signal: AppState.searchController.signal,
 			});
-
 			if (!res.ok) {
 				throw new Error(`REST request failed (${res.status})`);
 			}
 
 			const data = await res.json();
+			console.log("API Response:", data);
 
 			// Store all results for client-side pagination
-			allSearchResults = data.results || [];
-
-			// Render first page
+			AppState.allSearchResults = data.results || [];
+			console.log(
+				"Stored results:",
+				AppState.allSearchResults,
+				"Length:",
+				AppState.allSearchResults.length
+			); // Render first page
 			renderPaginatedResults(1, true); // isNewSearch = true
 		} catch (err) {
 			// Don't show error for aborted requests
@@ -171,14 +175,14 @@ async function handleSearchSubmit(page = 1) {
 			setResultsHTML(
 				'<p role="alert">Sorry, something went wrong. Please try again.</p>'
 			);
-			allSearchResults = [];
+			AppState.allSearchResults = [];
 		} finally {
-			searchController = null;
+			AppState.searchController = null;
 		}
 	} else {
 		// Same search - just navigate to different page (client-side)
 		console.log("Page navigation - client-side");
-		currentPage = page;
+		AppState.currentPage = page;
 		renderPaginatedResults(page, false); // isNewSearch = false
 	}
 }
@@ -216,13 +220,26 @@ function getOrganizationsWithMarkers(results) {
  * @param {boolean} isNewSearch - Whether this is a new search (requires map initialization)
  */
 function renderPaginatedResults(page, isNewSearch = false) {
+	console.log("renderPaginatedResults called with:", { page, isNewSearch });
+	console.log("AppState.allSearchResults:", AppState.allSearchResults);
+	console.log("Is array?", Array.isArray(AppState.allSearchResults));
+	console.log(
+		"Length:",
+		AppState.allSearchResults
+			? AppState.allSearchResults.length
+			: "undefined"
+	);
+
 	console.log(
 		`Rendering page ${page} of ${Math.ceil(
-			allSearchResults.length / resultsPerPage
+			AppState.allSearchResults.length / RESULTS_PER_PAGE
 		)}`
 	);
 
-	if (!Array.isArray(allSearchResults) || allSearchResults.length === 0) {
+	if (
+		!Array.isArray(AppState.allSearchResults) ||
+		AppState.allSearchResults.length === 0
+	) {
 		if (isNewSearch) {
 			// For new searches, set up the complete structure even with no results
 			const fullResultParts = [
@@ -238,14 +255,19 @@ function renderPaginatedResults(page, isNewSearch = false) {
 	}
 
 	// Calculate pagination
-	const totalResults = allSearchResults.length;
-	const totalPages = Math.ceil(totalResults / resultsPerPage);
-	const startIndex = (page - 1) * resultsPerPage;
-	const endIndex = Math.min(startIndex + resultsPerPage, totalResults);
-	const currentPageResults = allSearchResults.slice(startIndex, endIndex);
+	const totalResults = AppState.allSearchResults.length;
+	const totalPages = Math.ceil(totalResults / RESULTS_PER_PAGE);
+	const startIndex = (page - 1) * RESULTS_PER_PAGE;
+	const endIndex = Math.min(startIndex + RESULTS_PER_PAGE, totalResults);
+	const currentPageResults = AppState.allSearchResults.slice(
+		startIndex,
+		endIndex
+	);
 
 	// Pre-analyze which organizations will have markers (using all results, not just current page)
-	const orgIdsWithMarkers = getOrganizationsWithMarkers(allSearchResults);
+	const orgIdsWithMarkers = getOrganizationsWithMarkers(
+		AppState.allSearchResults
+	);
 
 	// For new searches, ensure we have a map container
 	if (isNewSearch) {
@@ -261,7 +283,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
 	const resultParts = [
 		`<div class="search-results-info">`,
 		`<p>Found ${totalResults} result${totalResults === 1 ? "" : "s"}${
-			totalResults > resultsPerPage
+			totalResults > RESULTS_PER_PAGE
 				? ` - showing ${startIndex + 1} to ${endIndex}`
 				: ""
 		}</p>`,
@@ -326,7 +348,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
 
 	// Initialize the map only for new searches, not for pagination
 	if (isNewSearch) {
-		setTimeout(() => initializeMap(allSearchResults), 100);
+		setTimeout(() => initializeMap(AppState.allSearchResults), 100);
 	}
 }
 
@@ -345,9 +367,9 @@ function initializeMap(results) {
 	cleanupMap();
 
 	// Initialize map components
-	mapMarkers = [];
-	orgMarkerMap.clear(); // Clear the organization-marker mapping
-	mapInfoWindow = new google.maps.InfoWindow();
+	AppState.mapMarkers = [];
+	AppState.orgMarkerMap.clear(); // Clear the organization-marker mapping
+	AppState.mapInfoWindow = new google.maps.InfoWindow();
 	const bounds = new google.maps.LatLngBounds();
 	const locations = [];
 
@@ -391,7 +413,7 @@ function initializeMap(results) {
 	}
 
 	// Initialize map
-	allergistMap = new google.maps.Map(mapContainer, {
+	AppState.allergistMap = new google.maps.Map(mapContainer, {
 		zoom: 10,
 		center: bounds.getCenter(),
 		mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -401,7 +423,7 @@ function initializeMap(results) {
 	for (const location of locations) {
 		const marker = new google.maps.Marker({
 			position: { lat: location.lat, lng: location.lng },
-			map: allergistMap,
+			map: AppState.allergistMap,
 			title: location.title,
 			icon: {
 				url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
@@ -412,22 +434,22 @@ function initializeMap(results) {
 		// Add click listener for info window
 		marker.addListener("click", () => {
 			const content = createInfoWindowContent(location);
-			mapInfoWindow.setContent(content);
-			mapInfoWindow.open(allergistMap, marker);
+			AppState.mapInfoWindow.setContent(content);
+			AppState.mapInfoWindow.open(AppState.allergistMap, marker);
 		});
 
-		mapMarkers.push(marker);
+		AppState.mapMarkers.push(marker);
 
 		// Store the mapping between organization ID and marker
-		orgMarkerMap.set(location.orgId, marker);
+		AppState.orgMarkerMap.set(location.orgId, marker);
 	}
 
 	// Fit map to show all markers
 	if (locations.length === 1) {
-		allergistMap.setCenter(bounds.getCenter());
-		allergistMap.setZoom(15);
+		AppState.allergistMap.setCenter(bounds.getCenter());
+		AppState.allergistMap.setZoom(15);
 	} else {
-		allergistMap.fitBounds(bounds);
+		AppState.allergistMap.fitBounds(bounds);
 	}
 }
 
@@ -496,21 +518,21 @@ function generateOrgId(org, physicianName) {
  * Clean up existing map resources
  */
 function cleanupMap() {
-	if (mapMarkers) {
-		for (const marker of mapMarkers) {
+	if (AppState.mapMarkers) {
+		for (const marker of AppState.mapMarkers) {
 			marker.setMap(null);
 		}
-		mapMarkers = [];
+		AppState.mapMarkers = [];
 	}
 
-	if (mapInfoWindow) {
-		mapInfoWindow.close();
+	if (AppState.mapInfoWindow) {
+		AppState.mapInfoWindow.close();
 	}
 
 	// Clear the organization-marker mapping
-	orgMarkerMap.clear();
+	AppState.orgMarkerMap.clear();
 
-	allergistMap = null;
+	AppState.allergistMap = null;
 }
 
 /**
@@ -767,15 +789,15 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
  * @param {string} orgId - Organization ID
  */
 function showMarkerOnMap(orgId) {
-	const marker = orgMarkerMap.get(orgId);
-	if (!marker || !allergistMap) {
+	const marker = AppState.orgMarkerMap.get(orgId);
+	if (!marker || !AppState.allergistMap) {
 		console.log("Marker or map not found for org ID:", orgId);
 		return;
 	}
 
 	// Center the map on the marker
-	allergistMap.setCenter(marker.getPosition());
-	allergistMap.setZoom(15);
+	AppState.allergistMap.setCenter(marker.getPosition());
+	AppState.allergistMap.setZoom(15);
 
 	// Trigger the marker click event to show the info window
 	google.maps.event.trigger(marker, "click");
@@ -800,7 +822,7 @@ function handleDocumentClick(event) {
 		!event.target.disabled
 	) {
 		const page = parseInt(event.target.dataset.page);
-		if (page && currentSearchData) {
+		if (page && AppState.currentSearchData) {
 			// Scroll to top of results
 			const resultsContainer = document.getElementById("results");
 			if (resultsContainer) {
