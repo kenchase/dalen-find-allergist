@@ -338,7 +338,7 @@
                                     $lng = isset($org['institution_gmap']['lng']) ? floatval($org['institution_gmap']['lng']) : 0;
                                     if ($lat && $lng && $org_name): ?>
                                         <li class="far-org-list-item far-org-list-item--map-link">
-                                            <a href="#" class="show-on-map-link" data-org-id="<?php echo esc_attr($org_id); ?>">📍 Show on map</a>
+                                            <a href="#" class="show-on-map-link" data-lat="<?php echo esc_attr($lat); ?>" data-lng="<?php echo esc_attr($lng); ?>" data-org-name="<?php echo esc_attr($org_name); ?>" data-address="<?php echo esc_attr($address); ?>">📍 Show on map</a>
                                         </li>
                                     <?php endif; ?>
                                 </ul>
@@ -355,7 +355,6 @@
                 let singleAllergistMap = null;
                 let singleAllergistMarkers = [];
                 let singleAllergistInfoWindow = null;
-                let orgMarkerMap = new Map(); // Maps organization IDs to their markers
 
                 document.addEventListener('DOMContentLoaded', function() {
                     if (typeof google !== 'undefined' && google.maps) {
@@ -373,18 +372,36 @@
                     document.addEventListener('click', function(e) {
                         if (e.target.classList.contains('show-on-map-link')) {
                             e.preventDefault();
-                            const orgId = e.target.getAttribute('data-org-id');
-                            showLocationOnMap(orgId);
+                            const lat = parseFloat(e.target.getAttribute('data-lat'));
+                            const lng = parseFloat(e.target.getAttribute('data-lng'));
+                            const orgName = e.target.getAttribute('data-org-name');
+                            const address = e.target.getAttribute('data-address');
+
+                            console.log('Show on map clicked:', {
+                                lat,
+                                lng,
+                                orgName,
+                                address
+                            });
+                            showLocationOnMap(lat, lng, orgName, address);
                         }
                     });
                 });
 
                 function initializeSingleAllergistMap() {
                     const mapContainer = document.getElementById('single-allergist-map');
-                    if (!mapContainer) return;
+                    if (!mapContainer) {
+                        console.log('Map container not found');
+                        return;
+                    }
 
                     const locations = <?php echo json_encode($map_locations); ?>;
-                    if (!locations || locations.length === 0) return;
+                    if (!locations || locations.length === 0) {
+                        console.log('No locations to display');
+                        return;
+                    }
+
+                    console.log('Initializing map with locations:', locations);
 
                     const bounds = new google.maps.LatLngBounds();
                     singleAllergistInfoWindow = new google.maps.InfoWindow();
@@ -395,9 +412,8 @@
                         mapTypeId: google.maps.MapTypeId.ROADMAP
                     });
 
-                    // Clear existing markers and mapping
+                    // Clear existing markers
                     singleAllergistMarkers = [];
-                    orgMarkerMap.clear();
 
                     // Add markers for each location
                     locations.forEach(function(location, index) {
@@ -423,16 +439,8 @@
                             singleAllergistInfoWindow.open(singleAllergistMap, marker);
                         });
 
-                        // Store marker in array and create organization ID mapping
+                        // Store marker in array
                         singleAllergistMarkers.push(marker);
-
-                        // Generate the same org ID as used in the HTML
-                        const orgId = 'org-' + Math.abs(crc32(location.title + '-' + location.address + '-' + location.physicianName));
-                        orgMarkerMap.set(orgId, {
-                            marker: marker,
-                            content: content
-                        });
-
                         bounds.extend(new google.maps.LatLng(location.lat, location.lng));
                     });
 
@@ -443,6 +451,8 @@
                     } else {
                         singleAllergistMap.fitBounds(bounds);
                     }
+
+                    console.log('Map initialized successfully with', singleAllergistMarkers.length, 'markers');
                 }
 
                 function createInfoWindowContent(location) {
@@ -472,7 +482,14 @@
                     return content;
                 }
 
-                function showLocationOnMap(orgId) {
+                function showLocationOnMap(lat, lng, orgName, address) {
+                    console.log('showLocationOnMap called with:', {
+                        lat,
+                        lng,
+                        orgName,
+                        address
+                    });
+
                     // Smooth scroll to map
                     const mapContainer = document.getElementById('single-allergist-map');
                     if (mapContainer) {
@@ -480,61 +497,75 @@
                             behavior: 'smooth',
                             block: 'center'
                         });
+                        console.log('Scrolled to map');
                     }
 
                     // Show marker info window after a short delay to allow scrolling
                     setTimeout(function() {
-                        const markerData = orgMarkerMap.get(orgId);
-                        if (markerData && singleAllergistMap && singleAllergistInfoWindow) {
+                        if (!singleAllergistMap || !singleAllergistInfoWindow) {
+                            console.log('Map or info window not initialized');
+                            return;
+                        }
+
+                        // Find the marker that matches these coordinates
+                        const targetMarker = singleAllergistMarkers.find(marker => {
+                            const position = marker.getPosition();
+                            return Math.abs(position.lat() - lat) < 0.0001 && Math.abs(position.lng() - lng) < 0.0001;
+                        });
+
+                        if (targetMarker) {
+                            console.log('Found matching marker, opening info window');
+
                             // Center map on the specific marker
-                            singleAllergistMap.setCenter(markerData.marker.getPosition());
+                            singleAllergistMap.setCenter(new google.maps.LatLng(lat, lng));
                             singleAllergistMap.setZoom(15);
 
-                            // Open info window
-                            singleAllergistInfoWindow.setContent(markerData.content);
-                            singleAllergistInfoWindow.open(singleAllergistMap, markerData.marker);
+                            // Create and open info window with organization data
+                            const content = createInfoWindowContentFromData(orgName, address);
+                            singleAllergistInfoWindow.setContent(content);
+                            singleAllergistInfoWindow.open(singleAllergistMap, targetMarker);
+                        } else {
+                            console.log('No matching marker found for coordinates:', lat, lng);
                         }
                     }, 500); // Delay to allow smooth scroll to complete
                 }
 
-                // Simple CRC32 implementation for consistent ID generation
-                function crc32(str) {
-                    let crc = 0 ^ (-1);
-                    for (let i = 0; i < str.length; i++) {
-                        crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
-                    }
-                    return (crc ^ (-1)) >>> 0;
-                }
+                function createInfoWindowContentFromData(orgName, address) {
+                    let content = '<div class="map-info-window">';
+                    content += '<h4>' + escapeHtml(orgName) + '</h4>';
 
-                // CRC32 lookup table
-                const crcTable = [];
-                for (let i = 0; i < 256; i++) {
-                    let c = i;
-                    for (let j = 0; j < 8; j++) {
-                        c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+                    if (address) {
+                        content += '<p><strong><?php _e('Address:', 'dalen-find-allergist'); ?></strong> ' + escapeHtml(address) + '</p>';
                     }
-                    crcTable[i] = c;
+
+                    content += '<p><strong><?php _e('Physician:', 'dalen-find-allergist'); ?></strong> <?php echo esc_js($physician_name); ?>';
+                    <?php if ($credentials): ?>
+                        content += ', <?php echo esc_js($credentials); ?>';
+                    <?php endif; ?>
+                    content += '</p>';
+
+                    content += '</div>';
+                    return content;
                 }
 
                 function escapeHtml(text) {
+                    if (!text) return '';
                     const div = document.createElement('div');
                     div.textContent = text;
                     return div.innerHTML;
                 }
             </script>
-        <?php endif; ?>
+        <?php endif; ?> <?php
 
-    <?php
+                        // Return the buffered content
+                        return ob_get_clean();
+                    }
 
-        // Return the buffered content
-        return ob_get_clean();
-    }
+                    // Register the shortcode
+                    // Ideally this would use a single shortcode. However, because of how Divi was setup, we need to use two.
+                    // TO-DO: Refactor to use a single shortcode
+                    add_shortcode('find_allergists_form', 'find_allergist_form_shortcode');
+                    add_shortcode('find_allergists_results', 'find_allergist_results_shortcode');
 
-    // Register the shortcode
-    // Ideally this would use a single shortcode. However, because of how Divi was setup, we need to use two.
-    // TO-DO: Refactor to use a single shortcode
-    add_shortcode('find_allergists_form', 'find_allergist_form_shortcode');
-    add_shortcode('find_allergists_results', 'find_allergist_results_shortcode');
-
-    // Short code to display Single Allergist on front-end
-    add_shortcode('find_allergist_single', 'find_allergist_single_shortcode');
+                    // Short code to display Single Allergist on front-end
+                    add_shortcode('find_allergist_single', 'find_allergist_single_shortcode');
