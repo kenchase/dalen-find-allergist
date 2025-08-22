@@ -177,7 +177,7 @@ This plugin follows WordPress best practices and coding standards:
 
 ### Search Endpoint
 
-**URL**: `GET /wp-json/dalen/v1/physicians/search` *(Updated namespace)*
+**URL**: `GET /wp-json/dalen/v1/physicians/search` _(Updated namespace)_
 
 **Parameters**:
 
@@ -190,10 +190,11 @@ This plugin follows WordPress best practices and coding standards:
 -   `oit` (boolean): Filter for OIT specialists
 
 **Enhanced Security & Validation**:
-- All parameters are properly sanitized and validated
-- Distance parameter limited to 1-500km range
-- Required search criteria validation
-- Comprehensive error handling with user-friendly messages
+
+-   All parameters are properly sanitized and validated
+-   Distance parameter limited to 1-500km range
+-   Required search criteria validation
+-   Comprehensive error handling with user-friendly messages
 
 **Example Requests**:
 
@@ -340,21 +341,23 @@ dalen-find-allergist/
 ├── tests/                            # Unit tests
 └── .circleci/                        # CI/CD configuration
 ```
-│   ├── custom-post.php               # Physician post type
-│   ├── custom-role.php               # Wild Apricot user role management & access controls
-│   ├── rest-api-search.php           # Search API endpoints
-│   ├── shortcodes.php                # Frontend shortcodes
-│   └── login-redirect.php            # User management
+
+│ ├── custom-post.php # Physician post type
+│ ├── custom-role.php # Wild Apricot user role management & access controls
+│ ├── rest-api-search.php # Search API endpoints
+│ ├── shortcodes.php # Frontend shortcodes
+│ └── login-redirect.php # User management
 ├── assets/
-│   ├── css/
-│   │   ├── admin.css                 # Admin panel styles
-│   │   └── find-allergist-results.css # Frontend styles
-│   └── js/
-│       ├── admin.js                  # Admin panel functionality
-│       └── find-allergist-results.js # Frontend JavaScript
-├── tests/                            # Unit tests
-└── .circleci/                        # CI/CD configuration
-```
+│ ├── css/
+│ │ ├── admin.css # Admin panel styles
+│ │ └── find-allergist-results.css # Frontend styles
+│ └── js/
+│ ├── admin.js # Admin panel functionality
+│ └── find-allergist-results.js # Frontend JavaScript
+├── tests/ # Unit tests
+└── .circleci/ # CI/CD configuration
+
+````
 
 ## Configuration
 
@@ -378,7 +381,7 @@ public function configure_acf_google_map_api($api) {
     }
     return $api;
 }
-```
+````
 
 **Required Google APIs**:
 
@@ -472,11 +475,13 @@ No additional configuration is required. The system automatically:
 The plugin includes optional login redirect functionality (`includes/login-redirect.php`) that can redirect allergist users to their physician profiles after login. This feature is currently not loaded by default but can be enabled by uncommenting the include line in the main plugin file.
 
 **Features**:
-- Redirects users with 'allergist' role to physician post type admin page
-- WooCommerce compatibility for WooCommerce-based login systems
-- Clean, focused user experience for allergist users
+
+-   Redirects users with 'allergist' role to physician post type admin page
+-   WooCommerce compatibility for WooCommerce-based login systems
+-   Clean, focused user experience for allergist users
 
 To enable, add to `includes/class-plugin.php`:
+
 ```php
 require_once $this->plugin_path . 'includes/login-redirect.php';
 ```
@@ -632,7 +637,7 @@ This plugin is developed for the Canadian Society of Allergy and Clinical Immuno
 -   **PERFORMANCE**: Reduced plugin size by ~30% through code optimization
 -   **SECURITY**: Enhanced sanitization and escaping throughout
 
-### Version 1.2.0
+### Version 0.4.0
 
 -   **NEW**: Wild Apricot SSO integration with comprehensive user role management
 -   **NEW**: Granular access controls for wa_level users on physician profiles
@@ -645,7 +650,7 @@ This plugin is developed for the Canadian Society of Allergy and Clinical Immuno
 -   **IMPROVED**: Optimized code structure with OOP approach and reduced redundancy
 -   **IMPROVED**: Better user experience with clean, focused admin interface for physicians
 
-### Version 1.1.0
+### Version 0.3.0
 
 -   **NEW**: Client-side pagination for instant page navigation
 -   **NEW**: Smart search detection (new search vs. page navigation)
@@ -656,7 +661,7 @@ This plugin is developed for the Canadian Society of Allergy and Clinical Immuno
 -   **IMPROVED**: Memory management with automatic result cleanup
 -   **IMPROVED**: JavaScript architecture with better error handling
 
-### Version 1.0.0
+### Version 0.2.0
 
 -   **NEW**: Complete admin panel with dashboard, settings, and help documentation
 -   **NEW**: Centralized Google Maps API key management through admin interface
