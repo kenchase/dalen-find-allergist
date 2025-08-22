@@ -1,8 +1,28 @@
 <?php
-/*
-*  Custom WordPress Post Type and Taxonomy for Allergists
-*/
+/**
+ * Custom WordPress Post Type and Taxonomy for Allergists
+ * 
+ * Registers the 'physicians' post type and 'physiciantypes' taxonomy
+ * for managing allergist data in the WordPress backend.
+ * 
+ * Note: Although named 'physicians', this post type is specifically for Allergists.
+ * The naming was kept for backward compatibility as content already exists 
+ * in the database with this structure.
+ *
+ * @package Dalen_Find_Allergist
+ * @since 1.0.0
+ */
 
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Register custom post type for allergists and related taxonomy
+ * 
+ * @since 1.0.0
+ */
 function csaci_custom_allergist_post()
 {
     $post_type_args = array(

@@ -9,6 +9,9 @@
  * Text Domain:     dalen-find-allergist
  * Domain Path:     /languages
  * Version:         0.2.0
+ * Requires at least: 5.0
+ * Tested up to:    6.4
+ * Requires PHP:    7.4
  *
  * @package         Dalen_Find_Allergist
  */
@@ -18,6 +21,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Define plugin constants
+require_once plugin_dir_path(__FILE__) . 'includes/constants.php';
+
 /**
  * Get Google Maps API key from plugin settings
  * 
@@ -25,7 +31,7 @@ if (!defined('ABSPATH')) {
  */
 function dalen_get_google_maps_api_key()
 {
-    $options = get_option('dalen_find_allergist_options');
+    $options = get_option(DALEN_FIND_ALLERGIST_OPTIONS);
     return isset($options['google_maps_api_key']) ? $options['google_maps_api_key'] : '';
 }
 
@@ -39,41 +45,14 @@ function dalen_has_google_maps_api_key()
     return !empty(dalen_get_google_maps_api_key());
 }
 
-/**
- * Display admin notice if Google Maps API key is not configured
- */
-function dalen_check_api_key_admin_notice()
+// Load the main plugin class
+require_once plugin_dir_path(__FILE__) . 'includes/class-plugin.php';
+
+// Initialize the plugin
+function dalen_find_allergist_init()
 {
-    if (!dalen_has_google_maps_api_key() && current_user_can('manage_options')) {
-        $settings_url = admin_url('admin.php?page=dalen-find-allergist-settings');
-        echo '<div class="notice notice-warning is-dismissible">
-            <p><strong>Find Allergist Plugin:</strong> Google Maps API key is not configured. 
-            <a href="' . esc_url($settings_url) . '">Please configure it in the plugin settings</a> 
-            for full functionality.</p>
-        </div>';
-    }
+    return Dalen_Find_Allergist_Plugin::get_instance(__FILE__);
 }
-add_action('admin_notices', 'dalen_check_api_key_admin_notice');
 
-function my_acf_google_map_api($api)
-{
-    $api_key = dalen_get_google_maps_api_key();
-
-    if (!empty($api_key)) {
-        $api['key'] = $api_key;
-    }
-
-    return $api;
-}
-add_filter('acf/fields/google_map/api', 'my_acf_google_map_api');
-
-include_once plugin_dir_path(__FILE__) . 'includes/custom-role.php';
-include_once plugin_dir_path(__FILE__) . 'includes/custom-post.php';
-include_once plugin_dir_path(__FILE__) . 'includes/shortcodes.php';
-include_once plugin_dir_path(__FILE__) . 'includes/rest-api-search.php';
-// include_once plugin_dir_path(__FILE__) . 'includes/login-redirect.php';
-
-// Include admin functionality
-if (is_admin()) {
-    include_once plugin_dir_path(__FILE__) . 'admin/class-admin.php';
-}
+// Initialize plugin on plugins_loaded hook
+add_action('plugins_loaded', 'dalen_find_allergist_init', 10);

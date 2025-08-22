@@ -1,10 +1,19 @@
 <?php
-// /wp-content/mu-plugins/physicians-search.php
+/**
+ * REST API Search Endpoints for Dalen Find Allergist Plugin
+ * 
+ * @package Dalen_Find_Allergist
+ */
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 add_action('rest_api_init', function () {
-    register_rest_route('my/v1', '/physicians/search', [
+    register_rest_route('dalen/v1', '/physicians/search', [
         'methods'  => 'GET',
-        'callback' => 'my_physician_search',
+        'callback' => 'dalen_physician_search',
         'permission_callback' => '__return_true',
         'args' => [
             // Title parts (mapped from your form)
@@ -15,7 +24,7 @@ add_action('rest_api_init', function () {
             'oit'       => ['required' => false, 'sanitize_callback' => 'rest_sanitize_boolean'],
             'city'      => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'province'  => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
-            'postal'    => ['required' => false, 'sanitize_callback' => 'my_sanitize_postal'],
+            'postal'    => ['required' => false, 'sanitize_callback' => 'dalen_sanitize_postal'],
             'kms'       => ['required' => false, 'sanitize_callback' => 'absint'], // distance filter in kilometers
         ],
     ]);
@@ -23,8 +32,11 @@ add_action('rest_api_init', function () {
 
 /**
  * Normalize Canadian postal codes like "M5V 3A8" -> "M5V 3A8" (uppercase, single space) or "M5V3A8" if you prefer.
+ * 
+ * @param string $value Postal code to sanitize
+ * @return string Sanitized postal code
  */
-function my_sanitize_postal($value)
+function dalen_sanitize_postal($value)
 {
     $v = strtoupper(preg_replace('/\s+/', '', (string)$value));
     // optionally validate: if (!preg_match('/^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z]\d[ABCEGHJ-NPRSTV-Z]\d$/', $v)) { return ''; }
@@ -34,8 +46,11 @@ function my_sanitize_postal($value)
 /**
  * Simple geocoding function for Canadian postal codes
  * You might want to cache results or use a postal code database
+ * 
+ * @param string $postal_code Postal code to geocode
+ * @return array|null Array with lat/lng or null if failed
  */
-function my_geocode_postal($postal_code)
+function dalen_geocode_postal($postal_code)
 {
     if (empty($postal_code)) {
         return null;
@@ -85,8 +100,14 @@ function my_geocode_postal($postal_code)
 /**
  * Calculate distance between two points using Haversine formula
  * Returns distance in kilometers
+ * 
+ * @param float $lat1 Latitude of first point
+ * @param float $lng1 Longitude of first point  
+ * @param float $lat2 Latitude of second point
+ * @param float $lng2 Longitude of second point
+ * @return float Distance in kilometers
  */
-function my_haversine_distance($lat1, $lng1, $lat2, $lng2)
+function dalen_haversine_distance($lat1, $lng1, $lat2, $lng2)
 {
     $earth_radius = 6371; // Earth's radius in kilometers
 
@@ -104,32 +125,57 @@ function my_haversine_distance($lat1, $lng1, $lat2, $lng2)
     return $earth_radius * $c;
 }
 
-function my_physician_search(WP_REST_Request $req)
+/**
+ * REST API endpoint handler for physician search
+ * 
+ * @param WP_REST_Request $req The request object
+ * @return array|WP_Error Search results or error
+ */
+function dalen_physician_search(WP_REST_Request $req)
 {
-    $fname = trim((string) $req['fname']);
-    $lname = trim((string) $req['lname']);
-    $full  = trim("$fname $lname");
+    // Validate and sanitize input
+    $fname = trim(sanitize_text_field($req->get_param('fname') ?? ''));
+    $lname = trim(sanitize_text_field($req->get_param('lname') ?? ''));
+    $city = trim(sanitize_text_field($req->get_param('city') ?? ''));
+    $province = trim(sanitize_text_field($req->get_param('province') ?? ''));
+    $postal = trim(sanitize_text_field($req->get_param('postal') ?? ''));
+    $kms = absint($req->get_param('kms') ?? 0);
+    $oit = rest_sanitize_boolean($req->get_param('oit') ?? false);
 
     // Require at least one search criterion
-    if (empty($fname) && empty($lname) && empty($req['city']) && empty($req['province']) && empty($req['postal']) && empty($req['kms'])) {
-        return new WP_Error('missing_criteria', 'Please provide at least one search criterion.', ['status' => 400]);
+    if (empty($fname) && empty($lname) && empty($city) && empty($province) && empty($postal) && $kms === 0) {
+        return new WP_Error(
+            'missing_criteria', 
+            __('Please provide at least one search criterion.', 'dalen-find-allergist'),
+            ['status' => 400]
+        );
     }
 
-    $meta_query = ['relation' => 'AND'];
+    // Validate distance parameter
+    if ($kms > 0 && ($kms < 1 || $kms > 500)) {
+        return new WP_Error(
+            'invalid_distance',
+            __('Distance must be between 1 and 500 kilometers.', 'dalen-find-allergist'),
+            ['status' => 400]
+        );
+    }
 
-    // Exclude records where immunologist_online_search_tool is "YES"
-    $meta_query[] = [
-        'relation' => 'OR',
-        [
-            'key'     => 'immunologist_online_search_tool',
-            'value'   => 'YES',
-            'compare' => '!='
-        ],
-        [
-            'key'     => 'immunologist_online_search_tool',
-            'compare' => 'NOT EXISTS'
-        ]
-    ];
+    try {
+        $meta_query = ['relation' => 'AND'];
+
+        // Exclude records where immunologist_online_search_tool is "YES"
+        $meta_query[] = [
+            'relation' => 'OR',
+            [
+                'key'     => 'immunologist_online_search_tool',
+                'value'   => 'YES',
+                'compare' => '!='
+            ],
+            [
+                'key'     => 'immunologist_online_search_tool',
+                'compare' => 'NOT EXISTS'
+            ]
+        ];
 
     // Map your form fields to ACF keys. (Change these to YOUR actual ACF field names.)
     // Map request params -> your ACF meta keys
@@ -274,7 +320,7 @@ function my_physician_search(WP_REST_Request $req)
 
     // Distance-based filtering: filter physicians by organizations within specified radius
     if (!empty($req['kms']) && !empty($req['postal'])) {
-        $origin = my_geocode_postal($req['postal']);
+        $origin = dalen_geocode_postal($req['postal']);
         $radius = (float)$req['kms'];
 
         if ($origin && is_array($origin) && isset($origin['lat']) && isset($origin['lng'])) {
@@ -296,7 +342,7 @@ function my_physician_search(WP_REST_Request $req)
                     }
 
                     if ($lat && $lng) {
-                        $distance = my_haversine_distance($origin['lat'], $origin['lng'], $lat, $lng);
+                        $distance = dalen_haversine_distance($origin['lat'], $origin['lng'], $lat, $lng);
 
                         if ($distance <= $radius) {
                             return true;
@@ -315,7 +361,7 @@ function my_physician_search(WP_REST_Request $req)
         if (isset($origin) && is_array($origin) && isset($origin['lat']) && isset($origin['lng'])) {
             $search_postal_coords = $origin;
         } else {
-            $search_postal_coords = my_geocode_postal($req['postal']);
+            $search_postal_coords = dalen_geocode_postal($req['postal']);
         }
     }
 
@@ -330,7 +376,7 @@ function my_physician_search(WP_REST_Request $req)
                     $org_lng = (float) $org['institution_gmap']['lng'];
 
                     if ($org_lat && $org_lng) {
-                        $distance = my_haversine_distance(
+                        $distance = dalen_haversine_distance(
                             $search_postal_coords['lat'],
                             $search_postal_coords['lng'],
                             $org_lat,

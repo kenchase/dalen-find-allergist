@@ -1,56 +1,101 @@
-// Find Allergist Results JavaScript
+/**
+ * Find Allergist Results JavaScript
+ * 
+ * Handles search form submission, pagination, and map functionality
+ * for the Dalen Find Allergist plugin.
+ * 
+ * @package Dalen_Find_Allergist
+ * @since 1.0.0
+ */
+
+// Constants
+const ENDPOINT = "/wp-json/dalen/v1/physicians/search";
+const RESULTS_PER_PAGE = 20;
+const MAP_DEFAULT_ZOOM = 10;
+const MAP_DEFAULT_CENTER = { lat: 43.6532, lng: -79.3832 }; // Toronto
+
+// Global state management
+const AppState = {
+	allergistMap: null,
+	mapMarkers: [],
+	mapInfoWindow: null,
+	orgMarkerMap: new Map(),
+	searchController: null,
+	currentSearchData: null,
+	currentPage: 1,
+	allSearchResults: [],
+	elements: {}
+};
+
+/**
+ * Initialize the application
+ */
 document.addEventListener("DOMContentLoaded", function () {
+	initializeApp();
+});
+
+/**
+ * Initialize app and cache DOM elements
+ */
+function initializeApp() {
 	// Cache DOM elements to avoid repeated queries
-	const elements = {
+	AppState.elements = {
 		form: document.getElementById("allergistfrm"),
 		searchBtn: document.getElementById("btn-search"),
 		clearBtn: document.getElementById("btn-clear"),
 		results: document.getElementById("results"),
 	};
 
+	bindEventHandlers();
+}
+
+/**
+ * Bind event handlers to DOM elements
+ */
+function bindEventHandlers() {
+	const { form, searchBtn, clearBtn } = AppState.elements;
+
 	// Handle form submission
-	if (elements.form) {
-		elements.form.addEventListener("submit", function (e) {
+	if (form) {
+		form.addEventListener("submit", function (e) {
 			e.preventDefault();
 			handleSearchSubmit();
 		});
 	}
 
 	// Handle search button click
-	if (elements.searchBtn) {
-		elements.searchBtn.addEventListener("click", function (e) {
+	if (searchBtn) {
+		searchBtn.addEventListener("click", function (e) {
 			e.preventDefault();
 			handleSearchSubmit();
 		});
 	}
 
 	// Handle clear button click
-	if (elements.clearBtn) {
-		elements.clearBtn.addEventListener("click", function (e) {
+	if (clearBtn) {
+		clearBtn.addEventListener("click", function (e) {
 			e.preventDefault();
-			elements.form?.reset();
-			// Reset pagination state
-			currentSearchData = null;
-			currentPage = 1;
-			allSearchResults = [];
-			// Clear results
-			setResultsHTML("");
+			clearForm();
 		});
 	}
-});
+}
 
-const ENDPOINT = "/wp-json/my/v1/physicians/search";
-
-// Global variables for map functionality and pagination
-let allergistMap = null;
-let mapMarkers = [];
-let mapInfoWindow = null;
-let orgMarkerMap = new Map(); // Maps organization IDs to their markers
-let searchController = null; // For aborting previous requests
-let currentSearchData = null; // Store current search parameters
-let currentPage = 1; // Track current page
-let allSearchResults = []; // Store complete result set for client-side pagination
-let resultsPerPage = 20; // Results per page
+/**
+ * Clear the form and reset state
+ */
+function clearForm() {
+	const { form } = AppState.elements;
+	
+	form?.reset();
+	
+	// Reset pagination state
+	AppState.currentSearchData = null;
+	AppState.currentPage = 1;
+	AppState.allSearchResults = [];
+	
+	// Clear results
+	setResultsHTML("");
+}
 
 /**
  * Handle search form submission - only makes API call for new searches

@@ -195,12 +195,24 @@ class Dalen_Find_Allergist_Admin
     }
 
     /**
+     * Get option value with fallback
+     * 
+     * @param string $key Option key
+     * @param mixed $default Default value
+     * @return mixed Option value or default
+     */
+    private function get_option_value($key, $default = '')
+    {
+        $options = get_option('dalen_find_allergist_options', []);
+        return isset($options[$key]) ? $options[$key] : $default;
+    }
+
+    /**
      * Settings field callbacks
      */
     public function google_maps_api_key_callback()
     {
-        $options = get_option('dalen_find_allergist_options');
-        $value = isset($options['google_maps_api_key']) ? $options['google_maps_api_key'] : '';
+        $value = $this->get_option_value('google_maps_api_key');
         
         printf(
             '<input type="text" id="google_maps_api_key" name="dalen_find_allergist_options[google_maps_api_key]" value="%s" class="regular-text" />',
@@ -211,26 +223,24 @@ class Dalen_Find_Allergist_Admin
 
     public function search_results_limit_callback()
     {
-        $options = get_option('dalen_find_allergist_options');
-        $value = isset($options['search_results_limit']) ? $options['search_results_limit'] : '20';
+        $value = $this->get_option_value('search_results_limit', '20');
         
         printf(
-            '<input type="number" id="search_results_limit" name="dalen_find_allergist_options[search_results_limit]" value="%s" min="1" max="100" />',
+            '<input type="number" id="search_results_limit" name="dalen_find_allergist_options[search_results_limit]" value="%s" min="1" max="100" class="small-text" />',
             esc_attr($value)
         );
-        echo '<p class="description">' . esc_html__('Maximum number of search results to display.', 'dalen-find-allergist') . '</p>';
+        echo '<p class="description">' . esc_html__('Maximum number of search results to display (1-100).', 'dalen-find-allergist') . '</p>';
     }
 
     public function default_search_radius_callback()
     {
-        $options = get_option('dalen_find_allergist_options');
-        $value = isset($options['default_search_radius']) ? $options['default_search_radius'] : '50';
+        $value = $this->get_option_value('default_search_radius', '50');
         
         printf(
-            '<input type="number" id="default_search_radius" name="dalen_find_allergist_options[default_search_radius]" value="%s" min="1" max="500" />',
+            '<input type="number" id="default_search_radius" name="dalen_find_allergist_options[default_search_radius]" value="%s" min="1" max="500" class="small-text" />',
             esc_attr($value)
         );
-        echo '<p class="description">' . esc_html__('Default search radius in kilometers.', 'dalen-find-allergist') . '</p>';
+        echo '<p class="description">' . esc_html__('Default search radius in kilometers (1-500).', 'dalen-find-allergist') . '</p>';
     }
 
     /**
