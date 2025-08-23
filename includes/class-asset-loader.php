@@ -53,7 +53,7 @@ class Dalen_Asset_Loader {
      * @param string $path Original asset path
      * @return string      Minified asset path
      */
-    private static function get_minified_path($path) {
+    public static function get_minified_path($path) {
         $path_info = pathinfo($path);
         $dir = $path_info['dirname'];
         $filename = $path_info['filename'];
@@ -80,10 +80,14 @@ class Dalen_Asset_Loader {
         $base_url = $upload_dir['baseurl'];
         $base_dir = $upload_dir['basedir'];
         
+        // Get the plugin base URL (one level up from includes directory)
+        $plugin_base_url = plugin_dir_url(dirname(__FILE__));
+        $plugin_base_path = plugin_dir_path(dirname(__FILE__));
+        
         // Handle plugin assets
-        if (strpos($url, plugin_dir_url(__FILE__)) === 0) {
-            $relative_path = str_replace(plugin_dir_url(__FILE__), '', $url);
-            return plugin_dir_path(__FILE__) . $relative_path;
+        if (strpos($url, $plugin_base_url) === 0) {
+            $relative_path = str_replace($plugin_base_url, '', $url);
+            return $plugin_base_path . $relative_path;
         }
         
         // Handle other URLs
@@ -133,6 +137,22 @@ function dalen_get_asset_url($asset_path, $base_url = null) {
  * @return string            Version string
  */
 function dalen_get_asset_version($asset_path) {
-    $file_path = plugin_dir_path(__FILE__) . '../assets/' . $asset_path;
+    $plugin_base_path = plugin_dir_path(dirname(__FILE__));
+    
+    // Check if we should use minified version and if it exists
+    $use_minified = !defined('WP_DEBUG') || !WP_DEBUG;
+    
+    if ($use_minified) {
+        // Try minified version first
+        $minified_path = Dalen_Asset_Loader::get_minified_path($asset_path);
+        $minified_file_path = $plugin_base_path . 'assets/' . $minified_path;
+        
+        if (file_exists($minified_file_path)) {
+            return Dalen_Asset_Loader::get_asset_version($minified_file_path);
+        }
+    }
+    
+    // Fallback to original file
+    $file_path = $plugin_base_path . 'assets/' . $asset_path;
     return Dalen_Asset_Loader::get_asset_version($file_path);
 }

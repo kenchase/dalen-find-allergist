@@ -121,6 +121,10 @@ class Dalen_Find_Allergist_Admin
             return;
         }
 
+        // Ensure asset loader functions are available
+        if (!function_exists('dalen_get_asset_url')) {
+            require_once plugin_dir_path(__FILE__) . '../includes/class-asset-loader.php';
+        }
 
         $asset_base_url = plugin_dir_url(__FILE__) . '../assets/';
         wp_enqueue_style(
