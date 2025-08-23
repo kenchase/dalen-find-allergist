@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Admin functionality for Dalen Find Allergist plugin
  *
@@ -215,7 +216,7 @@ class Dalen_Find_Allergist_Admin
     public function google_maps_api_key_callback()
     {
         $value = $this->get_option_value('google_maps_api_key');
-        
+
         printf(
             '<input type="text" id="google_maps_api_key" name="dalen_find_allergist_options[google_maps_api_key]" value="%s" class="regular-text" />',
             esc_attr($value)
@@ -226,7 +227,7 @@ class Dalen_Find_Allergist_Admin
     public function search_results_limit_callback()
     {
         $value = $this->get_option_value('search_results_limit', '20');
-        
+
         printf(
             '<input type="number" id="search_results_limit" name="dalen_find_allergist_options[search_results_limit]" value="%s" min="1" max="100" class="small-text" />',
             esc_attr($value)
@@ -237,7 +238,7 @@ class Dalen_Find_Allergist_Admin
     public function default_search_radius_callback()
     {
         $value = $this->get_option_value('default_search_radius', '50');
-        
+
         printf(
             '<input type="number" id="default_search_radius" name="dalen_find_allergist_options[default_search_radius]" value="%s" min="1" max="500" class="small-text" />',
             esc_attr($value)
@@ -267,7 +268,7 @@ class Dalen_Find_Allergist_Admin
         // Sanitize Google Maps API key
         if (isset($input['google_maps_api_key'])) {
             $sanitized['google_maps_api_key'] = sanitize_text_field($input['google_maps_api_key']);
-            
+
             // Validate API key format
             if (!empty($sanitized['google_maps_api_key']) && !preg_match('/^AIza[0-9A-Za-z-_]{35}$/', $sanitized['google_maps_api_key'])) {
                 add_settings_error(
@@ -341,9 +342,4 @@ class Dalen_Find_Allergist_Admin
             wp_send_json_error(__('Failed to reset settings. Please try again.', 'dalen-find-allergist'));
         }
     }
-}
-
-// Initialize the admin class
-if (is_admin()) {
-    new Dalen_Find_Allergist_Admin();
 }
