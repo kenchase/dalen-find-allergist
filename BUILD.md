@@ -5,21 +5,25 @@ This plugin uses a modern build process with Vite to optimize JavaScript and CSS
 ## Quick Start
 
 1. **Install dependencies** (first time only):
+
    ```bash
    npm install
    ```
 
 2. **Build for production**:
+
    ```bash
    npm run build:zip
    ```
-   
+
    Or use the convenience script:
+
    ```bash
    ./build.sh
    ```
 
 This will create:
+
 - `dist/dalen-find-allergist.zip` ready for WordPress installation
 
 The build process creates minified assets temporarily during the build, then packages them into the zip file and cleans up the intermediate files, leaving only the production-ready zip.
@@ -42,14 +46,16 @@ The build process creates minified assets temporarily during the build, then pac
 ## Production Zip Contents
 
 The production zip includes only the files needed for WordPress:
+
 - Main plugin file (`dalen-find-allergist.php`)
 - `/includes/` directory
-- `/admin/` directory  
+- `/admin/` directory
 - `/assets/` directory (with minified CSS and JS files)
 - `/languages/` directory (if present)
 - `readme.txt` and other documentation
 
 The minified assets inside the zip are:
+
 - `assets/css/admin.min.css`
 - `assets/css/find-allergist-results.min.css`
 - `assets/js/admin.min.js`
@@ -65,6 +71,7 @@ The plugin should automatically detect and use the appropriate files based on wh
 ## File Naming
 
 The build process creates correctly named minified files:
+
 - `assets/css/admin.css` → `dist/assets/css/admin.min.css`
 - `assets/css/find-allergist-results.css` → `dist/assets/css/find-allergist-results.min.css`
 - `assets/js/admin.js` → `dist/assets/js/admin.min.js`
