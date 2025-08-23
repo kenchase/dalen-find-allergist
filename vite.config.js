@@ -30,9 +30,9 @@ export default defineConfig({
         // JavaScript files
         'find-allergist-results': resolve(__dirname, 'assets/js/find-allergist-results.js'),
         'admin': resolve(__dirname, 'assets/js/admin.js'),
-        // CSS files through JS imports
-        'find-allergist-results-styles': resolve(__dirname, 'src/css-entries/find-allergist-results.js'),
-        'admin-styles': resolve(__dirname, 'src/css-entries/admin.js'),
+        // CSS files directly
+        'find-allergist-results-styles': resolve(__dirname, 'assets/css/find-allergist-results.css'),
+        'admin-styles': resolve(__dirname, 'assets/css/admin.css'),
       },
       output: {
         // Configure output file naming
