@@ -120,18 +120,20 @@ class Dalen_Find_Allergist_Admin
             return;
         }
 
+
+        $asset_base_url = plugin_dir_url(__FILE__) . '../assets/';
         wp_enqueue_style(
             'dalen-find-allergist-admin',
-            plugin_dir_url(__FILE__) . '../assets/css/admin.css',
+            dalen_get_asset_url('css/admin.css', $asset_base_url),
             array(),
-            '1.0.0'
+            dalen_get_asset_version('css/admin.css')
         );
 
         wp_enqueue_script(
             'dalen-find-allergist-admin',
-            plugin_dir_url(__FILE__) . '../assets/js/admin.js',
+            dalen_get_asset_url('js/admin.js', $asset_base_url),
             array('jquery'),
-            '1.0.0',
+            dalen_get_asset_version('js/admin.js'),
             true
         );
 

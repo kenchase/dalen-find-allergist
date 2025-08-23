@@ -81,11 +81,12 @@ abstract class Find_Allergist_Shortcode_Base
      */
     protected function enqueue_main_css()
     {
+        $asset_base_url = $this->plugin_url . '../assets/';
         wp_enqueue_style(
             'find-allergist-results-css',
-            $this->plugin_url . '../assets/css/find-allergist-results.css',
+            dalen_get_asset_url('css/find-allergist-results.css', $asset_base_url),
             array(),
-            '1.0.0'
+            dalen_get_asset_version('css/find-allergist-results.css')
         );
     }
 

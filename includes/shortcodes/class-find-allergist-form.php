@@ -47,11 +47,12 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
         $has_maps_api = $this->enqueue_google_maps_api();
 
         // Enqueue JavaScript
+        $asset_base_url = $this->plugin_url . '../assets/';
         wp_enqueue_script(
             'find-allergist-results-js',
-            $this->plugin_url . '../assets/js/find-allergist-results.js',
+            dalen_get_asset_url('js/find-allergist-results.js', $asset_base_url),
             array('jquery', $has_maps_api ? 'google-maps-api' : 'jquery'),
-            '1.0.0',
+            dalen_get_asset_version('js/find-allergist-results.js'),
             true
         );
 
