@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Plugin Constants
  * 
@@ -13,7 +14,7 @@ if (!defined('ABSPATH')) {
 
 // Plugin Information
 if (!defined('DALEN_FIND_ALLERGIST_VERSION')) {
-    define('DALEN_FIND_ALLERGIST_VERSION', '0.2.0');
+    define('DALEN_FIND_ALLERGIST_VERSION', '0.9.1');
 }
 
 if (!defined('DALEN_FIND_ALLERGIST_PLUGIN_FILE')) {

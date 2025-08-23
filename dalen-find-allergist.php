@@ -8,7 +8,7 @@
  * Author URI:      https://www.dalendesign.com/
  * Text Domain:     dalen-find-allergist
  * Domain Path:     /languages
- * Version:         0.9.0
+ * Version:         0.9.1
  * Requires at least: 5.0
  * Tested up to:    6.4
  * Requires PHP:    7.4
