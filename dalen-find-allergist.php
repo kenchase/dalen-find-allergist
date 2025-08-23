@@ -45,6 +45,9 @@ function dalen_has_google_maps_api_key()
     return !empty(dalen_get_google_maps_api_key());
 }
 
+// Load the asset loader utility
+require_once plugin_dir_path(__FILE__) . 'includes/class-asset-loader.php';
+
 // Load the main plugin class
 require_once plugin_dir_path(__FILE__) . 'includes/class-plugin.php';
 

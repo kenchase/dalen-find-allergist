@@ -1,0 +1,24 @@
+{
+  "name": "dalen-find-allergist",
+  "version": "0.9.1",
+  "description": "CSACI Find an Allergist plugin for Dalen Design",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:zip": "npm run build && npm run zip",
+    "zip": "node scripts/create-zip.js"
+  },
+  "devDependencies": {
+    "vite": "^5.4.2",
+    "terser": "^5.31.6",
+    "cssnano": "^7.0.5",
+    "postcss": "^8.4.41",
+    "archiver": "^7.0.1"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}

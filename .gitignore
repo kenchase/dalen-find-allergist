@@ -7,3 +7,12 @@ node_modules/
 *.sql
 *.tar.gz
 *.zip
+
+# Build artifacts
+dist/
+package-lock.json
+src/
+
+# Environment files
+.env
+.env.local
