@@ -181,8 +181,7 @@ This plugin follows WordPress best practices and coding standards:
 
 **Parameters**:
 
-- `fname` (string): First name search
-- `lname` (string): Last name search
+- `name` (string): Physician name search
 - `city` (string): City filter
 - `province` (string): Province filter
 - `postal` (string): Postal code (for distance filtering)
@@ -200,7 +199,7 @@ This plugin follows WordPress best practices and coding standards:
 
 ```bash
 # Search by name
-GET /wp-json/dalen/v1/physicians/search?fname=John&lname=Smith
+GET /wp-json/dalen/v1/physicians/search?name=John%20Smith
 
 # Distance-based search (50km radius from Toronto downtown)
 GET /wp-json/dalen/v1/physicians/search?postal=M5V3M6&kms=50
@@ -536,7 +535,7 @@ composer lint
 
 ```bash
 # Test basic search (updated endpoint)
-curl "http://localhost/wp-json/dalen/v1/physicians/search?fname=test"
+curl "http://localhost/wp-json/dalen/v1/physicians/search?name=test"
 
 # Test distance filtering
 curl "http://localhost/wp-json/dalen/v1/physicians/search?postal=M5V3M6&kms=50"

@@ -119,8 +119,7 @@ async function handleSearchSubmit(page = 1) {
 
     // Build query params (send only what's filled)
     const params = new URLSearchParams();
-    if (formData.phy_fname) params.set('fname', formData.phy_fname);
-    if (formData.phy_lname) params.set('lname', formData.phy_lname);
+    if (formData.phy_name) params.set('name', formData.phy_name);
     if (formData.phy_city) params.set('city', formData.phy_city);
     if (formData.phy_province) params.set('province', formData.phy_province);
     if (formData.phy_postal) params.set('postal', normalizePostal(formData.phy_postal));
@@ -520,8 +519,7 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 function getAllFormData() {
   // Cache field elements to avoid repeated DOM queries
   const fields = {
-    fname: document.getElementById('phy_fname'),
-    lname: document.getElementById('phy_lname'),
+    name: document.getElementById('phy_name'),
     city: document.getElementById('phy_city'),
     postal: document.getElementById('phy_postal'),
     province: document.getElementById('phy_province'),
@@ -529,8 +527,7 @@ function getAllFormData() {
   };
 
   return {
-    phy_fname: fields.fname?.value.trim() || '',
-    phy_lname: fields.lname?.value.trim() || '',
+    phy_name: fields.name?.value.trim() || '',
     phy_city: fields.city?.value.trim() || '',
     phy_postal: fields.postal?.value.trim() || '',
     phy_province: fields.province?.value.trim() || '',

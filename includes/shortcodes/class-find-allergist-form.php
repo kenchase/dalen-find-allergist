@@ -76,13 +76,8 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
                 <input type="hidden" name="Find" value="Physician" />
 
                 <div class="grid-field-box grid-column-one">
-                    <label for="phy_fname"><?php _e('Physician\'s First Name', 'dalen-find-allergist'); ?></label>
-                    <input type="text" id="phy_fname" name="phy_fname" value="" />
-                </div>
-
-                <div class="grid-field-box grid-column-one">
-                    <label for="phy_lname"><?php _e('Physician\'s Last Name', 'dalen-find-allergist'); ?></label>
-                    <input type="text" id="phy_lname" name="phy_lname" value="" />
+                    <label for="phy_name"><?php _e('Physician\'s Name', 'dalen-find-allergist'); ?></label>
+                    <input type="text" id="phy_name" name="phy_name" value="" />
                 </div>
 
                 <div class="grid-field-box grid-column-one">

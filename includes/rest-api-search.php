@@ -17,8 +17,7 @@ add_action('rest_api_init', function () {
         'callback' => 'dalen_physician_search',
         'permission_callback' => '__return_true',
         'args' => [
-            'fname'    => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
-            'lname'    => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
+            'name'     => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'city'     => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'province' => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'postal'   => ['required' => false, 'sanitize_callback' => 'dalen_sanitize_postal'],
@@ -162,15 +161,14 @@ function dalen_organization_matches_search($org, $city = null, $province = null,
 function dalen_physician_search(WP_REST_Request $req)
 {
     // Sanitize inputs
-    $fname = trim($req->get_param('fname') ?? '');
-    $lname = trim($req->get_param('lname') ?? '');
+    $name = trim($req->get_param('name') ?? '');
     $city = trim($req->get_param('city') ?? '');
     $province = trim($req->get_param('province') ?? '');
     $postal = trim($req->get_param('postal') ?? '');
     $kms = absint($req->get_param('kms') ?? 0);
 
     // Require at least one search criterion
-    if (empty($fname) && empty($lname) && empty($city) && empty($province) && empty($postal) && $kms === 0) {
+    if (empty($name) && empty($city) && empty($province) && empty($postal) && $kms === 0) {
         return new WP_Error('missing_criteria', 'Please provide at least one search criterion.', ['status' => 400]);
     }
 
@@ -204,19 +202,13 @@ function dalen_physician_search(WP_REST_Request $req)
     $physicians = get_posts($query_args);
 
     // Filter by name if provided
-    if (!empty($fname) || !empty($lname)) {
-        $physicians = array_filter($physicians, function ($physician) use ($fname, $lname) {
+    if (!empty($name)) {
+        $physicians = array_filter($physicians, function ($physician) use ($name) {
             $title = strtolower(get_the_title($physician));
+            $search_name = strtolower($name);
 
-            if (!empty($fname) && stripos($title, strtolower($fname)) === false) {
-                return false;
-            }
-
-            if (!empty($lname) && stripos($title, strtolower($lname)) === false) {
-                return false;
-            }
-
-            return true;
+            // Check if the search name matches any part of the physician title
+            return stripos($title, $search_name) !== false;
         });
     }
 

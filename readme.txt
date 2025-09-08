@@ -326,8 +326,7 @@ Initial release of the Dalen Find Allergist plugin. Install to begin using the a
 * Comprehensive error handling with user-friendly messages
 
 **Parameters:**
-* `fname` (string) - First name search
-* `lname` (string) - Last name search  
+* `name` (string) - Physician name search
 * `city` (string) - City filter
 * `province` (string) - Province filter
 * `postal` (string) - Postal code for distance filtering
@@ -335,7 +334,7 @@ Initial release of the Dalen Find Allergist plugin. Install to begin using the a
 **Example Requests:**
 ```
 # Search by name
-GET /wp-json/dalen/v1/physicians/search?fname=John&lname=Smith
+GET /wp-json/dalen/v1/physicians/search?name=John%20Smith
 
 # Distance-based search (50km radius from Toronto downtown)  
 GET /wp-json/dalen/v1/physicians/search?postal=M5V3M6&kms=50
