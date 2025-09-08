@@ -17,38 +17,26 @@ add_action('rest_api_init', function () {
         'callback' => 'dalen_physician_search',
         'permission_callback' => '__return_true',
         'args' => [
-            // Title parts (mapped from your form)
-            'fname' => ['required' => false,  'sanitize_callback' => 'sanitize_text_field'],
-            'lname' => ['required' => false,  'sanitize_callback' => 'sanitize_text_field'],
-
-            // ACF-backed filters (all optional)
-            'city'      => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
-            'province'  => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
-            'postal'    => ['required' => false, 'sanitize_callback' => 'dalen_sanitize_postal'],
-            'kms'       => ['required' => false, 'sanitize_callback' => 'absint'], // distance filter in kilometers
+            'fname'    => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
+            'lname'    => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
+            'city'     => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
+            'province' => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
+            'postal'   => ['required' => false, 'sanitize_callback' => 'dalen_sanitize_postal'],
+            'kms'      => ['required' => false, 'sanitize_callback' => 'absint'],
         ],
     ]);
 });
 
 /**
- * Normalize Canadian postal codes like "M5V 3A8" -> "M5V 3A8" (uppercase, single space) or "M5V3A8" if you prefer.
- * 
- * @param string $value Postal code to sanitize
- * @return string Sanitized postal code
+ * Sanitize postal code for search
  */
 function dalen_sanitize_postal($value)
 {
-    $v = strtoupper(preg_replace('/\s+/', '', (string)$value));
-    // optionally validate: if (!preg_match('/^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z]\d[ABCEGHJ-NPRSTV-Z]\d$/', $v)) { return ''; }
-    return $v; // store without space; compare with LIKE to be flexible
+    return strtoupper(preg_replace('/\s+/', '', (string)$value));
 }
 
 /**
- * Simple geocoding function for Canadian postal codes
- * You might want to cache results or use a postal code database
- * 
- * @param string $postal_code Postal code to geocode
- * @return array|null Array with lat/lng or null if failed
+ * Simple geocoding for Canadian postal codes
  */
 function dalen_geocode_postal($postal_code)
 {
@@ -56,36 +44,28 @@ function dalen_geocode_postal($postal_code)
         return null;
     }
 
-    // Normalize postal code - remove spaces and convert to uppercase
-    $clean_postal = strtoupper(preg_replace('/\s+/', '', $postal_code));
+    $api_key = dalen_get_google_maps_api_key();
+    if (empty($api_key)) {
+        return null;
+    }
 
-    // Format postal code for Google API (add space: "K1A0A6" -> "K1A 0A6")
+    // Format postal code for Google API
+    $clean_postal = strtoupper(preg_replace('/\s+/', '', $postal_code));
     if (strlen($clean_postal) === 6) {
         $formatted_postal = substr($clean_postal, 0, 3) . ' ' . substr($clean_postal, 3, 3);
     } else {
-        $formatted_postal = $clean_postal; // Use as-is if not 6 characters
-    }
-
-    // Use Google Geocoding API
-    $api_key = dalen_get_google_maps_api_key();
-
-    // Return null if no API key is configured
-    if (empty($api_key)) {
-        return null;
+        $formatted_postal = $clean_postal;
     }
 
     $address = urlencode($formatted_postal . ', Canada');
     $url = "https://maps.googleapis.com/maps/api/geocode/json?address={$address}&key={$api_key}";
 
     $response = wp_remote_get($url);
-
     if (is_wp_error($response)) {
         return null;
     }
 
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-
+    $data = json_decode(wp_remote_retrieve_body($response), true);
     if ($data['status'] === 'OK' && !empty($data['results'])) {
         $location = $data['results'][0]['geometry']['location'];
         return [
@@ -99,13 +79,6 @@ function dalen_geocode_postal($postal_code)
 
 /**
  * Calculate distance between two points using Haversine formula
- * Returns distance in kilometers
- * 
- * @param float $lat1 Latitude of first point
- * @param float $lng1 Longitude of first point  
- * @param float $lat2 Latitude of second point
- * @param float $lng2 Longitude of second point
- * @return float Distance in kilometers
  */
 function dalen_haversine_distance($lat1, $lng1, $lat2, $lng2)
 {
@@ -126,273 +99,188 @@ function dalen_haversine_distance($lat1, $lng1, $lat2, $lng2)
 }
 
 /**
+ * Check if an organization matches the search criteria
+ */
+function dalen_organization_matches_search($org, $city = null, $province = null, $postal = null)
+{
+    $gmap = $org['institution_gmap'] ?? [];
+
+    // Check city
+    if ($city && !empty($gmap['city'])) {
+        if (stripos($gmap['city'], $city) === false) {
+            return false;
+        }
+    }
+
+    // Check province - exact match required
+    if ($province && ($gmap['state_short'] ?? '') !== $province) {
+        return false;
+    }
+
+    // Check postal code
+    if ($postal && !empty($gmap['post_code'])) {
+        $stored_postal = str_replace(' ', '', $gmap['post_code']);
+        $search_postal = str_replace(' ', '', $postal);
+        if (
+            stripos($stored_postal, $search_postal) === false &&
+            stripos($stored_postal, substr($search_postal, 0, 3)) === false
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
  * REST API endpoint handler for physician search
- * 
- * @param WP_REST_Request $req The request object
- * @return array|WP_Error Search results or error
  */
 function dalen_physician_search(WP_REST_Request $req)
 {
-    // Validate and sanitize input
-    $fname = trim(sanitize_text_field($req->get_param('fname') ?? ''));
-    $lname = trim(sanitize_text_field($req->get_param('lname') ?? ''));
-    $city = trim(sanitize_text_field($req->get_param('city') ?? ''));
-    $province = trim(sanitize_text_field($req->get_param('province') ?? ''));
-    $postal = trim(sanitize_text_field($req->get_param('postal') ?? ''));
+    // Sanitize inputs
+    $fname = trim($req->get_param('fname') ?? '');
+    $lname = trim($req->get_param('lname') ?? '');
+    $city = trim($req->get_param('city') ?? '');
+    $province = trim($req->get_param('province') ?? '');
+    $postal = trim($req->get_param('postal') ?? '');
     $kms = absint($req->get_param('kms') ?? 0);
-
-    // Create full name for title-based search
-    $full = trim($fname . ' ' . $lname);
 
     // Require at least one search criterion
     if (empty($fname) && empty($lname) && empty($city) && empty($province) && empty($postal) && $kms === 0) {
-        return new WP_Error(
-            'missing_criteria',
-            __('Please provide at least one search criterion.', 'dalen-find-allergist'),
-            ['status' => 400]
-        );
+        return new WP_Error('missing_criteria', 'Please provide at least one search criterion.', ['status' => 400]);
     }
 
     // Validate distance parameter
     if ($kms > 0 && ($kms < 1 || $kms > 500)) {
-        return new WP_Error(
-            'invalid_distance',
-            __('Distance must be between 1 and 500 kilometers.', 'dalen-find-allergist'),
-            ['status' => 400]
-        );
+        return new WP_Error('invalid_distance', 'Distance must be between 1 and 500 kilometers.', ['status' => 400]);
     }
 
-    $meta_query = ['relation' => 'AND'];
-
-    // Exclude records where immunologist_online_search_tool is "YES"
-    $meta_query[] = [
-        'relation' => 'OR',
-        [
-            'key'     => 'immunologist_online_search_tool',
-            'value'   => 'YES',
-            'compare' => '!='
-        ],
-        [
-            'key'     => 'immunologist_online_search_tool',
-            'compare' => 'NOT EXISTS'
+    // Get all physicians (excluding those marked as not searchable)
+    $query_args = [
+        'post_type'      => 'physicians',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'no_found_rows'  => true,
+        'meta_query'     => [
+            [
+                'relation' => 'OR',
+                [
+                    'key'     => 'immunologist_online_search_tool',
+                    'value'   => 'YES',
+                    'compare' => '!='
+                ],
+                [
+                    'key'     => 'immunologist_online_search_tool',
+                    'compare' => 'NOT EXISTS'
+                ]
+            ]
         ]
     ];
 
-    // Map your form fields to ACF keys. (Change these to YOUR actual ACF field names.)
-    // Map request params -> your ACF meta keys
-    $acf_keys = [
-        'city'     => 'physician_city',
-        'province' => 'physician_province',
-        // Note: postal is handled separately as it searches within organizations_details
-    ];
+    $physicians = get_posts($query_args);
 
-    // City/province: exact or partial; choose one. Here we do case-insensitive partial:
-    if (!empty($req['city'])) {
-        $meta_query[] = [
-            'key'     => $acf_keys['city'],
-            'value'   => $req['city'],
-            'compare' => 'LIKE',
-        ];
-    }
-    if (!empty($req['province'])) {
-        $province_search = trim($req['province']);
-        $meta_query[] = [
-            'key'     => $acf_keys['province'],
-            'value'   => $province_search,
-            'compare' => 'LIKE',
-        ];
-    }
+    // Filter by name if provided
+    if (!empty($fname) || !empty($lname)) {
+        $physicians = array_filter($physicians, function ($physician) use ($fname, $lname) {
+            $title = strtolower(get_the_title($physician));
 
-    // Note: postal code search is handled post-query for better performance
-
-    // Store postal search for post-query filtering if meta query fails
-    $postal_search_term = !empty($req['postal']) ? $req['postal'] : null;
-
-    // Remove postal from meta_query for now - we'll filter after the query
-    $meta_query_without_postal = array_filter($meta_query, function ($query) {
-        return !isset($query['relation']) || $query['relation'] !== 'OR' ||
-            !isset($query[0]['key']) || strpos($query[0]['key'], 'post_code') === false;
-    });
-
-    $posts = [];
-
-    // If we have a name to search for, use title-based search only
-    if (!empty(trim($full))) {
-        // Get all physicians first, then filter by title
-        $q = new WP_Query([
-            'post_type'      => 'physicians',
-            'post_status'    => 'publish',
-            'meta_query'     => $meta_query_without_postal,
-            'posts_per_page' => -1, // Get all posts to filter
-            'no_found_rows'  => true,
-        ]);
-
-        // Filter by title matching
-        $posts = array_values(array_filter($q->posts, function ($p) use ($fname, $lname) {
-            $title = mb_strtolower(get_the_title($p));
-
-            // Check if both first and last name are in the title (if both provided)
-            if (!empty($fname) && !empty($lname)) {
-                return (stripos($title, mb_strtolower($fname)) !== false &&
-                    stripos($title, mb_strtolower($lname)) !== false);
+            if (!empty($fname) && stripos($title, strtolower($fname)) === false) {
+                return false;
             }
 
-            // Check if just first name is in title (if only first name provided)
-            if (!empty($fname) && empty($lname)) {
-                return stripos($title, mb_strtolower($fname)) !== false;
+            if (!empty($lname) && stripos($title, strtolower($lname)) === false) {
+                return false;
             }
 
-            // Check if just last name is in title (if only last name provided)
-            if (empty($fname) && !empty($lname)) {
-                return stripos($title, mb_strtolower($lname)) !== false;
-            }
-
-            return false;
-        }));
-    } else {
-        // No name provided, search only by meta fields (except postal code)
-        // If only postal+kms provided, get all physicians to filter by distance
-        $meta_query_for_search = $meta_query_without_postal;
-
-        // If no traditional search criteria provided (only postal+kms), get all physicians
-        if (empty($req['city']) && empty($req['province'])) {
-            // Only use the immunologist exclusion filter, get all other physicians
-            $meta_query_for_search = [
-                [
-                    'relation' => 'OR',
-                    [
-                        'key'     => 'immunologist_online_search_tool',
-                        'value'   => 'YES',
-                        'compare' => '!='
-                    ],
-                    [
-                        'key'     => 'immunologist_online_search_tool',
-                        'compare' => 'NOT EXISTS'
-                    ]
-                ]
-            ];
-        }
-
-        $q = new WP_Query([
-            'post_type'      => 'physicians',
-            'post_status'    => 'publish',
-            'meta_query'     => $meta_query_for_search,
-            'posts_per_page' => -1, // Get all posts
-            'no_found_rows'  => true,
-        ]);
-
-        $posts = $q->posts;
+            return true;
+        });
     }
 
-    // Post-query filter for postal code if needed (but skip if doing distance filtering)
-    if ($postal_search_term && !empty($posts) && empty($req['kms'])) {
-        $posts = array_values(array_filter($posts, function ($p) use ($postal_search_term) {
-            $organizations_details = get_field('organizations_details', $p->ID) ?: [];
+    // Filter by location criteria
+    if (!empty($city) || !empty($province) || !empty($postal)) {
+        $physicians = array_filter($physicians, function ($physician) use ($city, $province, $postal) {
+            $organizations = get_field('organizations_details', $physician->ID) ?: [];
 
-            foreach ($organizations_details as $org) {
-                if (isset($org['institution_gmap']['post_code'])) {
-                    $stored_postal = $org['institution_gmap']['post_code'];
-
-                    // Check for matches with different formats
-                    if (
-                        stripos($stored_postal, $postal_search_term) !== false ||
-                        stripos(str_replace(' ', '', $stored_postal), str_replace(' ', '', $postal_search_term)) !== false ||
-                        stripos($stored_postal, substr($postal_search_term, 0, 3)) !== false
-                    ) {
-                        return true;
-                    }
+            foreach ($organizations as $org) {
+                if (dalen_organization_matches_search($org, $city, $province, $postal)) {
+                    return true;
                 }
             }
+
             return false;
-        }));
+        });
     }
 
-    // Distance-based filtering: filter physicians by organizations within specified radius
-    if (!empty($req['kms']) && !empty($req['postal'])) {
-        $origin = dalen_geocode_postal($req['postal']);
-        $radius = (float)$req['kms'];
+    // Filter by distance if postal code and radius provided
+    $origin_coords = null;
+    if (!empty($postal) && $kms > 0) {
+        $origin_coords = dalen_geocode_postal($postal);
 
-        if ($origin && is_array($origin) && isset($origin['lat']) && isset($origin['lng'])) {
-            $posts = array_values(array_filter($posts, function ($p) use ($origin, $radius) {
-                $organizations_details = get_field('organizations_details', $p->ID) ?: [];
+        if ($origin_coords) {
+            $physicians = array_filter($physicians, function ($physician) use ($origin_coords, $kms) {
+                $organizations = get_field('organizations_details', $physician->ID) ?: [];
 
-                // Check if ANY organization is within the radius
-                foreach ($organizations_details as $org) {
-                    // Check both institution_gmap structure and direct lat/lng fields
-                    $lat = null;
-                    $lng = null;
+                foreach ($organizations as $org) {
+                    $gmap = $org['institution_gmap'] ?? [];
 
-                    if (isset($org['institution_gmap']['lat']) && isset($org['institution_gmap']['lng'])) {
-                        $lat = (float) $org['institution_gmap']['lat'];
-                        $lng = (float) $org['institution_gmap']['lng'];
-                    } elseif (isset($org['institution_latitude']) && isset($org['institution_longitude'])) {
-                        $lat = (float) $org['institution_latitude'];
-                        $lng = (float) $org['institution_longitude'];
-                    }
+                    if (!empty($gmap['lat']) && !empty($gmap['lng'])) {
+                        $distance = dalen_haversine_distance(
+                            $origin_coords['lat'],
+                            $origin_coords['lng'],
+                            (float)$gmap['lat'],
+                            (float)$gmap['lng']
+                        );
 
-                    if ($lat && $lng) {
-                        $distance = dalen_haversine_distance($origin['lat'], $origin['lng'], $lat, $lng);
-
-                        if ($distance <= $radius) {
+                        if ($distance <= $kms) {
                             return true;
                         }
                     }
                 }
-                return false; // No organizations within radius
-            }));
+
+                return false;
+            });
         }
     }
 
-    // Build response—include selected ACF fields if useful
-    $search_postal_coords = null;
-    if (!empty($req['postal'])) {
-        // Reuse the geocoded coordinates if we already have them from distance filtering
-        if (isset($origin) && is_array($origin) && isset($origin['lat']) && isset($origin['lng'])) {
-            $search_postal_coords = $origin;
-        } else {
-            $search_postal_coords = dalen_geocode_postal($req['postal']);
-        }
-    }
+    // Build response
+    $results = array_map(function ($physician) use ($city, $province, $postal, $origin_coords) {
+        $organizations = get_field('organizations_details', $physician->ID) ?: [];
 
-    $out = array_map(function ($p) use ($search_postal_coords) {
-        $organizations_details = get_field('organizations_details', $p->ID) ?: [];
+        // Filter organizations to only include matching ones
+        $filtered_orgs = array_filter($organizations, function ($org) use ($city, $province, $postal) {
+            return dalen_organization_matches_search($org, $city, $province, $postal);
+        });
 
-        // Calculate distances for each organization if postal code provided
-        if ($search_postal_coords && !empty($organizations_details)) {
-            foreach ($organizations_details as &$org) {
-                if (isset($org['institution_gmap']['lat']) && isset($org['institution_gmap']['lng'])) {
-                    $org_lat = (float) $org['institution_gmap']['lat'];
-                    $org_lng = (float) $org['institution_gmap']['lng'];
+        // Add distance information if we have origin coordinates
+        if ($origin_coords) {
+            foreach ($filtered_orgs as &$org) {
+                $gmap = $org['institution_gmap'] ?? [];
 
-                    if ($org_lat && $org_lng) {
-                        $distance = dalen_haversine_distance(
-                            $search_postal_coords['lat'],
-                            $search_postal_coords['lng'],
-                            $org_lat,
-                            $org_lng
-                        );
-                        $org['distance_km'] = round($distance, 1);
-                    }
+                if (!empty($gmap['lat']) && !empty($gmap['lng'])) {
+                    $distance = dalen_haversine_distance(
+                        $origin_coords['lat'],
+                        $origin_coords['lng'],
+                        (float)$gmap['lat'],
+                        (float)$gmap['lng']
+                    );
+                    $org['distance_km'] = round($distance, 1);
                 }
             }
         }
 
         return [
-            'id'    => $p->ID,
-            'title' => get_the_title($p),
-            'link'  => get_permalink($p),
+            'id'    => $physician->ID,
+            'title' => get_the_title($physician),
+            'link'  => get_permalink($physician),
             'acf'   => [
-                'city'     => get_post_meta($p->ID, 'physician_city', true),
-                'province' => get_post_meta($p->ID, 'physician_province', true),
-                'postal'   => get_post_meta($p->ID, 'physician_zipcode', true),
-                'credentials' => get_post_meta($p->ID, 'physician_credentials', true),
-                'organizations_details' => $organizations_details,
+                'credentials' => get_post_meta($physician->ID, 'physician_credentials', true),
+                'organizations_details' => array_values($filtered_orgs),
             ],
         ];
-    }, $posts);
+    }, $physicians);
 
     return rest_ensure_response([
-        'total_results' => count($out),
-        'results'       => $out,
+        'total_results' => count($results),
+        'results'       => array_values($results),
     ]);
 }

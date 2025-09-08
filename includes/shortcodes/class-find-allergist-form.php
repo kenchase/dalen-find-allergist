@@ -99,19 +99,19 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
                     <label for="phy_province"><?php _e('Province', 'dalen-find-allergist'); ?></label>
                     <select id="phy_province" name="phy_province">
                         <option value=""></option>
-                        <option value="Alberta"><?php _e('Alberta', 'dalen-find-allergist'); ?></option>
-                        <option value="British Columbia"><?php _e('British Columbia', 'dalen-find-allergist'); ?></option>
-                        <option value="Manitoba"><?php _e('Manitoba', 'dalen-find-allergist'); ?></option>
-                        <option value="New Brunswick"><?php _e('New Brunswick', 'dalen-find-allergist'); ?></option>
-                        <option value="Newfoundland"><?php _e('Newfoundland', 'dalen-find-allergist'); ?></option>
-                        <option value="Nova Scotia"><?php _e('Nova Scotia', 'dalen-find-allergist'); ?></option>
-                        <option value="Ontario"><?php _e('Ontario', 'dalen-find-allergist'); ?></option>
-                        <option value="Prince Edward Island"><?php _e('Prince Edward Island', 'dalen-find-allergist'); ?></option>
-                        <option value="Quebec"><?php _e('Quebec', 'dalen-find-allergist'); ?></option>
-                        <option value="Saskatchewan"><?php _e('Saskatchewan', 'dalen-find-allergist'); ?></option>
-                        <option value="Northwest Territory"><?php _e('Northwest Territory', 'dalen-find-allergist'); ?></option>
-                        <option value="Nunavut"><?php _e('Nunavut', 'dalen-find-allergist'); ?></option>
-                        <option value="Yukon"><?php _e('Yukon', 'dalen-find-allergist'); ?></option>
+                        <option value="AB"><?php _e('Alberta', 'dalen-find-allergist'); ?></option>
+                        <option value="BC"><?php _e('British Columbia', 'dalen-find-allergist'); ?></option>
+                        <option value="MB"><?php _e('Manitoba', 'dalen-find-allergist'); ?></option>
+                        <option value="NB"><?php _e('New Brunswick', 'dalen-find-allergist'); ?></option>
+                        <option value="NL"><?php _e('Newfoundland', 'dalen-find-allergist'); ?></option>
+                        <option value="NS"><?php _e('Nova Scotia', 'dalen-find-allergist'); ?></option>
+                        <option value="ON"><?php _e('Ontario', 'dalen-find-allergist'); ?></option>
+                        <option value="PE"><?php _e('Prince Edward Island', 'dalen-find-allergist'); ?></option>
+                        <option value="QC"><?php _e('Quebec', 'dalen-find-allergist'); ?></option>
+                        <option value="SK"><?php _e('Saskatchewan', 'dalen-find-allergist'); ?></option>
+                        <option value="NT"><?php _e('Northwest Territory', 'dalen-find-allergist'); ?></option>
+                        <option value="NU"><?php _e('Nunavut', 'dalen-find-allergist'); ?></option>
+                        <option value="YT"><?php _e('Yukon', 'dalen-find-allergist'); ?></option>
                     </select>
                 </div>
 
