@@ -81,13 +81,17 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
                 </div>
 
                 <div class="grid-field-box grid-column-one">
-                    <label for="phy_city"><?php _e('City', 'dalen-find-allergist'); ?></label>
-                    <input type="text" id="phy_city" name="phy_city" value="" />
+                    <label for="phy_prac_pop"><?php _e('Practice population', 'dalen-find-allergist'); ?></label>
+                    <select id="phy_prac_pop" name="phy_prac_pop">
+                        <option value=""><?php _e('All Ages', 'dalen-find-allergist'); ?></option>
+                        <option value="Adults"><?php _e('Adults', 'dalen-find-allergist'); ?></option>
+                        <option value="Pediatric"><?php _e('Pediatric', 'dalen-find-allergist'); ?></option>
+                    </select>
                 </div>
 
                 <div class="grid-field-box grid-column-one">
-                    <label for="phy_postal"><?php _e('Postal Code', 'dalen-find-allergist'); ?></label>
-                    <input type="text" id="phy_postal" name="phy_postal" value="" />
+                    <label for="phy_city"><?php _e('City', 'dalen-find-allergist'); ?></label>
+                    <input type="text" id="phy_city" name="phy_city" value="" />
                 </div>
 
                 <div class="grid-field-box grid-column-one">
@@ -108,6 +112,11 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
                         <option value="NU"><?php _e('Nunavut', 'dalen-find-allergist'); ?></option>
                         <option value="YT"><?php _e('Yukon', 'dalen-find-allergist'); ?></option>
                     </select>
+                </div>
+
+                <div class="grid-field-box grid-column-one">
+                    <label for="phy_postal"><?php _e('Postal Code', 'dalen-find-allergist'); ?></label>
+                    <input type="text" id="phy_postal" name="phy_postal" value="" />
                 </div>
 
                 <div class="grid-field-box grid-column-one">

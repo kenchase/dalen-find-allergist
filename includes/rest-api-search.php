@@ -17,11 +17,12 @@ add_action('rest_api_init', function () {
         'callback' => 'dalen_physician_search',
         'permission_callback' => '__return_true',
         'args' => [
-            'name'     => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
-            'city'     => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
-            'province' => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
-            'postal'   => ['required' => false, 'sanitize_callback' => 'dalen_sanitize_postal'],
-            'kms'      => ['required' => false, 'sanitize_callback' => 'absint'],
+            'name'         => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
+            'city'         => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
+            'province'     => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
+            'postal'       => ['required' => false, 'sanitize_callback' => 'dalen_sanitize_postal'],
+            'kms'          => ['required' => false, 'sanitize_callback' => 'absint'],
+            'prac_pop'     => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
         ],
     ]);
 });
@@ -135,7 +136,7 @@ function dalen_organization_matches_search($org, $city = null, $province = null,
         }
     }
 
-    // Check province - exact match required
+    // Check province - case sensitive match required
     if ($province && ($gmap['state_short'] ?? '') !== $province) {
         return false;
     }
@@ -166,9 +167,10 @@ function dalen_physician_search(WP_REST_Request $req)
     $province = trim($req->get_param('province') ?? '');
     $postal = trim($req->get_param('postal') ?? '');
     $kms = absint($req->get_param('kms') ?? 0);
+    $prac_pop = trim($req->get_param('prac_pop') ?? '');
 
     // Require at least one search criterion
-    if (empty($name) && empty($city) && empty($province) && empty($postal) && $kms === 0) {
+    if (empty($name) && empty($city) && empty($province) && empty($postal) && $kms === 0 && empty($prac_pop)) {
         return new WP_Error('missing_criteria', 'Please provide at least one search criterion.', ['status' => 400]);
     }
 
@@ -209,6 +211,27 @@ function dalen_physician_search(WP_REST_Request $req)
 
             // Check if the search name matches any part of the physician title
             return stripos($title, $search_name) !== false;
+        });
+    }
+
+    // Filter by practice population if provided
+    if (!empty($prac_pop)) {
+        $physicians = array_filter($physicians, function ($physician) use ($prac_pop) {
+            $practice_population = get_field('practice_population', $physician->ID);
+
+            // Handle empty or null values
+            if (empty($practice_population)) {
+                return false;
+            }
+
+            // ACF select field can return string (single select) or array (multi-select)
+            if (is_array($practice_population)) {
+                // Multi-select: check if the search value is in the array
+                return in_array($prac_pop, $practice_population, true);
+            } else {
+                // Single select: exact match comparison
+                return (string)$practice_population === $prac_pop;
+            }
         });
     }
 
@@ -290,6 +313,7 @@ function dalen_physician_search(WP_REST_Request $req)
             'link'  => get_permalink($physician),
             'acf'   => [
                 'credentials' => get_post_meta($physician->ID, 'physician_credentials', true),
+                'practice_population' => get_field('practice_population', $physician->ID),
                 'organizations_details' => array_values($filtered_orgs),
             ],
         ];

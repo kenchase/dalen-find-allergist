@@ -124,6 +124,7 @@ async function handleSearchSubmit(page = 1) {
     if (formData.phy_province) params.set('province', formData.phy_province);
     if (formData.phy_postal) params.set('postal', normalizePostal(formData.phy_postal));
     if (formData.phy_kms) params.set('kms', formData.phy_kms);
+    if (formData.phy_prac_pop) params.set('prac_pop', formData.phy_prac_pop);
 
     // UI: basic loading state
     setResultsHTML('<p>Searching…</p>');
@@ -524,6 +525,7 @@ function getAllFormData() {
     postal: document.getElementById('phy_postal'),
     province: document.getElementById('phy_province'),
     kms: document.getElementById('phy_kms'),
+    prac_pop: document.getElementById('phy_prac_pop'),
   };
 
   return {
@@ -532,6 +534,7 @@ function getAllFormData() {
     phy_postal: fields.postal?.value.trim() || '',
     phy_province: fields.province?.value.trim() || '',
     phy_kms: fields.kms?.value.trim() || '30',
+    phy_prac_pop: fields.prac_pop?.value.trim() || '',
   };
 }
 
