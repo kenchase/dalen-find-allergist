@@ -99,6 +99,27 @@ function dalen_haversine_distance($lat1, $lng1, $lat2, $lng2)
 }
 
 /**
+ * Normalize city name for comparison (case insensitive, remove accents, trim spaces)
+ */
+function dalen_normalize_city_name($city_name)
+{
+    if (empty($city_name)) {
+        return '';
+    }
+
+    // Trim spaces
+    $normalized = trim($city_name);
+
+    // Convert to lowercase
+    $normalized = strtolower($normalized);
+
+    // Remove accents/diacritics
+    $normalized = remove_accents($normalized);
+
+    return $normalized;
+}
+
+/**
  * Check if an organization matches the search criteria
  */
 function dalen_organization_matches_search($org, $city = null, $province = null, $postal = null)
@@ -107,7 +128,10 @@ function dalen_organization_matches_search($org, $city = null, $province = null,
 
     // Check city
     if ($city && !empty($gmap['city'])) {
-        if (stripos($gmap['city'], $city) === false) {
+        $normalized_search_city = dalen_normalize_city_name($city);
+        $normalized_stored_city = dalen_normalize_city_name($gmap['city']);
+
+        if ($normalized_search_city !== $normalized_stored_city) {
             return false;
         }
     }
