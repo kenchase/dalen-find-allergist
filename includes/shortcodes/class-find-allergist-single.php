@@ -77,6 +77,7 @@ class Find_Allergist_Single_Shortcode extends Find_Allergist_Shortcode_Base
             'name' => get_the_title($this->post_id),
             'link' => get_permalink($this->post_id),
             'credentials' => get_field('physician_credentials', $this->post_id) ?: '',
+            'oit_field' => get_field('practices_oral_immunotherapy_oit', $this->post_id),
             'practice_setting' => get_field('practice_setting', $this->post_id) ?: '',
             'practice_population' => get_field('practice_population', $this->post_id) ?: '',
             'virtual_care' => get_field('virtual_careconsultation_services', $this->post_id) ?: '',
@@ -85,6 +86,33 @@ class Find_Allergist_Single_Shortcode extends Find_Allergist_Shortcode_Base
             'treatment_services' => get_field('treatment_services_offered', $this->post_id) ?: '',
             'organizations' => get_field('organizations_details', $this->post_id) ?: []
         ];
+
+        // Handle ACF Select field: OIT can be array (multi-select) or string (single select)
+        // Convert to Yes/No for display consistency
+        $this->physician_data['oit'] = $this->format_oit_value($this->physician_data['oit_field']);
+    }
+
+    /**
+     * Format OIT field value from ACF Select field
+     * 
+     * @param mixed $oit_field Raw OIT field value from ACF
+     * @return string 'Yes' or 'No'
+     */
+    private function format_oit_value($oit_field)
+    {
+        if (empty($oit_field)) {
+            return 'No';
+        }
+
+        // ACF Select field can return:
+        // - String (single select): "OIT"
+        // - Array (multi-select): ["OIT"] or ["OIT", "other_value"]
+        if (is_array($oit_field)) {
+            return in_array('OIT', $oit_field) ? 'Yes' : 'No';
+        }
+
+        // Single select string value
+        return ($oit_field === 'OIT') ? 'Yes' : 'No';
     }
 
     /**
