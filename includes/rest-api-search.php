@@ -22,7 +22,6 @@ add_action('rest_api_init', function () {
             'lname' => ['required' => false,  'sanitize_callback' => 'sanitize_text_field'],
 
             // ACF-backed filters (all optional)
-            'oit'       => ['required' => false, 'sanitize_callback' => 'rest_sanitize_boolean'],
             'city'      => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'province'  => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'postal'    => ['required' => false, 'sanitize_callback' => 'dalen_sanitize_postal'],
@@ -141,7 +140,6 @@ function dalen_physician_search(WP_REST_Request $req)
     $province = trim(sanitize_text_field($req->get_param('province') ?? ''));
     $postal = trim(sanitize_text_field($req->get_param('postal') ?? ''));
     $kms = absint($req->get_param('kms') ?? 0);
-    $oit = rest_sanitize_boolean($req->get_param('oit') ?? false);
 
     // Create full name for title-based search
     $full = trim($fname . ' ' . $lname);
@@ -183,22 +181,10 @@ function dalen_physician_search(WP_REST_Request $req)
     // Map your form fields to ACF keys. (Change these to YOUR actual ACF field names.)
     // Map request params -> your ACF meta keys
     $acf_keys = [
-        'oit'      => 'practices_oral_immunotherapy_oit',
         'city'     => 'physician_city',
         'province' => 'physician_province',
         // Note: postal is handled separately as it searches within organizations_details
     ];
-
-    // OIT filtering: only filter when checkbox is selected (true)
-    if ($req['oit'] === true) {
-        // Only return records where the practices_oral_immunotherapy_oit array contains "OIT"
-        $meta_query[] = [
-            'key'     => $acf_keys['oit'],
-            'value'   => 'OIT',
-            'compare' => 'LIKE'
-        ];
-    }
-    // If OIT checkbox is not selected, the OIT field value doesn't impact results
 
     // City/province: exact or partial; choose one. Here we do case-insensitive partial:
     if (!empty($req['city'])) {
@@ -269,7 +255,7 @@ function dalen_physician_search(WP_REST_Request $req)
         $meta_query_for_search = $meta_query_without_postal;
 
         // If no traditional search criteria provided (only postal+kms), get all physicians
-        if (empty($req['city']) && empty($req['province']) && !($req['oit'] === true)) {
+        if (empty($req['city']) && empty($req['province'])) {
             // Only use the immunologist exclusion filter, get all other physicians
             $meta_query_for_search = [
                 [
@@ -396,7 +382,6 @@ function dalen_physician_search(WP_REST_Request $req)
             'title' => get_the_title($p),
             'link'  => get_permalink($p),
             'acf'   => [
-                'oit'      => get_post_meta($p->ID, 'practices_oral_immunotherapy_oit', true),
                 'city'     => get_post_meta($p->ID, 'physician_city', true),
                 'province' => get_post_meta($p->ID, 'physician_province', true),
                 'postal'   => get_post_meta($p->ID, 'physician_zipcode', true),

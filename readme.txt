@@ -54,7 +54,6 @@ The Dalen Find Allergist plugin provides a comprehensive directory system for al
 * **Name Search** - Fuzzy matching for first name, last name, or full name
 * **Location Filters** - City, province, or postal code filtering
 * **Distance Search** - Radius search from 1km to 500km with Canadian postal code geocoding
-* **Specialty Filters** - OIT (Oral Immunotherapy) and other treatment specializations
 * **Smart Caching** - Results cached in browser memory for instant pagination
 * **Combined Search** - Mix multiple criteria for precise results
 
@@ -181,7 +180,7 @@ Yes! The plugin supports physicians with multiple practice locations through ACF
 
 = What specialties can be filtered? =
 
-Currently, the plugin supports filtering for Oral Immunotherapy (OIT) specialists. Additional specialty filters can be added by extending the ACF field structure or through the plugin's extensible hook system.
+Additional specialty filters can be added by extending the ACF field structure or through the plugin's extensible hook system.
 
 = Is the plugin mobile-friendly? =
 
@@ -295,7 +294,6 @@ Use the real-time API key testing feature in Find Allergist → Settings. The ad
 * **NEW:** Shortcode system for easy page integration
 * **NEW:** Haversine formula for accurate distance calculations
 * **NEW:** Support for multiple practice locations per physician
-* **NEW:** OIT (Oral Immunotherapy) specialty filtering
 * **NEW:** Optimized database queries for performance
 
 == Upgrade Notice ==
@@ -334,8 +332,6 @@ Initial release of the Dalen Find Allergist plugin. Install to begin using the a
 * `province` (string) - Province filter
 * `postal` (string) - Postal code for distance filtering
 * `kms` (integer) - Search radius in kilometers (1-500)
-* `oit` (boolean) - Filter for OIT specialists
-
 **Example Requests:**
 ```
 # Search by name
@@ -343,9 +339,6 @@ GET /wp-json/dalen/v1/physicians/search?fname=John&lname=Smith
 
 # Distance-based search (50km radius from Toronto downtown)  
 GET /wp-json/dalen/v1/physicians/search?postal=M5V3M6&kms=50
-
-# Combined search
-GET /wp-json/dalen/v1/physicians/search?city=Toronto&oit=true
 
 # Province-wide search
 GET /wp-json/dalen/v1/physicians/search?province=Ontario
@@ -365,7 +358,6 @@ GET /wp-json/dalen/v1/physicians/search?province=Ontario
         "province": "Ontario", 
         "postal": "M5V 3M6",
         "credentials": "MD, FRCPC",
-        "oit": ["OIT"],
         "organizations_details": [
           {
             "institutation_name": "Hospital for Sick Children",

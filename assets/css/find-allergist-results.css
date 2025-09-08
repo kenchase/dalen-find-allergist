@@ -1,331 +1,323 @@
 /* CSS Custom Properties using Tailwind naming conventions */
 :root {
-	/* Colors */
-	--blue-600: #007cba;
-	--blue-700: #005a87;
-	--blue-50: #f0f8ff;
+  /* Colors */
+  --blue-600: #007cba;
+  --blue-700: #005a87;
+  --blue-50: #f0f8ff;
 
-	--gray-100: #f5f5f5;
-	--gray-200: #e0e0e0;
-	--gray-300: #ddd;
-	--gray-400: #999;
-	--gray-500: #666;
-	--gray-600: #555;
-	--gray-700: #333;
-	--gray-800: #777;
+  --gray-100: #f5f5f5;
+  --gray-200: #e0e0e0;
+  --gray-300: #ddd;
+  --gray-400: #999;
+  --gray-500: #666;
+  --gray-600: #555;
+  --gray-700: #333;
+  --gray-800: #777;
 
-	--red-600: #d63638;
+  --red-600: #d63638;
 
-	--slate-50: #f8fafc;
-	--slate-100: #f1f5f9;
-	--slate-200: #f0f0f1;
-	--slate-700: #2271b1;
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #f0f0f1;
+  --slate-700: #2271b1;
 
-	--neutral-50: #f9f9f9;
-	--white: #fff;
+  --neutral-50: #f9f9f9;
+  --white: #fff;
 
-	/* Spacing */
-	--spacing-1: 0.25rem;
-	--spacing-2: 0.5rem;
-	--spacing-3: 0.75rem;
-	--spacing-4: 1rem;
-	--spacing-6: 1.5rem;
-	--spacing-16: 16px;
+  /* Spacing */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-16: 16px;
 
-	/* Border radius */
-	--rounded: 4px;
-	--rounded-lg: 8px;
+  /* Border radius */
+  --rounded: 4px;
+  --rounded-lg: 8px;
 
-	/* Font sizes */
-	--text-xs: 0.8rem;
-	--text-sm: 0.85rem;
-	--text-base: 0.9rem;
-	--text-lg: 1rem;
-	--text-xl: 1.1rem;
+  /* Font sizes */
+  --text-xs: 0.8rem;
+  --text-sm: 0.85rem;
+  --text-base: 0.9rem;
+  --text-lg: 1rem;
+  --text-xl: 1.1rem;
 
-	/* Transitions */
-	--transition-all: all 0.2s ease;
-	--transition-bg: background-color 0.2s ease;
+  /* Transitions */
+  --transition-all: all 0.2s ease;
+  --transition-bg: background-color 0.2s ease;
 }
 
 /* Target Divi's entry-content specifically to override its styles */
 #page-container .find-allergists-results,
 .find-allergists-results {
-	padding: var(--spacing-16);
-	margin-top: var(--spacing-16);
-	border-radius: var(--rounded);
+  padding: var(--spacing-16);
+  margin-top: var(--spacing-16);
+  border-radius: var(--rounded);
 }
 
 #page-container .far-items,
 .far-items {
-	display: grid;
-	gap: var(--spacing-4);
+  display: grid;
+  gap: var(--spacing-4);
 }
 
 /* Add styles for the new organization structure */
 #page-container .far-item,
 .far-item {
-	margin-bottom: var(--spacing-6);
-	padding: var(--spacing-4);
-	border: 1px solid var(--gray-300);
-	border-radius: var(--rounded-lg);
-	background-color: var(--white);
+  margin-bottom: var(--spacing-6);
+  padding: var(--spacing-4);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--rounded-lg);
+  background-color: var(--white);
 }
 
 #page-container .far-orgs,
 .far-orgs {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
 }
 
 #page-container .far-org,
 .far-org {
-	padding: var(--spacing-4);
-	border-left: 3px solid var(--blue-600);
-	background-color: var(--neutral-50);
+  padding: var(--spacing-4);
+  border-left: 3px solid var(--blue-600);
+  background-color: var(--neutral-50);
 }
 
 #page-container .far-org-list,
 .far-org-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 #page-container .far-org-list-item--map-link,
 .far-org-list-item--map-link {
-	margin-top: var(--spacing-2);
+  margin-top: var(--spacing-2);
 }
 
 #page-container .far-physician-info,
 .far-physician-info {
-	margin-bottom: var(--spacing-3);
+  margin-bottom: var(--spacing-3);
 }
 
 #page-container .far-physician-name,
 .far-physician-name {
-	font-size: var(--text-xl);
-	font-weight: bold;
-	color: var(--blue-600);
-	text-decoration: none;
+  font-size: var(--text-xl);
+  font-weight: bold;
+  color: var(--blue-600);
+  text-decoration: none;
 }
 
 #page-container .far-physician-name a:hover,
 .far-physician-name a:hover {
-	text-decoration: underline;
+  text-decoration: underline;
 }
 
 #page-container .far-physician-credentials,
 .far-physician-credentials {
-	font-size: var(--text-base);
-	color: var(--gray-500);
-	margin-top: var(--spacing-1);
-}
-
-#page-container .far-oit-status,
-.far-oit-status {
-	font-size: var(--text-base);
-	color: var(--slate-700);
-	margin-top: var(--spacing-1);
-	font-weight: 500;
+  font-size: var(--text-base);
+  color: var(--gray-500);
+  margin-top: var(--spacing-1);
 }
 
 /* Distance Display */
 #page-container .far-distance,
 .far-distance {
-	font-size: var(--text-base);
-	color: var(--red-600);
-	margin-top: var(--spacing-1);
-	font-weight: 600;
-	background-color: var(--slate-200);
-	padding: var(--spacing-1) var(--spacing-2);
-	border-radius: var(--rounded);
-	display: inline-block;
+  font-size: var(--text-base);
+  color: var(--red-600);
+  margin-top: var(--spacing-1);
+  font-weight: 600;
+  background-color: var(--slate-200);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--rounded);
+  display: inline-block;
 }
 
 #page-container .far-org-info,
 .far-org-info {
-	border-top: 1px solid var(--gray-200);
-	padding-top: var(--spacing-2);
+  border-top: 1px solid var(--gray-200);
+  padding-top: var(--spacing-2);
 }
 
 #page-container .far-org-name,
 .far-org-name {
-	font-size: var(--text-lg);
-	color: var(--gray-700);
-	display: block;
-	margin-bottom: var(--spacing-1);
+  font-size: var(--text-lg);
+  color: var(--gray-700);
+  display: block;
+  margin-bottom: var(--spacing-1);
 }
 
 #page-container .far-org-address,
 .far-org-address {
-	font-size: var(--text-base);
-	color: var(--gray-600);
-	margin-bottom: var(--spacing-1);
+  font-size: var(--text-base);
+  color: var(--gray-600);
+  margin-bottom: var(--spacing-1);
 }
 
 #page-container .far-org-city-state,
 .far-org-city-state {
-	font-size: var(--text-base);
-	color: var(--gray-800);
-	font-style: italic;
-	margin-bottom: var(--spacing-1);
+  font-size: var(--text-base);
+  color: var(--gray-800);
+  font-style: italic;
+  margin-bottom: var(--spacing-1);
 }
 
 #page-container .far-org-postal,
 .far-org-postal {
-	font-size: var(--text-base);
-	color: var(--gray-800);
-	font-weight: 500;
+  font-size: var(--text-base);
+  color: var(--gray-800);
+  font-weight: 500;
 }
 
 /* View on Map Link */
 #page-container .far-view-map,
 .far-view-map {
-	margin-top: var(--spacing-2);
+  margin-top: var(--spacing-2);
 }
 
 #page-container .far-map-link,
 .far-map-link {
-	display: inline-block;
-	padding: var(--spacing-1) var(--spacing-2);
-	background-color: var(--blue-600);
-	color: var(--white) !important;
-	text-decoration: none;
-	border-radius: var(--rounded);
-	font-size: var(--text-sm);
-	transition: var(--transition-bg);
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-2);
+  background-color: var(--blue-600);
+  color: var(--white) !important;
+  text-decoration: none;
+  border-radius: var(--rounded);
+  font-size: var(--text-sm);
+  transition: var(--transition-bg);
 }
 
 #page-container .far-map-link:hover,
 .far-map-link:hover {
-	background-color: var(--blue-700);
-	text-decoration: none;
-	color: var(--white) !important;
+  background-color: var(--blue-700);
+  text-decoration: none;
+  color: var(--white) !important;
 }
 
 /* Google Map Styles */
 #page-container #allergist-map,
 #allergist-map {
-	width: 100%;
-	height: 400px;
-	margin-bottom: 2rem;
-	border: 1px solid var(--gray-300);
-	border-radius: var(--rounded-lg);
-	background-color: var(--gray-100);
+  width: 100%;
+  height: 400px;
+  margin-bottom: 2rem;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--rounded-lg);
+  background-color: var(--gray-100);
 }
 
 /* Map Info Window Styles */
 .map-info-window h4 {
-	margin: 0 0 var(--spacing-2) 0;
-	color: var(--blue-600);
-	font-size: var(--text-lg);
-	font-weight: bold;
+  margin: 0 0 var(--spacing-2) 0;
+  color: var(--blue-600);
+  font-size: var(--text-lg);
+  font-weight: bold;
 }
 
 .map-info-window p {
-	margin: var(--spacing-1) 0;
-	font-size: var(--text-base);
-	line-height: 1.4;
+  margin: var(--spacing-1) 0;
+  font-size: var(--text-base);
+  line-height: 1.4;
 }
 
 .map-info-window strong {
-	color: var(--gray-700);
+  color: var(--gray-700);
 }
 
 .map-info-window em {
-	color: var(--gray-500);
-	font-style: italic;
+  color: var(--gray-500);
+  font-style: italic;
 }
 
 /* Pagination Styles */
 #page-container .pagination-container,
 .pagination-container {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	gap: var(--spacing-2);
-	margin: var(--spacing-6) 0;
-	padding: var(--spacing-4) 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin: var(--spacing-6) 0;
+  padding: var(--spacing-4) 0;
 }
 
 #page-container .pagination-btn,
 .pagination-btn {
-	padding: var(--spacing-2) var(--spacing-4);
-	border: 1px solid var(--blue-600);
-	background-color: var(--white);
-	color: var(--blue-600);
-	cursor: pointer;
-	border-radius: var(--rounded);
-	font-size: var(--text-base);
-	transition: var(--transition-all);
-	min-width: 44px;
-	text-align: center;
+  padding: var(--spacing-2) var(--spacing-4);
+  border: 1px solid var(--blue-600);
+  background-color: var(--white);
+  color: var(--blue-600);
+  cursor: pointer;
+  border-radius: var(--rounded);
+  font-size: var(--text-base);
+  transition: var(--transition-all);
+  min-width: 44px;
+  text-align: center;
 }
 
 #page-container .pagination-btn:hover:not(.disabled):not(.current),
 .pagination-btn:hover:not(.disabled):not(.current) {
-	background-color: var(--blue-600);
-	color: var(--white);
+  background-color: var(--blue-600);
+  color: var(--white);
 }
 
 #page-container .pagination-btn.current,
 .pagination-btn.current {
-	background-color: var(--blue-600);
-	color: var(--white);
-	font-weight: bold;
+  background-color: var(--blue-600);
+  color: var(--white);
+  font-weight: bold;
 }
 
 #page-container .pagination-btn.disabled,
 .pagination-btn.disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-	color: var(--gray-400);
-	border-color: var(--gray-300);
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: var(--gray-400);
+  border-color: var(--gray-300);
 }
 
 #page-container .pagination-info,
 .pagination-info {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-1);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
 }
 
 #page-container .pagination-ellipsis,
 .pagination-ellipsis {
-	padding: var(--spacing-2) var(--spacing-1);
-	color: var(--gray-500);
+  padding: var(--spacing-2) var(--spacing-1);
+  color: var(--gray-500);
 }
 
 #page-container .search-results-info,
 .search-results-info {
-	margin-bottom: var(--spacing-4);
-	padding: var(--spacing-3);
-	background-color: var(--blue-50);
-	border: 1px solid var(--blue-600);
-	border-radius: var(--rounded);
+  margin-bottom: var(--spacing-4);
+  padding: var(--spacing-3);
+  background-color: var(--blue-50);
+  border: 1px solid var(--blue-600);
+  border-radius: var(--rounded);
 }
 
 #page-container .search-results-info p,
 .search-results-info p {
-	margin: 0;
-	color: var(--gray-700);
-	font-weight: 500;
+  margin: 0;
+  color: var(--gray-700);
+  font-weight: 500;
 }
 
 /* Responsive pagination for mobile */
 @media (max-width: 768px) {
-	#page-container .pagination-container,
-	.pagination-container {
-		flex-wrap: wrap;
-		gap: var(--spacing-1);
-	}
+  #page-container .pagination-container,
+  .pagination-container {
+    flex-wrap: wrap;
+    gap: var(--spacing-1);
+  }
 
-	#page-container .pagination-btn,
-	.pagination-btn {
-		padding: 0.4rem 0.7rem;
-		font-size: var(--text-xs);
-		min-width: 36px;
-	}
+  #page-container .pagination-btn,
+  .pagination-btn {
+    padding: 0.4rem 0.7rem;
+    font-size: var(--text-xs);
+    min-width: 36px;
+  }
 }

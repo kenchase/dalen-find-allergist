@@ -288,7 +288,6 @@ Displays the complete search interface including:
 - `province` (Text): Physician's primary province
 - `postal` (Text): Physician's primary postal code
 - `credentials` (Text): Medical credentials
-- `practices_oral_immunotherapy_oit` (Checkbox): OIT specialization
 - `immunologist_online_search_tool` (Select): Search visibility
 
 ### Organization Details (Repeater)

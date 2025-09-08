@@ -86,11 +86,6 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
                 </div>
 
                 <div class="grid-field-box grid-column-one">
-                    <label for="phy_oit"><?php _e('Practices Oral Immunotherapy (OIT)', 'dalen-find-allergist'); ?></label>
-                    <input type="checkbox" id="phy_oit" name="phy_oit" value="true" />
-                </div>
-
-                <div class="grid-field-box grid-column-one">
                     <label for="phy_city"><?php _e('City', 'dalen-find-allergist'); ?></label>
                     <input type="text" id="phy_city" name="phy_city" value="" />
                 </div>

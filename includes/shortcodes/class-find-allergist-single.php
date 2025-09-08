@@ -77,7 +77,6 @@ class Find_Allergist_Single_Shortcode extends Find_Allergist_Shortcode_Base
             'name' => get_the_title($this->post_id),
             'link' => get_permalink($this->post_id),
             'credentials' => get_field('physician_credentials', $this->post_id) ?: '',
-            'oit_field' => get_field('practices_oral_immunotherapy_oit', $this->post_id),
             'practice_setting' => get_field('practice_setting', $this->post_id) ?: '',
             'practice_population' => get_field('practice_population', $this->post_id) ?: '',
             'virtual_care' => get_field('virtual_careconsultation_services', $this->post_id) ?: '',
@@ -86,9 +85,6 @@ class Find_Allergist_Single_Shortcode extends Find_Allergist_Shortcode_Base
             'treatment_services' => get_field('treatment_services_offered', $this->post_id) ?: '',
             'organizations' => get_field('organizations_details', $this->post_id) ?: []
         ];
-
-        // Map OIT field value to Yes/No
-        $this->physician_data['oit'] = is_array($this->physician_data['oit_field']) && !empty($this->physician_data['oit_field']) ? 'Yes' : 'No';
     }
 
     /**

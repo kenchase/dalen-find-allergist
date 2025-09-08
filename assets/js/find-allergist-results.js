@@ -121,7 +121,6 @@ async function handleSearchSubmit(page = 1) {
     const params = new URLSearchParams();
     if (formData.phy_fname) params.set('fname', formData.phy_fname);
     if (formData.phy_lname) params.set('lname', formData.phy_lname);
-    if (typeof formData.phy_oit === 'boolean') params.set('oit', String(!!formData.phy_oit));
     if (formData.phy_city) params.set('city', formData.phy_city);
     if (formData.phy_province) params.set('province', formData.phy_province);
     if (formData.phy_postal) params.set('postal', normalizePostal(formData.phy_postal));
@@ -243,16 +242,10 @@ function renderPaginatedResults(page, isNewSearch = false) {
     const prov = item.acf?.province || '';
     const credentials = item.acf?.credentials || '';
 
-    // Map OIT field value to Yes/No
-    // OIT is either "" (No) or an array (Yes)
-    const oitValue = item.acf?.oit;
-    const oit = Array.isArray(oitValue) ? 'Yes' : 'No';
-
     // Prepare physician info for organizations
     const physicianInfo = {
       title: item.title,
       credentials,
-      oit,
       link: item.link,
     };
 
@@ -462,7 +455,6 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 				</a>
 				${physicianInfo.credentials ? `, ${escapeHTML(physicianInfo.credentials)}` : ''}
 			</h3>
-			<p><strong>Practices OIT:</strong> ${physicianInfo.oit}</p>
 		</div>
 	`);
 
@@ -530,7 +522,6 @@ function getAllFormData() {
   const fields = {
     fname: document.getElementById('phy_fname'),
     lname: document.getElementById('phy_lname'),
-    oit: document.getElementById('phy_oit'),
     city: document.getElementById('phy_city'),
     postal: document.getElementById('phy_postal'),
     province: document.getElementById('phy_province'),
@@ -540,7 +531,6 @@ function getAllFormData() {
   return {
     phy_fname: fields.fname?.value.trim() || '',
     phy_lname: fields.lname?.value.trim() || '',
-    phy_oit: fields.oit?.checked || false,
     phy_city: fields.city?.value.trim() || '',
     phy_postal: fields.postal?.value.trim() || '',
     phy_province: fields.province?.value.trim() || '',
