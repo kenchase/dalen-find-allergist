@@ -116,12 +116,16 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
 
                 <div class="grid-field-box grid-column-one">
                     <label for="phy_postal"><?php _e('Postal Code', 'dalen-find-allergist'); ?></label>
-                    <input type="text" id="phy_postal" name="phy_postal" value="" />
+                    <input type="text" id="phy_postal" name="phy_postal" value="" maxlength="7" placeholder="K1A 0A6"
+                        aria-describedby="postal-error" autocomplete="postal-code" />
+                    <div id="postal-error" class="field-error" style="display: none;" role="alert" aria-live="polite">
+                        <?php _e('Please enter a valid Canadian postal code (e.g., K1A 0A6)', 'dalen-find-allergist'); ?>
+                    </div>
                 </div>
 
-                <div class="grid-field-box grid-column-one">
-                    <label><?php _e('Within the range of', 'dalen-find-allergist'); ?></label>
-                    <select id="phy_kms" name="phy_kms" class="short-box">
+                <div class="grid-field-box grid-column-one" id="range-field-container">
+                    <label for="phy_kms"><?php _e('Within the range of', 'dalen-find-allergist'); ?></label>
+                    <select id="phy_kms" name="phy_kms" class="short-box" disabled aria-describedby="range-help-text">
                         <option value="10">10</option>
                         <option value="20">20</option>
                         <option value="30" selected>30</option>
@@ -132,6 +136,9 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
                         <option value="200">200</option>
                         <option value="500">500</option>
                     </select> <?php _e('Kilometers', 'dalen-find-allergist'); ?>
+                    <div id="range-help-text" class="field-help-text" role="status" aria-live="polite">
+                        <?php _e('This field is only available when a valid postal code is provided.', 'dalen-find-allergist'); ?>
+                    </div>
                 </div>
 
                 <div class="grid-column-two">

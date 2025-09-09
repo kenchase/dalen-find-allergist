@@ -12,6 +12,11 @@
 const ENDPOINT = '/wp-json/dalen/v1/physicians/search';
 const RESULTS_PER_PAGE = 20;
 
+// Validation constants
+const VALIDATION_DEBOUNCE_DELAY = 300; // milliseconds
+const POSTAL_CODE_MAX_LENGTH = 6; // Without space
+const POSTAL_CODE_REGEX = /^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/;
+
 // Global state management
 const AppState = {
   allergistMap: null,
@@ -23,6 +28,7 @@ const AppState = {
   currentPage: 1,
   allSearchResults: [],
   elements: {},
+  validationTimeout: null, // For debouncing validation
 };
 
 /**
@@ -42,16 +48,22 @@ function initializeApp() {
     searchBtn: document.getElementById('btn-search'),
     clearBtn: document.getElementById('btn-clear'),
     results: document.getElementById('results'),
+    postalInput: document.getElementById('phy_postal'),
+    rangeSelect: document.getElementById('phy_kms'),
+    rangeContainer: document.getElementById('range-field-container'),
+    postalError: document.getElementById('postal-error'),
+    rangeHelpText: document.getElementById('range-help-text'),
   };
 
   bindEventHandlers();
+  initializeRangeFieldState();
 }
 
 /**
  * Bind event handlers to DOM elements
  */
 function bindEventHandlers() {
-  const { form, searchBtn, clearBtn } = AppState.elements;
+  const { form, searchBtn, clearBtn, postalInput } = AppState.elements;
 
   // Handle form submission
   if (form) {
@@ -76,6 +88,34 @@ function bindEventHandlers() {
       clearForm();
     });
   }
+
+  // Handle postal code input changes
+  if (postalInput) {
+    postalInput.addEventListener('input', function () {
+      formatPostalCodeInput();
+
+      // Debounce validation to improve performance
+      if (AppState.validationTimeout) {
+        clearTimeout(AppState.validationTimeout);
+      }
+
+      AppState.validationTimeout = setTimeout(() => {
+        validatePostalCode();
+        toggleRangeField();
+      }, VALIDATION_DEBOUNCE_DELAY);
+    });
+
+    // Also validate on blur for better UX (immediate)
+    postalInput.addEventListener('blur', function () {
+      // Clear any pending timeout and validate immediately
+      if (AppState.validationTimeout) {
+        clearTimeout(AppState.validationTimeout);
+        AppState.validationTimeout = null;
+      }
+      validatePostalCode();
+      toggleRangeField();
+    });
+  }
 }
 
 /**
@@ -93,12 +133,196 @@ function clearForm() {
 
   // Clear results
   setResultsHTML('');
+
+  // Reset validation states
+  clearPostalValidation();
+
+  // Reset range field state
+  toggleRangeField();
+}
+
+/**
+ * Initialize the range field state on page load
+ */
+function initializeRangeFieldState() {
+  toggleRangeField();
+}
+
+/**
+ * Format postal code input as user types (add space after 3rd character)
+ */
+function formatPostalCodeInput() {
+  const { postalInput } = AppState.elements;
+
+  if (!postalInput) {
+    return;
+  }
+
+  try {
+    let value = postalInput.value.replace(/\s/g, '').toUpperCase(); // Remove spaces and convert to uppercase
+
+    // Limit to maximum allowed characters
+    if (value.length > POSTAL_CODE_MAX_LENGTH) {
+      value = value.substring(0, POSTAL_CODE_MAX_LENGTH);
+    }
+
+    // Add space after 3rd character if we have more than 3 characters
+    if (value.length > 3) {
+      value = value.substring(0, 3) + ' ' + value.substring(3);
+    }
+
+    // Update the input value
+    postalInput.value = value;
+  } catch (error) {
+    console.warn('Error formatting postal code input:', error);
+  }
+}
+
+/**
+ * Validate postal code input and show/hide error messages
+ */
+function validatePostalCode() {
+  const { postalInput, postalError } = AppState.elements;
+
+  if (!postalInput || !postalError) {
+    console.warn('Postal validation elements not found');
+    return false;
+  }
+
+  try {
+    const postalValue = postalInput.value.trim();
+
+    // If empty, clear validation state
+    if (!postalValue) {
+      clearPostalValidation();
+      return true; // Empty is allowed
+    }
+
+    // Check if valid
+    const isValid = isValidPostalCode(postalValue);
+
+    if (isValid) {
+      // Valid postal code
+      postalInput.classList.remove('error');
+      postalInput.classList.add('valid');
+      postalError.classList.remove('show');
+      postalError.style.display = 'none';
+      return true;
+    } else {
+      // Invalid postal code
+      postalInput.classList.remove('valid');
+      postalInput.classList.add('error');
+      postalError.classList.add('show');
+      postalError.style.display = 'block';
+      return false;
+    }
+  } catch (error) {
+    console.error('Error during postal code validation:', error);
+    // On error, clear validation state to avoid broken UI
+    clearPostalValidation();
+    return false;
+  }
+}
+
+/**
+ * Clear postal code validation state
+ */
+function clearPostalValidation() {
+  const { postalInput, postalError } = AppState.elements;
+
+  if (postalInput) {
+    postalInput.classList.remove('error', 'valid');
+  }
+
+  if (postalError) {
+    postalError.classList.remove('show');
+    postalError.style.display = 'none';
+  }
+}
+
+/**
+ * Cleanup function for preventing memory leaks
+ */
+function cleanup() {
+  // Clear any pending timeouts
+  if (AppState.validationTimeout) {
+    clearTimeout(AppState.validationTimeout);
+    AppState.validationTimeout = null;
+  }
+
+  // Abort any pending requests
+  if (AppState.searchController) {
+    AppState.searchController.abort();
+    AppState.searchController = null;
+  }
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', cleanup);
+
+/**
+ * Toggle the range field based on postal code input
+ */
+function toggleRangeField() {
+  const { postalInput, rangeSelect, rangeContainer, rangeHelpText } = AppState.elements;
+
+  if (!postalInput || !rangeSelect || !rangeContainer) {
+    return;
+  }
+
+  const postalValue = postalInput.value.trim();
+  const hasValidPostalCode = postalValue.length > 0 && isValidPostalCode(postalValue);
+
+  if (hasValidPostalCode) {
+    rangeSelect.disabled = false;
+    rangeContainer.classList.remove('disabled');
+    rangeContainer.style.opacity = '1';
+    rangeContainer.style.pointerEvents = 'auto';
+
+    // Hide help text when field is enabled
+    if (rangeHelpText) {
+      rangeHelpText.style.display = 'none';
+    }
+  } else {
+    rangeSelect.disabled = true;
+    rangeContainer.classList.add('disabled');
+    rangeContainer.style.opacity = '0.5';
+    rangeContainer.style.pointerEvents = 'none';
+
+    // Show help text when field is disabled
+    if (rangeHelpText) {
+      rangeHelpText.style.display = 'block';
+    }
+  }
+}
+
+/**
+ * Validate the entire form before submission
+ */
+function validateForm() {
+  const { postalInput } = AppState.elements;
+
+  let isValid = true;
+
+  // Validate postal code if provided
+  if (postalInput && postalInput.value.trim()) {
+    if (!validatePostalCode()) {
+      isValid = false;
+    }
+  }
+
+  return isValid;
 }
 
 /**
  * Handle search form submission - only makes API call for new searches
  */
 async function handleSearchSubmit(page = 1) {
+  // Validate form before proceeding
+  if (!validateForm()) {
+    return; // Stop submission if validation fails
+  }
+
   // Get all form data
   const formData = getAllFormData();
 
@@ -545,6 +769,20 @@ function normalizePostal(v) {
   return String(v || '')
     .toUpperCase()
     .replace(/\s+/g, '');
+}
+
+/**
+ * Validate Canadian postal code format
+ * Accepts formats like: K1A 0A6, K1A0A6, k1a 0a6
+ * Returns true if valid, false otherwise
+ */
+function isValidPostalCode(postalCode) {
+  if (!postalCode || typeof postalCode !== 'string') {
+    return false;
+  }
+
+  // Use constant regex for consistency
+  return POSTAL_CODE_REGEX.test(postalCode.trim());
 }
 
 /**
