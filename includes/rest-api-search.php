@@ -46,6 +46,7 @@ function dalen_geocode_postal($postal_code)
 
     $api_key = dalen_get_google_maps_api_key();
     if (empty($api_key)) {
+        error_log('Dalen Find Allergist: Google Maps API key not configured for geocoding');
         return null;
     }
 
@@ -60,21 +61,40 @@ function dalen_geocode_postal($postal_code)
     $address = urlencode($formatted_postal . ', Canada');
     $url = "https://maps.googleapis.com/maps/api/geocode/json?address={$address}&key={$api_key}";
 
-    $response = wp_remote_get($url);
+    $response = wp_remote_get($url, [
+        'timeout' => 10,
+        'headers' => [
+            'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . home_url()
+        ]
+    ]);
+
     if (is_wp_error($response)) {
+        error_log('Dalen Find Allergist: Geocoding API request failed: ' . $response->get_error_message());
         return null;
     }
 
     $data = json_decode(wp_remote_retrieve_body($response), true);
-    if ($data['status'] === 'OK' && !empty($data['results'])) {
-        $location = $data['results'][0]['geometry']['location'];
-        return [
-            'lat' => (float) $location['lat'],
-            'lng' => (float) $location['lng']
-        ];
+
+    if (!$data) {
+        error_log('Dalen Find Allergist: Invalid JSON response from geocoding API');
+        return null;
     }
 
-    return null;
+    if ($data['status'] !== 'OK') {
+        error_log('Dalen Find Allergist: Geocoding API error: ' . $data['status'] . ' for postal code: ' . $postal_code);
+        return null;
+    }
+
+    if (empty($data['results'])) {
+        error_log('Dalen Find Allergist: No geocoding results for postal code: ' . $postal_code);
+        return null;
+    }
+
+    $location = $data['results'][0]['geometry']['location'];
+    return [
+        'lat' => (float) $location['lat'],
+        'lng' => (float) $location['lng']
+    ];
 }
 
 /**
@@ -82,6 +102,27 @@ function dalen_geocode_postal($postal_code)
  */
 function dalen_haversine_distance($lat1, $lng1, $lat2, $lng2)
 {
+    // Validate coordinates
+    if (!is_numeric($lat1) || !is_numeric($lng1) || !is_numeric($lat2) || !is_numeric($lng2)) {
+        return false;
+    }
+
+    // Convert to float and validate ranges
+    $lat1 = (float) $lat1;
+    $lng1 = (float) $lng1;
+    $lat2 = (float) $lat2;
+    $lng2 = (float) $lng2;
+
+    // Validate latitude range (-90 to 90)
+    if ($lat1 < -90 || $lat1 > 90 || $lat2 < -90 || $lat2 > 90) {
+        return false;
+    }
+
+    // Validate longitude range (-180 to 180)
+    if ($lng1 < -180 || $lng1 > 180 || $lng2 < -180 || $lng2 > 180) {
+        return false;
+    }
+
     $earth_radius = 6371; // Earth's radius in kilometers
 
     $lat1 = deg2rad($lat1);
@@ -203,6 +244,9 @@ function dalen_physician_search(WP_REST_Request $req)
 
     $physicians = get_posts($query_args);
 
+    // Debug: Log initial physician count
+    error_log('Dalen Search Debug: Initial physicians found: ' . count($physicians));
+
     // Filter by name if provided
     if (!empty($name)) {
         $physicians = array_filter($physicians, function ($physician) use ($name) {
@@ -235,77 +279,102 @@ function dalen_physician_search(WP_REST_Request $req)
         });
     }
 
-    // Filter by location criteria
-    if (!empty($city) || !empty($province) || !empty($postal)) {
-        $physicians = array_filter($physicians, function ($physician) use ($city, $province, $postal) {
+    // Filter by location criteria (only if city or province specified)
+    if (!empty($city) || !empty($province)) {
+        $physicians = array_filter($physicians, function ($physician) use ($city, $province) {
             $organizations = get_field('organizations_details', $physician->ID) ?: [];
 
             foreach ($organizations as $org) {
-                if (dalen_organization_matches_search($org, $city, $province, $postal)) {
+                if (dalen_organization_matches_search($org, $city, $province, null)) {
                     return true;
                 }
             }
 
             return false;
         });
+
+        error_log('Dalen Search Debug: After location filtering: ' . count($physicians) . ' physicians');
     }
 
-    // Filter by distance if postal code and radius provided
+    // Geocode postal code for distance calculations if needed
     $origin_coords = null;
     if (!empty($postal) && $kms > 0) {
+        error_log('Dalen Search Debug: Attempting to geocode postal: ' . $postal);
         $origin_coords = dalen_geocode_postal($postal);
 
-        if ($origin_coords) {
-            $physicians = array_filter($physicians, function ($physician) use ($origin_coords, $kms) {
-                $organizations = get_field('organizations_details', $physician->ID) ?: [];
-
-                foreach ($organizations as $org) {
-                    $gmap = $org['institution_gmap'] ?? [];
-
-                    if (!empty($gmap['lat']) && !empty($gmap['lng'])) {
-                        $distance = dalen_haversine_distance(
-                            $origin_coords['lat'],
-                            $origin_coords['lng'],
-                            (float)$gmap['lat'],
-                            (float)$gmap['lng']
-                        );
-
-                        if ($distance <= $kms) {
-                            return true;
-                        }
-                    }
-                }
-
-                return false;
-            });
+        // If geocoding fails, we can't do distance filtering
+        if (!$origin_coords) {
+            error_log('Dalen Search Debug: Geocoding failed for postal: ' . $postal);
+            return new WP_Error('geocoding_failed', 'Unable to geocode the provided postal code for distance calculation.', ['status' => 400]);
+        } else {
+            error_log('Dalen Search Debug: Geocoded coordinates: ' . json_encode($origin_coords));
         }
     }
 
     // Build response
-    $results = array_map(function ($physician) use ($city, $province, $postal, $origin_coords) {
+    $results = array_map(function ($physician) use ($city, $province, $postal, $origin_coords, $kms) {
         $organizations = get_field('organizations_details', $physician->ID) ?: [];
 
-        // Filter organizations to only include matching ones
-        $filtered_orgs = array_filter($organizations, function ($org) use ($city, $province, $postal) {
-            return dalen_organization_matches_search($org, $city, $province, $postal);
-        });
+        // Debug: Log organization count for this physician
+        error_log('Dalen Search Debug: Physician ID ' . $physician->ID . ' has ' . count($organizations) . ' organizations');
 
-        // Add distance information if we have origin coordinates
-        if ($origin_coords) {
-            foreach ($filtered_orgs as &$org) {
+        // Filter organizations based on search criteria
+        $filtered_orgs = [];
+
+        foreach ($organizations as $org) {
+            // For distance-based searches with only postal code and no city/province, 
+            // skip location matching and rely only on distance calculation
+            $location_match = true;
+
+            // Only apply location filtering if city or province is specified
+            if (!empty($city) || !empty($province)) {
+                $location_match = dalen_organization_matches_search($org, $city, $province, null);
+            }
+
+            // Check distance if needed
+            $distance_match = true;
+            $distance_km = null;
+
+            if ($origin_coords && $kms > 0) {
                 $gmap = $org['institution_gmap'] ?? [];
 
                 if (!empty($gmap['lat']) && !empty($gmap['lng'])) {
-                    $distance = dalen_haversine_distance(
+                    $distance_km = dalen_haversine_distance(
                         $origin_coords['lat'],
                         $origin_coords['lng'],
                         (float)$gmap['lat'],
                         (float)$gmap['lng']
                     );
-                    $org['distance_km'] = round($distance, 1);
+
+                    // Check if distance calculation was successful and within range
+                    if ($distance_km !== false && $distance_km <= $kms) {
+                        $distance_match = true;
+                        error_log('Dalen Search Debug: Organization matches distance (' . round($distance_km, 1) . 'km <= ' . $kms . 'km)');
+                    } else {
+                        $distance_match = false;
+                        if ($distance_km !== false) {
+                            error_log('Dalen Search Debug: Organization outside distance (' . round($distance_km, 1) . 'km > ' . $kms . 'km)');
+                        } else {
+                            error_log('Dalen Search Debug: Distance calculation failed for organization');
+                        }
+                    }
+                } else {
+                    // No coordinates available, can't calculate distance
+                    $distance_match = false;
+                    error_log('Dalen Search Debug: Organization missing coordinates');
                 }
             }
+
+            // Include organization if it matches all criteria
+            if ($location_match && $distance_match) {
+                if ($distance_km !== null && $distance_km !== false) {
+                    $org['distance_km'] = round($distance_km, 1);
+                }
+                $filtered_orgs[] = $org;
+            }
         }
+
+        error_log('Dalen Search Debug: Physician ID ' . $physician->ID . ' has ' . count($filtered_orgs) . ' matching organizations');
 
         return [
             'id'    => $physician->ID,
@@ -318,6 +387,13 @@ function dalen_physician_search(WP_REST_Request $req)
             ],
         ];
     }, $physicians);
+
+    // Filter out physicians with no matching organizations
+    $results = array_filter($results, function ($result) {
+        return !empty($result['acf']['organizations_details']);
+    });
+
+    error_log('Dalen Search Debug: Final result count: ' . count($results));
 
     return rest_ensure_response([
         'total_results' => count($results),

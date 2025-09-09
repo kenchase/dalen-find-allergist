@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 
 // Plugin Information
 if (!defined('DALEN_FIND_ALLERGIST_VERSION')) {
-    define('DALEN_FIND_ALLERGIST_VERSION', '0.9.1');
+    define('DALEN_FIND_ALLERGIST_VERSION', '0.9.2');
 }
 
 if (!defined('DALEN_FIND_ALLERGIST_PLUGIN_FILE')) {
