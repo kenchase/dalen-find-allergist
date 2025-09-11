@@ -64,6 +64,9 @@ class WA_User_Manager
         // Column management
         add_filter('manage_physicians_posts_columns', [__CLASS__, 'modify_post_columns'], 999);
 
+        // Row actions management
+        add_filter('post_row_actions', [__CLASS__, 'remove_quick_edit_for_wa_users'], 10, 2);
+
         // Views management
         add_filter('views_edit-physicians', [__CLASS__, 'hide_post_status_views']);
         add_filter('months_dropdown_results', [__CLASS__, 'remove_date_filter_dropdown'], 10, 2);
@@ -73,7 +76,9 @@ class WA_User_Manager
         add_filter('screen_options_show_screen', [__CLASS__, 'hide_screen_options'], 10, 2);
 
         // Admin bar restrictions
-        add_action('wp_before_admin_bar_render', [__CLASS__, 'modify_admin_bar']);
+        add_action('admin_bar_menu', [__CLASS__, 'modify_admin_bar'], 999);
+        add_action('wp_before_admin_bar_render', [__CLASS__, 'remove_admin_bar_nodes']);
+        add_action('admin_head', [__CLASS__, 'hide_admin_bar_account_css']);
     }
 
     /**
@@ -512,6 +517,13 @@ class WA_User_Manager
         if ($pagenow == 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] == 'physicians') {
             $existing_posts = self::get_user_physicians_posts();
 
+            echo '<style>
+                /* Hide search box for all wa_level users on physicians page */
+                .search-box {
+                    display: none !important;
+                }
+            </style>';
+
             if (!empty($existing_posts)) {
                 echo '<style>
                     /* Hide Add New buttons and related elements */
@@ -645,6 +657,9 @@ class WA_User_Manager
             // Remove checkbox column
             unset($columns['cb']);
 
+            // Remove author column
+            unset($columns['author']);
+
             // Remove date column
             unset($columns['date']);
 
@@ -660,6 +675,25 @@ class WA_User_Manager
             unset($columns['taxonomy-physiciantypes']);
         }
         return $columns;
+    }
+
+    /**
+     * Remove quick edit functionality for wa_level users
+     * 
+     * Prevents wa_level users from using inline editing which could bypass
+     * security restrictions and validation rules.
+     * 
+     * @param array $actions Row actions for the post
+     * @param WP_Post $post Current post object
+     * @return array Modified actions array
+     */
+    public static function remove_quick_edit_for_wa_users($actions, $post)
+    {
+        // Only apply to physicians posts and wa_level users
+        if ($post->post_type === 'physicians' && self::is_wa_user()) {
+            unset($actions['inline hide-if-no-js']);
+        }
+        return $actions;
     }
 
     /**
@@ -738,9 +772,48 @@ class WA_User_Manager
     }
 
     /**
-     * Modify admin bar to show only secondary items for wa_level users
+     * Modify admin bar to show only logout link for wa_level users
      */
-    public static function modify_admin_bar()
+    public static function modify_admin_bar($wp_admin_bar)
+    {
+        if (!self::is_wa_user()) {
+            return;
+        }
+
+        // Remove the main user account menu and all related nodes
+        $wp_admin_bar->remove_node('my-account');
+        $wp_admin_bar->remove_node('my-account-with-avatar');
+        $wp_admin_bar->remove_node('user-actions');
+        $wp_admin_bar->remove_node('user-info');
+        $wp_admin_bar->remove_node('edit-profile');
+
+        // Remove other common admin bar items
+        $wp_admin_bar->remove_node('wp-logo');
+        $wp_admin_bar->remove_node('site-name');
+        $wp_admin_bar->remove_node('new-content');
+        $wp_admin_bar->remove_node('comments');
+        $wp_admin_bar->remove_node('updates');
+        $wp_admin_bar->remove_node('search');
+
+        // Remove items from root-default menu
+        $wp_admin_bar->remove_node('menu-toggle');
+        $wp_admin_bar->remove_node('archive');
+        $wp_admin_bar->remove_node('wpseo-menu');
+        $wp_admin_bar->remove_node('tribe-events');
+
+        // Add a simple logout link
+        $wp_admin_bar->add_node(array(
+            'id'     => 'logout-only',
+            'title'  => 'Logout',
+            'href'   => wp_logout_url(),
+            'parent' => 'top-secondary'
+        ));
+    }
+
+    /**
+     * Remove admin bar nodes using wp_before_admin_bar_render hook
+     */
+    public static function remove_admin_bar_nodes()
     {
         if (!self::is_wa_user()) {
             return;
@@ -748,20 +821,42 @@ class WA_User_Manager
 
         global $wp_admin_bar;
 
-        // Get all nodes
-        $all_nodes = $wp_admin_bar->get_nodes();
+        // Remove account-related nodes
+        $wp_admin_bar->remove_node('my-account');
+        $wp_admin_bar->remove_node('my-account-with-avatar');
+        $wp_admin_bar->remove_node('user-actions');
+        $wp_admin_bar->remove_node('user-info');
+        $wp_admin_bar->remove_node('edit-profile');
 
-        // Remove all nodes except those in the secondary group
-        foreach ($all_nodes as $node) {
-            // Keep secondary items and their children
-            if (
-                $node->id !== 'top-secondary' &&
-                $node->parent !== 'top-secondary' &&
-                $node->id !== 'wp-admin-bar-top-secondary'
-            ) {
-                $wp_admin_bar->remove_node($node->id);
-            }
+        // Remove root-default menu items
+        $wp_admin_bar->remove_node('menu-toggle');
+        $wp_admin_bar->remove_node('archive');
+        $wp_admin_bar->remove_node('wpseo-menu');
+        $wp_admin_bar->remove_node('tribe-events');
+    }
+
+    /**
+     * Hide account elements with CSS as fallback
+     */
+    public static function hide_admin_bar_account_css()
+    {
+        if (!self::is_wa_user()) {
+            return;
         }
+
+        echo '<style>
+            #wp-admin-bar-my-account,
+            #wp-admin-bar-my-account-with-avatar,
+            #wp-admin-bar-user-actions,
+            #wp-admin-bar-user-info,
+            #wp-admin-bar-edit-profile,
+            #wp-admin-bar-menu-toggle,
+            #wp-admin-bar-archive,
+            #wp-admin-bar-wpseo-menu,
+            #wp-admin-bar-tribe-events {
+                display: none !important;
+            }
+        </style>';
     }
 }
 
