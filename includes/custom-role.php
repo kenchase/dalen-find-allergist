@@ -670,9 +670,6 @@ class WA_User_Manager
             unset($columns['wpseo_linked']);
             unset($columns['yoast-seo-links']);
             unset($columns['yoast-seo-linked']);
-
-            // Remove taxonomy column
-            unset($columns['taxonomy-physiciantypes']);
         }
         return $columns;
     }

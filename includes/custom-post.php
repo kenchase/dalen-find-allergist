@@ -1,9 +1,9 @@
 <?php
 /**
- * Custom WordPress Post Type and Taxonomy for Allergists
+ * Custom WordPress Post Type for Allergists
  * 
- * Registers the 'physicians' post type and 'physiciantypes' taxonomy
- * for managing allergist data in the WordPress backend.
+ * Registers the 'physicians' post type for managing allergist data 
+ * in the WordPress backend.
  * 
  * Note: Although named 'physicians', this post type is specifically for Allergists.
  * The naming was kept for backward compatibility as content already exists 
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Register custom post type for allergists and related taxonomy
+ * Register custom post type for allergists
  * 
  * @since 1.0.0
  */
@@ -68,36 +68,10 @@ function csaci_custom_allergist_post()
         ],
         'hierarchical' => false,
         'supports' => array('title', 'author'),
-        'taxonomies' => array('physiciantypes'),
     );
     // Although named 'physicians', this post type is for Allergists.
     // Content was already created in the database, so we continue to use 'physicians' as the post type name.
     // Changing this to 'allergists' would require a database migration which is out of scope at this time 
     register_post_type('physicians', $post_type_args);
-
-    $taxonomy_labels = array(
-        'name' => __('Allergist Types', 'dalen-find-allergist'),
-        'singular_name' => __('Allergist Type', 'dalen-find-allergist'),
-        'search_items' => __('Search Allergist Types', 'dalen-find-allergist'),
-        'all_items' => __('All Allergist Types', 'dalen-find-allergist'),
-        'parent_item' => __('Parent Allergist Type', 'dalen-find-allergist'),
-        'parent_item_colon' => __('Parent Allergist Type:', 'dalen-find-allergist'),
-        'edit_item' => __('Edit Allergist Type', 'dalen-find-allergist'),
-        'update_item' => __('Update Allergist Type', 'dalen-find-allergist'),
-        'add_new_item' => __('Add New Allergist Type', 'dalen-find-allergist'),
-        'new_item_name' => __('New Allergist Type Name',   'dalen-find-allergist'),
-        'menu_name' => __('Allergist Types', 'dalen-find-allergist'),
-    );
-
-    $taxonomy_args = array(
-        'hierarchical' => true,
-        'labels' => $taxonomy_labels,
-        'show_ui' => true,
-        'show_admin_column' => true,
-        'query_var' => true,
-        'rewrite' => array('slug' => 'physiciantypes'),
-    );
-
-    register_taxonomy('physiciantypes', array('physicians'), $taxonomy_args);
 }
 add_action('init', 'csaci_custom_allergist_post');

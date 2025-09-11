@@ -34,13 +34,9 @@ if (!defined('DALEN_FIND_ALLERGIST_OPTIONS')) {
     define('DALEN_FIND_ALLERGIST_OPTIONS', 'dalen_find_allergist_options');
 }
 
-// Post Type and Taxonomy
+// Post Type
 if (!defined('DALEN_ALLERGIST_POST_TYPE')) {
     define('DALEN_ALLERGIST_POST_TYPE', 'physicians');
-}
-
-if (!defined('DALEN_ALLERGIST_TAXONOMY')) {
-    define('DALEN_ALLERGIST_TAXONOMY', 'physiciantypes');
 }
 
 // API Settings
