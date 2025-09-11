@@ -47,6 +47,7 @@ class WA_User_Manager
         // UI restrictions
         add_action('admin_menu', [__CLASS__, 'modify_admin_interface'], 999);
         add_action('admin_head', [__CLASS__, 'hide_ui_elements']);
+        add_action('admin_head', [__CLASS__, 'remove_help_tab']);
         add_action('admin_init', [__CLASS__, 'block_restricted_pages'], 1);
 
         // AJAX restrictions
@@ -54,10 +55,18 @@ class WA_User_Manager
         add_action('wp_ajax_sample-permalink', [__CLASS__, 'block_unauthorized_ajax'], 1);
 
         // Column management
-        add_filter('manage_physicians_posts_columns', [__CLASS__, 'modify_post_columns']);
+        add_filter('manage_physicians_posts_columns', [__CLASS__, 'modify_post_columns'], 999);
 
         // Views management
         add_filter('views_edit-physicians', [__CLASS__, 'hide_post_status_views']);
+        add_filter('months_dropdown_results', [__CLASS__, 'remove_date_filter_dropdown'], 10, 2);
+
+        // Post editor restrictions
+        add_action('add_meta_boxes', [__CLASS__, 'remove_meta_boxes'], 999);
+        add_filter('screen_options_show_screen', [__CLASS__, 'hide_screen_options'], 10, 2);
+
+        // Admin bar restrictions
+        add_action('wp_before_admin_bar_render', [__CLASS__, 'modify_admin_bar']);
 
         // Error handling
         add_action('admin_notices', [__CLASS__, 'display_error_messages']);
@@ -458,12 +467,6 @@ class WA_User_Manager
         if (!empty($existing_posts)) {
             remove_submenu_page('edit.php?post_type=physicians', 'post-new.php?post_type=physicians');
         }
-
-        // Remove metaboxes
-        remove_meta_box('authordiv', 'physicians', 'normal');
-        remove_meta_box('slugdiv', 'physicians', 'normal');
-        remove_meta_box('slugdiv', 'physicians', 'side');
-        remove_meta_box('slugdiv', 'physicians', 'advanced');
     }
 
     /**
@@ -509,16 +512,14 @@ class WA_User_Manager
             }
         }
 
-        // Hide author and slug editing elements
+        // Hide remaining author and slug elements that can't be removed via meta boxes
         if (in_array($pagenow, ['post.php', 'post-new.php']) && self::is_physicians_page()) {
             echo '<style>
-                /* Author elements */
-                #authordiv,
-                #author,
+                /* Author elements in publish meta box */
                 .misc-pub-post-author,
                 .misc-pub-section.misc-pub-author,
                 
-                /* Slug elements */
+                /* Slug elements in publish meta box and permalink */
                 #edit-slug-box,
                 #editable-post-name,
                 #editable-post-name-full,
@@ -526,15 +527,6 @@ class WA_User_Manager
                 #sample-permalink,
                 .sample-permalink,
                 #post-slug-edit,
-                #post_name,
-                input[name="post_name"],
-                label[for="post_name"],
-                .form-field.slug,
-                #slugdiv,
-                #slug-metabox,
-                .inline-edit-col .slug,
-                .quick-edit-row .slug,
-                fieldset.inline-edit-slug,
                 #edit-slug-buttons {
                     display: none !important;
                 }
@@ -542,20 +534,32 @@ class WA_User_Manager
 
             echo '<script>
                 jQuery(document).ready(function($) {
-                    // Remove author and slug elements
-                    $("#authordiv, #edit-slug-box, .edit-slug").remove();
-                    $("#post_name, input[name=\"post_name\"]").hide();
-                    $("label[for=\"post_name\"]").hide();
-                    
-                    // Remove click handlers
-                    $("#sample-permalink a, .edit-slug").off("click");
+                    // Remove permalink editing functionality
+                    $("#edit-slug-box, .edit-slug").remove();
+                    $("#sample-permalink a").off("click");
                     
                     // Handle dynamic content
                     setTimeout(function() {
-                        $("input[name=\"post_name\"], #post_name, .form-field.slug").hide();
+                        $("#edit-slug-box, .edit-slug").remove();
+                        $("#sample-permalink a").off("click");
                     }, 1000);
                 });
             </script>';
+        }
+    }
+
+    /**
+     * Remove help tabs for wa_level users
+     */
+    public static function remove_help_tab()
+    {
+        if (!self::is_wa_user()) {
+            return;
+        }
+
+        $screen = get_current_screen();
+        if ($screen) {
+            $screen->remove_help_tabs();
         }
     }
 
@@ -619,9 +623,22 @@ class WA_User_Manager
     public static function modify_post_columns($columns)
     {
         if (self::is_wa_user()) {
-            unset($columns['author']);
-            unset($columns['slug']);
-            unset($columns['name']);
+            // Remove checkbox column
+            unset($columns['cb']);
+
+            // Remove date column
+            unset($columns['date']);
+
+            // Remove Yoast SEO columns (try different possible names)
+            unset($columns['wpseo-links']);
+            unset($columns['wpseo-linked']);
+            unset($columns['wpseo_links']);
+            unset($columns['wpseo_linked']);
+            unset($columns['yoast-seo-links']);
+            unset($columns['yoast-seo-linked']);
+
+            // Remove taxonomy column
+            unset($columns['taxonomy-physiciantypes']);
         }
         return $columns;
     }
@@ -639,6 +656,93 @@ class WA_User_Manager
             return [];
         }
         return $views;
+    }
+
+    /**
+     * Remove date filter dropdown for physicians post type
+     * 
+     * @param array $months
+     * @param string $post_type
+     * @return array
+     */
+    public static function remove_date_filter_dropdown($months, $post_type)
+    {
+        // Remove for physicians post type when wa_level user
+        if ($post_type === 'physicians' && self::is_wa_user()) {
+            return array(); // Return empty array to hide dropdown
+        }
+        return $months;
+    }
+
+    /**
+     * Remove meta boxes for wa_level users
+     */
+    public static function remove_meta_boxes()
+    {
+        if (!self::is_wa_user()) {
+            return;
+        }
+
+        // Remove author meta box
+        remove_meta_box('authordiv', 'physicians', 'normal');
+        remove_meta_box('authordiv', 'physicians', 'side');
+        remove_meta_box('authordiv', 'physicians', 'advanced');
+
+        // Remove slug meta box
+        remove_meta_box('slugdiv', 'physicians', 'normal');
+        remove_meta_box('slugdiv', 'physicians', 'side');
+        remove_meta_box('slugdiv', 'physicians', 'advanced');
+
+        // Remove other potentially problematic meta boxes
+        remove_meta_box('commentstatusdiv', 'physicians', 'normal');
+        remove_meta_box('commentsdiv', 'physicians', 'normal');
+        remove_meta_box('trackbacksdiv', 'physicians', 'normal');
+        remove_meta_box('postcustom', 'physicians', 'normal');
+        remove_meta_box('postexcerpt', 'physicians', 'normal');
+        remove_meta_box('formatdiv', 'physicians', 'normal');
+        remove_meta_box('pageparentdiv', 'physicians', 'normal');
+    }
+
+    /**
+     * Hide screen options for wa_level users
+     * 
+     * @param bool $show_screen
+     * @param WP_Screen $screen
+     * @return bool
+     */
+    public static function hide_screen_options($show_screen, $screen)
+    {
+        if (self::is_wa_user() && $screen->post_type === 'physicians') {
+            return false;
+        }
+        return $show_screen;
+    }
+
+    /**
+     * Modify admin bar to show only secondary items for wa_level users
+     */
+    public static function modify_admin_bar()
+    {
+        if (!self::is_wa_user()) {
+            return;
+        }
+
+        global $wp_admin_bar;
+
+        // Get all nodes
+        $all_nodes = $wp_admin_bar->get_nodes();
+
+        // Remove all nodes except those in the secondary group
+        foreach ($all_nodes as $node) {
+            // Keep secondary items and their children
+            if (
+                $node->id !== 'top-secondary' &&
+                $node->parent !== 'top-secondary' &&
+                $node->id !== 'wp-admin-bar-top-secondary'
+            ) {
+                $wp_admin_bar->remove_node($node->id);
+            }
+        }
     }
 
     /**
