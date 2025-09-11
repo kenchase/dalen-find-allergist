@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Custom WordPress Post Type for Allergists
  * 
@@ -75,3 +76,29 @@ function csaci_custom_allergist_post()
     register_post_type('physicians', $post_type_args);
 }
 add_action('init', 'csaci_custom_allergist_post');
+
+/**
+ * Make title mandatory for physicians post type
+ * 
+ * @since 1.0.0
+ */
+function make_physician_title_required()
+{
+    global $pagenow, $post_type;
+
+    if (($pagenow === 'post.php' || $pagenow === 'post-new.php') && $post_type === 'physicians') {
+        echo '<script>
+            jQuery(document).ready(function($) {
+                $("#publish, #save-post").click(function(e) {
+                    var title = $("#title").val().trim();
+                    if (title === "") {
+                        alert("Title is required for this post type.");
+                        $("#title").focus();
+                        return false;
+                    }
+                });
+            });
+        </script>';
+    }
+}
+add_action('admin_footer', 'make_physician_title_required');
