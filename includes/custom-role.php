@@ -47,7 +47,6 @@ class WA_User_Manager
         // UI restrictions
         add_action('admin_menu', [__CLASS__, 'modify_admin_interface'], 999);
         add_action('admin_head', [__CLASS__, 'hide_ui_elements']);
-        add_action('init', [__CLASS__, 'hide_admin_bar']);
         add_action('admin_init', [__CLASS__, 'block_restricted_pages'], 1);
 
         // AJAX restrictions
@@ -56,6 +55,9 @@ class WA_User_Manager
 
         // Column management
         add_filter('manage_physicians_posts_columns', [__CLASS__, 'modify_post_columns']);
+
+        // Views management
+        add_filter('views_edit-physicians', [__CLASS__, 'hide_post_status_views']);
 
         // Error handling
         add_action('admin_notices', [__CLASS__, 'display_error_messages']);
@@ -473,6 +475,11 @@ class WA_User_Manager
             return;
         }
 
+        // Hide all admin notices for wa_level users
+        remove_all_actions('admin_notices');
+        remove_all_actions('all_admin_notices');
+        remove_all_actions('network_admin_notices');
+
         global $pagenow;
 
         // Hide "Add New" button if user has existing post
@@ -553,26 +560,6 @@ class WA_User_Manager
     }
 
     /**
-     * Hide admin bar for wa_level users
-     */
-    public static function hide_admin_bar()
-    {
-        if (self::is_wa_user()) {
-            show_admin_bar(false);
-            add_filter('show_admin_bar', '__return_false');
-            remove_action('wp_head', '_admin_bar_bump_cb');
-
-            add_action('wp_head', function () {
-                echo '<style>#wpadminbar { display: none !important; } html { margin-top: 0 !important; }</style>';
-            });
-
-            add_action('admin_head', function () {
-                echo '<style>#wpadminbar { display: none !important; } html { margin-top: 0 !important; }</style>';
-            });
-        }
-    }
-
-    /**
      * Block access to restricted admin pages
      */
     public static function block_restricted_pages()
@@ -637,6 +624,21 @@ class WA_User_Manager
             unset($columns['name']);
         }
         return $columns;
+    }
+
+    /**
+     * Hide post status views for wa_level users
+     * 
+     * @param array $views
+     * @return array
+     */
+    public static function hide_post_status_views($views)
+    {
+        if (self::is_wa_user()) {
+            // Return empty array to hide all views (All, Published, Drafts, Private)
+            return [];
+        }
+        return $views;
     }
 
     /**
