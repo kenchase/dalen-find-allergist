@@ -178,9 +178,7 @@ class Dalen_Find_Allergist_Plugin
 
         // Set default options if they don't exist
         $default_options = [
-            'google_maps_api_key' => '',
-            'search_results_limit' => '20',
-            'default_search_radius' => '50'
+            'google_maps_api_key' => ''
         ];
 
         if (!get_option('dalen_find_allergist_options')) {

@@ -51,32 +51,10 @@ var DalenFindAllergistAdmin = {
 				);
 			}
 
-			// Validate search results limit
-			var limit = parseInt($("#search_results_limit").val());
-			if (limit < 1 || limit > 100) {
-				isValid = false;
-				errors.push(
-					dalenAdmin.strings.invalidResultsLimit ||
-						"Search results limit must be between 1 and 100."
-				);
-			}
-
-			// Validate search radius
-			var radius = parseInt($("#default_search_radius").val());
-			if (radius < 1 || radius > 500) {
-				isValid = false;
-				errors.push(
-					dalenAdmin.strings.invalidRadius ||
-						"Default search radius must be between 1 and 500 km."
-				);
-			}
-
 			if (!isValid) {
 				e.preventDefault();
 				alert(
-					(dalenAdmin.strings.validationErrors ||
-						"Please fix the following errors:") +
-						"\n\n" +
+					"Please fix the following errors:\n\n" +
 						errors.join("\n")
 				);
 			}

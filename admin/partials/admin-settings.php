@@ -52,16 +52,6 @@ if (!defined('ABSPATH')) {
                 ?></p>
                 <p><strong><?php esc_html_e('Required APIs:', 'dalen-find-allergist'); ?></strong> <?php esc_html_e('Maps JavaScript API, Geocoding API, Places API', 'dalen-find-allergist'); ?></p>
             </div>
-
-            <div class="dalen-help-item">
-                <h4><?php esc_html_e('Search Results Limit', 'dalen-find-allergist'); ?></h4>
-                <p><?php esc_html_e('This setting controls the maximum number of allergists that will be returned in search results. Setting a lower number improves page load times, while a higher number provides more comprehensive results.', 'dalen-find-allergist'); ?></p>
-            </div>
-
-            <div class="dalen-help-item">
-                <h4><?php esc_html_e('Default Search Radius', 'dalen-find-allergist'); ?></h4>
-                <p><?php esc_html_e('When users search for allergists, this is the default radius (in kilometers) that will be used if they don\'t specify one. Users can still adjust this in the search form.', 'dalen-find-allergist'); ?></p>
-            </div>
         </div>
     </div>
 

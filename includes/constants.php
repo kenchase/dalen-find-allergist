@@ -48,23 +48,6 @@ if (!defined('DALEN_API_ENDPOINT')) {
     define('DALEN_API_ENDPOINT', 'physicians/search');
 }
 
-// Default Settings
-if (!defined('DALEN_DEFAULT_SEARCH_LIMIT')) {
-    define('DALEN_DEFAULT_SEARCH_LIMIT', 20);
-}
-
-if (!defined('DALEN_DEFAULT_SEARCH_RADIUS')) {
-    define('DALEN_DEFAULT_SEARCH_RADIUS', 50);
-}
-
-if (!defined('DALEN_MAX_SEARCH_LIMIT')) {
-    define('DALEN_MAX_SEARCH_LIMIT', 100);
-}
-
-if (!defined('DALEN_MAX_SEARCH_RADIUS')) {
-    define('DALEN_MAX_SEARCH_RADIUS', 500);
-}
-
 // Capability Settings
 if (!defined('DALEN_ALLERGIST_CAPABILITY_TYPE')) {
     define('DALEN_ALLERGIST_CAPABILITY_TYPE', 'physicians');

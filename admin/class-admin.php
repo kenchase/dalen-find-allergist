@@ -91,24 +91,6 @@ class Dalen_Find_Allergist_Admin
             'dalen-find-allergist-settings',
             'dalen_find_allergist_general'
         );
-
-        // Search Results Limit
-        add_settings_field(
-            'search_results_limit',
-            'Search Results Limit',
-            array($this, 'search_results_limit_callback'),
-            'dalen-find-allergist-settings',
-            'dalen_find_allergist_general'
-        );
-
-        // Default Search Radius
-        add_settings_field(
-            'default_search_radius',
-            'Default Search Radius (km)',
-            array($this, 'default_search_radius_callback'),
-            'dalen-find-allergist-settings',
-            'dalen_find_allergist_general'
-        );
     }
 
     /**
@@ -160,10 +142,7 @@ class Dalen_Find_Allergist_Admin
                     'apiKeyInvalid' => __('✗ API Key Invalid', 'dalen-find-allergist'),
                     'testFailed' => __('✗ Test Failed', 'dalen-find-allergist'),
                     'testApiKey' => __('Test API Key', 'dalen-find-allergist'),
-                    'invalidApiKey' => __('Google Maps API key format appears to be invalid.', 'dalen-find-allergist'),
-                    'invalidResultsLimit' => __('Search results limit must be between 1 and 100.', 'dalen-find-allergist'),
-                    'invalidRadius' => __('Default search radius must be between 1 and 500 km.', 'dalen-find-allergist'),
-                    'validationErrors' => __('Please fix the following errors:', 'dalen-find-allergist')
+                    'invalidApiKey' => __('Google Maps API key format appears to be invalid.', 'dalen-find-allergist')
                 )
             )
         );
@@ -228,37 +207,13 @@ class Dalen_Find_Allergist_Admin
         echo '<p class="description">' . esc_html__('Enter your Google Maps API key for map functionality.', 'dalen-find-allergist') . '</p>';
     }
 
-    public function search_results_limit_callback()
-    {
-        $value = $this->get_option_value('search_results_limit', '20');
-
-        printf(
-            '<input type="number" id="search_results_limit" name="dalen_find_allergist_options[search_results_limit]" value="%s" min="1" max="100" class="small-text" />',
-            esc_attr($value)
-        );
-        echo '<p class="description">' . esc_html__('Maximum number of search results to display (1-100).', 'dalen-find-allergist') . '</p>';
-    }
-
-    public function default_search_radius_callback()
-    {
-        $value = $this->get_option_value('default_search_radius', '50');
-
-        printf(
-            '<input type="number" id="default_search_radius" name="dalen_find_allergist_options[default_search_radius]" value="%s" min="1" max="500" class="small-text" />',
-            esc_attr($value)
-        );
-        echo '<p class="description">' . esc_html__('Default search radius in kilometers (1-500).', 'dalen-find-allergist') . '</p>';
-    }
-
     /**
      * Get default settings
      */
     public function get_default_settings()
     {
         return array(
-            'google_maps_api_key' => '',
-            'search_results_limit' => '20',
-            'default_search_radius' => '50'
+            'google_maps_api_key' => ''
         );
     }
 
@@ -281,38 +236,6 @@ class Dalen_Find_Allergist_Admin
                     'Google Maps API key format appears to be invalid.',
                     'error'
                 );
-            }
-        }
-
-        // Sanitize and validate search results limit
-        if (isset($input['search_results_limit'])) {
-            $limit = intval($input['search_results_limit']);
-            if ($limit < 1 || $limit > 100) {
-                add_settings_error(
-                    'dalen_find_allergist_options',
-                    'invalid_results_limit',
-                    'Search results limit must be between 1 and 100.',
-                    'error'
-                );
-                $sanitized['search_results_limit'] = '20'; // Default value
-            } else {
-                $sanitized['search_results_limit'] = (string) $limit;
-            }
-        }
-
-        // Sanitize and validate default search radius
-        if (isset($input['default_search_radius'])) {
-            $radius = intval($input['default_search_radius']);
-            if ($radius < 1 || $radius > 500) {
-                add_settings_error(
-                    'dalen_find_allergist_options',
-                    'invalid_radius',
-                    'Default search radius must be between 1 and 500 km.',
-                    'error'
-                );
-                $sanitized['default_search_radius'] = '50'; // Default value
-            } else {
-                $sanitized['default_search_radius'] = (string) $radius;
             }
         }
 
