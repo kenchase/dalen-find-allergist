@@ -30,8 +30,6 @@ Access the admin panel through **Find Allergist** in your WordPress admin menu:
 ### Settings
 
 - **Google Maps API Key**: Configure and test your API key
-- **Search Results Limit**: Control maximum results (1-100, default: 20)
-- **Default Search Radius**: Set default distance filter (1-500km, default: 50)
 
 ### Help
 
@@ -104,8 +102,6 @@ The plugin requires a Google Maps API key for location features:
 
 Configure plugin behavior through **Find Allergist → Settings**:
 
-- **Search Results Limit**: Maximum results per search (1-100, default: 20)
-- **Default Search Radius**: Default distance filter (1-500km, default: 50)
 - **Google Maps API Key**: API key for mapping and geocoding
 
 ## Requirements
@@ -345,8 +341,6 @@ public function configure_acf_google_map_api($api) {
 
 Configure the plugin behavior through **Find Allergist → Settings**:
 
-- **Search Results Limit**: Maximum results per search (default: 20, range: 1-100)
-- **Default Search Radius**: Default distance filter in kilometers (default: 50km, range: 1-500km)
 - **Google Maps API Key**: API key for mapping and geocoding functionality
 
 ### Search Configuration
