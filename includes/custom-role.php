@@ -56,6 +56,7 @@ class WA_User_Manager
         add_action('admin_head', [__CLASS__, 'hide_ui_elements']);
         add_action('admin_head', [__CLASS__, 'remove_help_tab']);
         add_action('admin_init', [__CLASS__, 'block_restricted_pages'], 1);
+        add_action('current_screen', [__CLASS__, 'validate_admin_access'], 1);
 
         // AJAX restrictions
         add_action('wp_ajax_inline-save', [__CLASS__, 'block_unauthorized_ajax'], 1);
@@ -595,7 +596,7 @@ class WA_User_Manager
     }
 
     /**
-     * Block access to restricted admin pages
+     * Block access to restricted admin pages and enforce physicians-only access
      */
     public static function block_restricted_pages()
     {
@@ -605,25 +606,117 @@ class WA_User_Manager
 
         global $pagenow;
 
-        $blocked_pages = ['profile.php', 'user-edit.php', 'users.php', 'user-new.php'];
+        // Define allowed pages for wa_level users
+        $allowed_pages = [
+            'edit.php',     // Only with post_type=physicians
+            'post.php',     // Only for their own physicians posts
+            'post-new.php', // Only for physicians post type
+            'admin-ajax.php' // For AJAX requests
+        ];
 
-        if (in_array($pagenow, $blocked_pages)) {
-            wp_die(__('You do not have permission to access this page.'), __('Access Denied'), ['response' => 403]);
+        // Check if current page is in the allowed list
+        if (!in_array($pagenow, $allowed_pages)) {
+            // Redirect to physicians page instead of showing error
+            wp_redirect(admin_url('edit.php?post_type=physicians'));
+            exit;
         }
 
-        // Block new post creation if user already has one
-        if ($pagenow == 'post-new.php' && isset($_GET['post_type']) && $_GET['post_type'] == 'physicians') {
+        // Additional validation for edit.php - must have physicians post_type
+        if ($pagenow === 'edit.php') {
+            if (!isset($_GET['post_type']) || $_GET['post_type'] !== 'physicians') {
+                wp_redirect(admin_url('edit.php?post_type=physicians'));
+                exit;
+            }
+        }
+
+        // Validation for post-new.php - must be physicians post type
+        if ($pagenow === 'post-new.php') {
+            if (!isset($_GET['post_type']) || $_GET['post_type'] !== 'physicians') {
+                wp_redirect(admin_url('edit.php?post_type=physicians'));
+                exit;
+            }
+
+            // Block new post creation if user already has one
             if (!self::can_create_physicians_post()) {
                 wp_die(__('You can only create one physician profile. Please edit your existing profile instead.'));
             }
         }
 
-        // Block editing others' posts
-        if ($pagenow == 'post.php' && isset($_GET['action']) && $_GET['action'] == 'edit' && isset($_GET['post'])) {
-            $post = get_post(intval($_GET['post']));
-            if ($post && $post->post_type == 'physicians' && $post->post_author != get_current_user_id()) {
-                wp_die(__('You do not have permission to edit this post.'));
+        // Validation for post.php - must be their own physicians post
+        if ($pagenow === 'post.php') {
+            if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['post'])) {
+                $post = get_post(intval($_GET['post']));
+
+                // Check if post exists and is physicians post type
+                if (!$post || $post->post_type !== 'physicians') {
+                    wp_redirect(admin_url('edit.php?post_type=physicians'));
+                    exit;
+                }
+
+                // Check if user owns the post
+                if ($post->post_author != get_current_user_id()) {
+                    wp_die(__('You do not have permission to edit this post.'));
+                }
+            } else {
+                // No valid post ID or action, redirect to physicians list
+                wp_redirect(admin_url('edit.php?post_type=physicians'));
+                exit;
             }
+        }
+    }
+
+    /**
+     * Comprehensive admin access validation as additional safety net
+     * 
+     * This method provides an additional layer of security by validating
+     * admin access based on current screen and redirecting unauthorized access.
+     * 
+     * @param WP_Screen $current_screen Current admin screen
+     */
+    public static function validate_admin_access($current_screen)
+    {
+        if (!self::is_wa_user() || !is_admin()) {
+            return;
+        }
+
+        // Skip AJAX requests as they're handled separately
+        if (wp_doing_ajax()) {
+            return;
+        }
+
+        // Define allowed screen bases and IDs for wa_level users
+        $allowed_screens = [
+            'edit-physicians',      // Physicians list page
+            'physicians',          // Single physician edit page
+            'physicians_page_*'    // Any physicians-related admin pages
+        ];
+
+        $current_screen_id = $current_screen->id;
+        $current_screen_base = $current_screen->base;
+
+        // Check if current screen is allowed
+        $is_allowed = false;
+
+        // Check exact matches first
+        if (in_array($current_screen_id, $allowed_screens) || in_array($current_screen_base, $allowed_screens)) {
+            $is_allowed = true;
+        }
+
+        // Check for physicians-related screens
+        if (!$is_allowed) {
+            if (
+                strpos($current_screen_id, 'physicians') !== false ||
+                strpos($current_screen_base, 'physicians') !== false ||
+                ($current_screen->post_type === 'physicians')
+            ) {
+                $is_allowed = true;
+            }
+        }
+
+        // If not allowed, redirect to physicians page
+        if (!$is_allowed) {
+            wp_redirect(admin_url('edit.php?post_type=physicians'));
+            exit;
         }
     }
 
