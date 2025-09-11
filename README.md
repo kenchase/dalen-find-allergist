@@ -1,8 +1,14 @@
 # Dalen Find Allergist
 
-A WordPress plugin for the Canadia### 🔧 Technical Features
+A WordPress plugin for the Canadian Society of Allergy and Clinical Immunology (CSACI) that provides an advanced allergist/immunologist finder with location-based search capabilities.
 
-- **REST API Endpoints**: `/wp-json/dalen/v1/physicians/search` (updated namespace)
+## 🚀 Version 0.99 - SSO Integration & Optimization
+
+This version represents a complete code review and refactoring of the plugin, implementing WordPress best practices, enhanced security, Wild Apricot SSO integration, and improved maintainability.
+
+### 🔧 Technical Features
+
+- **REST API Endpoints**: `/wp-json/dalen/v1/physicians/search`
 - **Enhanced Security**: Comprehensive input validation and sanitization
 - **Client-Side Pagination**: Instant page navigation without additional API calls
 - **Efficient Queries**: Optimized database queries with post-query filtering
@@ -16,11 +22,7 @@ A WordPress plugin for the Canadia### 🔧 Technical Features
 - **API Key Management**: Secure Google Maps API key configuration
 - **Plugin Settings**: Configurable search parameters and display options
 - **WordPress Standards**: Code follows WordPress coding standards and best practices
-- **Production Ready**: Comprehensive error handling, validation, and documentationllergy and Clinical Immunology (CSACI) that provides an advanced allergist/immunologist finder with location-based search capabilities.
-
-## 🚀 Version 0.9.1 - Major Refactoring & Optimization
-
-This version represents a complete code review and refactoring of the plugin, implementing WordPress best practices, enhanced security, and improved maintainability.
+- **Production Ready**: Comprehensive error handling, validation, and documentation
 
 ### 🎯 Code Quality Improvements
 
@@ -328,7 +330,6 @@ dalen-find-allergist/
 │   │   ├── class-find-allergist-form.php
 │   │   ├── class-find-allergist-results.php
 │   │   └── class-find-allergist-single.php
-│   └── login-redirect.php            # Optional user management (not loaded by default)
 ├── assets/
 │   ├── css/
 │   │   ├── admin.css                 # Admin panel styles
@@ -344,7 +345,6 @@ dalen-find-allergist/
 │ ├── custom-role.php # Wild Apricot user role management & access controls
 │ ├── rest-api-search.php # Search API endpoints
 │ ├── shortcodes.php # Frontend shortcodes
-│ └── login-redirect.php # User management
 ├── assets/
 │ ├── css/
 │ │ ├── admin.css # Admin panel styles
@@ -467,22 +467,6 @@ No additional configuration is required. The system automatically:
 2. Assigns appropriate capabilities for physician post management
 3. Applies access restrictions and UI modifications
 4. Enforces content security rules
-
-### Optional Login Redirect
-
-The plugin includes optional login redirect functionality (`includes/login-redirect.php`) that can redirect allergist users to their physician profiles after login. This feature is currently not loaded by default but can be enabled by uncommenting the include line in the main plugin file.
-
-**Features**:
-
-- Redirects users with 'allergist' role to physician post type admin page
-- WooCommerce compatibility for WooCommerce-based login systems
-- Clean, focused user experience for allergist users
-
-To enable, add to `includes/class-plugin.php`:
-
-```php
-require_once $this->plugin_path . 'includes/login-redirect.php';
-```
 
 ### Troubleshooting
 
@@ -613,6 +597,16 @@ For support, feature requests, or bug reports:
 This plugin is developed for the Canadian Society of Allergy and Clinical Immunology (CSACI). All rights reserved.
 
 ## Changelog
+
+### Version 0.99 - SSO Integration & Cleanup
+
+- **REMOVED**: Optional login redirect functionality (`login-redirect.php`) - no longer needed
+- **ENHANCED**: Wild Apricot SSO integration with improved access controls
+- **IMPROVED**: Plugin architecture and code organization
+- **UPDATED**: All version numbers across plugin files for consistency
+- **MAINTAINED**: All existing functionality for physician search and management
+- **SECURITY**: Continued focus on secure coding practices and input validation
+- **DOCUMENTATION**: Updated README to reflect current plugin state
 
 ### Version 0.9.0 - Major Code Review & Refactoring
 

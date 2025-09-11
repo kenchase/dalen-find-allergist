@@ -5,7 +5,7 @@ Tags: directory, search, allergist, physician, medical, location, distance, maps
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 0.9.1
+Stable tag: 0.99
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,7 +15,7 @@ Advanced allergist and immunologist directory with comprehensive admin panel, Wi
 
 The Dalen Find Allergist plugin provides a comprehensive directory system for allergists and immunologists across Canada. Built specifically for the Canadian Society of Allergy and Clinical Immunology (CSACI), this plugin offers advanced search capabilities with location-based filtering, Wild Apricot SSO integration, and a complete admin panel for centralized management.
 
-**Version 0.9.1** represents a major refactoring and optimization with 30% reduction in plugin size, 100% WordPress coding standards compliance, enhanced security, and production-ready architecture.
+**Version 0.99** represents continued optimization with Wild Apricot SSO integration enhancements, code cleanup, and improved plugin architecture while maintaining all core functionality.
 
 = Key Features =
 
@@ -30,7 +30,16 @@ The Dalen Find Allergist plugin provides a comprehensive directory system for al
 * **Production-Ready Security** - Enhanced input validation, sanitization, and error handling
 * **Mobile Responsive** - Optimized pagination controls and responsive design for all devices
 
-= Version 0.9.1 Improvements =
+= Version 0.99 Improvements =
+
+* **Code Cleanup**: Removed optional login redirect functionality that was no longer needed
+* **SSO Enhancement**: Improved Wild Apricot SSO integration with better access controls
+* **Version Consistency**: Updated all version numbers across plugin files for consistency
+* **Documentation**: Updated all documentation to reflect current plugin state
+* **Architecture**: Maintained production-ready architecture with continued security focus
+* **Functionality**: All core search and management features remain fully functional
+
+= Previous Version 0.9.1 Improvements =
 
 * **Architecture**: Singleton pattern for main plugin class with proper dependency management
 * **Security**: Comprehensive input validation, sanitization, and escaping throughout
@@ -154,9 +163,9 @@ For organizations using Wild Apricot SSO:
 
 == Frequently Asked Questions ==
 
-= What's new in version 0.9.1? =
+= What's new in version 0.99? =
 
-Version 0.9.1 represents a major refactoring with 30% code reduction, enhanced security, Wild Apricot SSO integration, client-side pagination, and 100% WordPress coding standards compliance. The plugin now uses a singleton pattern, updated REST API namespace (`/wp-json/dalen/v1/`), and comprehensive input validation.
+Version 0.99 includes continued optimization with improved Wild Apricot SSO integration, code cleanup by removing unused login redirect functionality, updated documentation, and version consistency across all plugin files while maintaining all core search and management features.
 
 = How does Wild Apricot integration work? =
 
@@ -222,6 +231,14 @@ Use the real-time API key testing feature in Find Allergist → Settings. The ad
 8. **Mobile View** - Responsive design optimized for mobile devices
 
 == Changelog ==
+
+= 0.99 (2025-09-11) =
+* **CODE CLEANUP** - Removed optional login redirect functionality (login-redirect.php) that was no longer needed
+* **ENHANCED:** Improved Wild Apricot SSO integration with better access controls
+* **UPDATED:** All version numbers across plugin files for consistency (main plugin, constants, class files, package.json)
+* **MAINTAINED:** All existing core functionality for physician search and management
+* **DOCUMENTATION:** Updated README.md and readme.txt to reflect current plugin state
+* **ARCHITECTURE:** Continued focus on production-ready code with security best practices
 
 = 0.9.1 (2025-08-23) =
 * **MAJOR REFACTORING** - Complete code review and optimization with 30% size reduction

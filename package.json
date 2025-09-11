@@ -1,6 +1,6 @@
 {
   "name": "dalen-find-allergist",
-  "version": "0.9.1",
+  "version": "0.99",
   "description": "CSACI Find an Allergist plugin for Dalen Design",
   "scripts": {
     "dev": "vite",

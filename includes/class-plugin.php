@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Main Plugin Class for Dalen Find Allergist
  *
@@ -21,7 +22,7 @@ class Dalen_Find_Allergist_Plugin
      *
      * @var string
      */
-    const VERSION = '0.2.0';
+    const VERSION = '0.99';
 
     /**
      * Single instance of the plugin
@@ -89,7 +90,7 @@ class Dalen_Find_Allergist_Plugin
         add_action('plugins_loaded', [$this, 'load_textdomain']);
         add_action('admin_notices', [$this, 'check_api_key_admin_notice']);
         add_filter('acf/fields/google_map/api', [$this, 'configure_acf_google_map_api']);
-        
+
         register_activation_hook($this->plugin_file, [$this, 'activate']);
         register_deactivation_hook($this->plugin_file, [$this, 'deactivate']);
     }
