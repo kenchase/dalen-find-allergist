@@ -3,14 +3,15 @@
 /**
  * Wild Apricot User Role Management for Physicians Post Type
  * 
- * This file manages access control and UI restrictions for users with roles 
- * beginning with "wa_level_" when working with the physicians custom post type.
+ * Manages access control and UI restrictions for users with roles beginning 
+ * with "wa_level_" when working with the physicians custom post type.
  * 
- * Features:
- * - Access control for physicians post editing
- * - UI restrictions (hide admin bar, menus, etc.)
- * - Content restrictions (one post per user)
- * - Security (prevent author/slug changes)
+ * Key Features:
+ * - Role-based access control for physicians post editing
+ * - UI simplification (streamlined admin interface)
+ * - Content restrictions (one post per user limit)
+ * - Security controls (prevent unauthorized changes)
+ * - Admin bar and interface customization
  * 
  * @package Dalen Find Allergist
  * @since 1.0.0
@@ -29,7 +30,13 @@ class WA_User_Manager
 {
 
     /**
-     * Initialize hooks and filters
+     * Initialize all hooks and filters for wa_level user management
+     * 
+     * Organizes hooks by functionality for better maintainability:
+     * - Core capability management
+     * - Query and content restrictions  
+     * - UI restrictions and customization
+     * - AJAX and admin bar restrictions
      */
     public static function init()
     {
@@ -67,16 +74,13 @@ class WA_User_Manager
 
         // Admin bar restrictions
         add_action('wp_before_admin_bar_render', [__CLASS__, 'modify_admin_bar']);
-
-        // Error handling
-        add_action('admin_notices', [__CLASS__, 'display_error_messages']);
     }
 
     /**
      * Check if user has wa_level role
      * 
-     * @param WP_User|int $user User object or ID
-     * @return bool
+     * @param WP_User|int|null $user User object, ID, or null for current user
+     * @return bool True if user has wa_level role
      */
     public static function is_wa_user($user = null)
     {
@@ -97,6 +101,35 @@ class WA_User_Manager
         }
 
         return false;
+    }
+
+    /**
+     * Get existing physicians posts for a user (helper method to reduce redundancy)
+     * 
+     * @param int|null $user_id User ID, null for current user
+     * @param array $post_status Array of post statuses to check
+     * @param int|null $exclude_post_id Post ID to exclude from results
+     * @return array Array of post objects or IDs
+     */
+    private static function get_user_physicians_posts($user_id = null, $post_status = ['publish', 'draft', 'pending'], $exclude_post_id = null)
+    {
+        if (!$user_id) {
+            $user_id = get_current_user_id();
+        }
+
+        $args = [
+            'post_type' => 'physicians',
+            'post_status' => $post_status,
+            'author' => $user_id,
+            'numberposts' => 1,
+            'fields' => 'ids'
+        ];
+
+        if ($exclude_post_id) {
+            $args['exclude'] = [$exclude_post_id];
+        }
+
+        return get_posts($args);
     }
 
     /**
@@ -302,11 +335,16 @@ class WA_User_Manager
     }
 
     /**
-     * Prevent unauthorized changes to posts
+     * Prevent unauthorized changes to physicians posts
      * 
-     * @param array $post_data Post data
-     * @param array $postarr Post array
-     * @return array
+     * Enforces security rules:
+     * - Prevents author changes (users can only edit their own posts)
+     * - Prevents slug changes (maintains URL consistency)
+     * - Blocks duplicate post creation (one post per user limit)
+     * 
+     * @param array $post_data Post data being saved
+     * @param array $postarr Original post array
+     * @return array Modified post data
      */
     public static function prevent_unauthorized_changes($post_data, $postarr)
     {
@@ -340,10 +378,10 @@ class WA_User_Manager
     }
 
     /**
-     * Check if user can create physicians posts
+     * Check if user can create physicians posts (enforces one-post-per-user limit)
      * 
-     * @param int $user_id User ID
-     * @return bool
+     * @param int|null $user_id User ID, null for current user
+     * @return bool True if user can create posts
      */
     public static function can_create_physicians_post($user_id = null)
     {
@@ -351,18 +389,13 @@ class WA_User_Manager
             $user_id = get_current_user_id();
         }
 
+        // No restriction for non-wa users
         if (!self::is_wa_user($user_id)) {
-            return true; // No restriction for non-wa users
+            return true;
         }
 
-        $existing_posts = get_posts([
-            'post_type' => 'physicians',
-            'post_status' => ['publish', 'draft', 'pending', 'future', 'private'],
-            'author' => $user_id,
-            'numberposts' => 1,
-            'fields' => 'ids'
-        ]);
-
+        // Check for existing posts (including future and private)
+        $existing_posts = self::get_user_physicians_posts($user_id, ['publish', 'draft', 'pending', 'future', 'private']);
         return empty($existing_posts);
     }
 
@@ -386,7 +419,7 @@ class WA_User_Manager
     }
 
     /**
-     * Validate physicians post on save
+     * Validate physicians post on save (prevents duplicate posts)
      * 
      * @param int $post_id Post ID
      * @param WP_Post $post Post object
@@ -394,38 +427,32 @@ class WA_User_Manager
      */
     public static function validate_physicians_post($post_id, $post, $update)
     {
-        if ($post->post_type !== 'physicians' || wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) {
-            return;
-        }
-
-        if (!self::is_wa_user($post->post_author)) {
+        // Skip validation for autosaves, revisions, non-physicians posts, or updates
+        if (
+            $post->post_type !== 'physicians' ||
+            wp_is_post_autosave($post_id) ||
+            wp_is_post_revision($post_id) ||
+            $update ||
+            !self::is_wa_user($post->post_author)
+        ) {
             return;
         }
 
         // Check for duplicate posts on new post creation
-        if (!$update) {
-            $existing_posts = get_posts([
-                'post_type' => 'physicians',
-                'post_status' => ['publish', 'draft', 'pending', 'future', 'private'],
-                'author' => $post->post_author,
-                'exclude' => [$post_id],
-                'numberposts' => 1,
-                'fields' => 'ids'
-            ]);
+        $existing_posts = self::get_user_physicians_posts($post->post_author, ['publish', 'draft', 'pending', 'future', 'private'], $post_id);
 
-            if (!empty($existing_posts)) {
-                wp_delete_post($post_id, true);
-                wp_redirect(add_query_arg([
-                    'post_type' => 'physicians',
-                    'error' => 'duplicate_post'
-                ], admin_url('edit.php')));
-                exit;
-            }
+        if (!empty($existing_posts)) {
+            wp_delete_post($post_id, true);
+            wp_redirect(add_query_arg([
+                'post_type' => 'physicians',
+                'error' => 'duplicate_post'
+            ], admin_url('edit.php')));
+            exit;
         }
     }
 
     /**
-     * Modify admin interface for wa_level users
+     * Modify admin interface for wa_level users (removes unnecessary menu items)
      */
     public static function modify_admin_interface()
     {
@@ -444,33 +471,29 @@ class WA_User_Manager
             }
         }
 
-        // Clean up physicians submenu
+        // Clean up physicians submenu - keep only essential items
         if (isset($submenu['edit.php?post_type=physicians'])) {
+            $allowed_submenu_items = [
+                'edit.php?post_type=physicians',
+                'post-new.php?post_type=physicians'
+            ];
+
             foreach ($submenu['edit.php?post_type=physicians'] as $key => $submenu_item) {
-                if (!in_array($submenu_item[2], [
-                    'edit.php?post_type=physicians',
-                    'post-new.php?post_type=physicians'
-                ])) {
+                if (!in_array($submenu_item[2], $allowed_submenu_items)) {
                     unset($submenu['edit.php?post_type=physicians'][$key]);
                 }
             }
         }
 
-        // Remove "Add New" if user already has a post
-        $existing_posts = get_posts([
-            'post_type' => 'physicians',
-            'post_status' => ['publish', 'draft', 'pending'],
-            'author' => get_current_user_id(),
-            'numberposts' => 1
-        ]);
-
+        // Remove "Add New" if user already has a post (enforces one-post limit)
+        $existing_posts = self::get_user_physicians_posts();
         if (!empty($existing_posts)) {
             remove_submenu_page('edit.php?post_type=physicians', 'post-new.php?post_type=physicians');
         }
     }
 
     /**
-     * Hide UI elements via CSS and JavaScript
+     * Hide UI elements via CSS and JavaScript (streamlines interface for wa_level users)
      */
     public static function hide_ui_elements()
     {
@@ -478,7 +501,7 @@ class WA_User_Manager
             return;
         }
 
-        // Hide all admin notices for wa_level users
+        // Remove all admin notices for cleaner interface
         remove_all_actions('admin_notices');
         remove_all_actions('all_admin_notices');
         remove_all_actions('network_admin_notices');
@@ -487,15 +510,11 @@ class WA_User_Manager
 
         // Hide "Add New" button if user has existing post
         if ($pagenow == 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] == 'physicians') {
-            $existing_posts = get_posts([
-                'post_type' => 'physicians',
-                'post_status' => ['publish', 'draft', 'pending'],
-                'author' => get_current_user_id(),
-                'numberposts' => 1
-            ]);
+            $existing_posts = self::get_user_physicians_posts();
 
             if (!empty($existing_posts)) {
                 echo '<style>
+                    /* Hide Add New buttons and related elements */
                     .page-title-action,
                     .add-new-h2,
                     #favorite-actions,
@@ -512,14 +531,14 @@ class WA_User_Manager
             }
         }
 
-        // Hide remaining author and slug elements that can't be removed via meta boxes
+        // Hide author and slug elements that can't be removed via meta boxes
         if (in_array($pagenow, ['post.php', 'post-new.php']) && self::is_physicians_page()) {
             echo '<style>
-                /* Author elements in publish meta box */
+                /* Hide author elements in publish meta box */
                 .misc-pub-post-author,
                 .misc-pub-section.misc-pub-author,
                 
-                /* Slug elements in publish meta box and permalink */
+                /* Hide slug elements in publish meta box and permalink */
                 #edit-slug-box,
                 #editable-post-name,
                 #editable-post-name-full,
@@ -742,18 +761,6 @@ class WA_User_Manager
             ) {
                 $wp_admin_bar->remove_node($node->id);
             }
-        }
-    }
-
-    /**
-     * Display error messages
-     */
-    public static function display_error_messages()
-    {
-        if (isset($_GET['error']) && $_GET['error'] === 'duplicate_post') {
-            echo '<div class="notice notice-error is-dismissible">
-                <p><strong>Error:</strong> You can only create one physician profile. Please edit your existing profile instead.</p>
-            </div>';
         }
     }
 }
