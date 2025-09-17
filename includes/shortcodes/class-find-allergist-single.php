@@ -204,11 +204,10 @@ class Find_Allergist_Single_Shortcode extends Find_Allergist_Shortcode_Base
                 <?php endif; ?>
             </h3>
 
-            <p><strong><?php _e('Practices OIT:', 'dalen-find-allergist'); ?></strong> <?php echo $this->esc_html($data['oit']); ?></p>
-
             <?php $this->render_practice_settings($data['practice_setting']); ?>
+            <?php $this->render_field_if_exists('Practices OIT:', $data['oit']); ?>
             <?php $this->render_field_if_exists('Practice Population:', $data['practice_population']); ?>
-            <?php $this->render_field_if_exists('Virtual Care/Consultation Services:', $data['virtual_care']); ?>
+            <?php $this->render_consultation_services($data['virtual_care']); ?>
             <?php $this->render_field_if_exists('Site for Clinical Trials:', $data['clinical_trials']); ?>
             <?php $this->render_field_if_exists('Special Areas of Interest:', $data['special_areas']); ?>
             <?php $this->render_treatment_services($data['treatment_services']); ?>
@@ -223,7 +222,7 @@ class Find_Allergist_Single_Shortcode extends Find_Allergist_Shortcode_Base
     {
         if (!$practice_setting) return;
     ?>
-        <p><strong><?php _e('Practice Setting(s):', 'dalen-find-allergist'); ?></strong></p>
+        <p class="far-list-label"><strong><?php _e('Practice Setting(s):', 'dalen-find-allergist'); ?></strong></p>
         <ul>
             <?php
             if (is_array($practice_setting)) {
@@ -245,7 +244,7 @@ class Find_Allergist_Single_Shortcode extends Find_Allergist_Shortcode_Base
     {
         if (!$treatment_services) return;
     ?>
-        <p><strong><?php _e('Treatment Services Offered:', 'dalen-find-allergist'); ?></strong></p>
+        <p class="far-list-label"><strong><?php _e('Treatment Services Offered:', 'dalen-find-allergist'); ?></strong></p>
         <ul>
             <?php
             if (is_array($treatment_services)) {
@@ -254,6 +253,28 @@ class Find_Allergist_Single_Shortcode extends Find_Allergist_Shortcode_Base
                 }
             } else {
                 echo '<li>' . $this->esc_html($treatment_services) . '</li>';
+            }
+            ?>
+        </ul>
+    <?php
+    }
+
+    /**
+     * Render consultation services as list
+     */
+    private function render_consultation_services($consultation_services)
+    {
+        if (!$consultation_services) return;
+    ?>
+        <p class="far-list-label"><strong><?php _e('Consultation Services:', 'dalen-find-allergist'); ?></strong></p>
+        <ul>
+            <?php
+            if (is_array($consultation_services)) {
+                foreach ($consultation_services as $service) {
+                    echo '<li>' . $this->esc_html($service) . '</li>';
+                }
+            } else {
+                echo '<li>' . $this->esc_html($consultation_services) . '</li>';
             }
             ?>
         </ul>

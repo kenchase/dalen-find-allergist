@@ -142,6 +142,12 @@
   padding-top: var(--spacing-2);
 }
 
+#page-container .far-list-label,
+.far-list-label {
+  padding-bottom: 0;
+  margin-bottom: var(--spacing-1);
+}
+
 #page-container .far-org-name,
 .far-org-name {
   font-size: var(--text-lg);
