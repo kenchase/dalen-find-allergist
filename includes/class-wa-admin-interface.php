@@ -9,7 +9,6 @@
  * Key Features:
  * - Admin menu management and cleanup
  * - UI element hiding and customization
- * - Admin bar modifications
  * - Meta box management
  * - List page customizations
  * 
@@ -33,8 +32,10 @@ class WA_Admin_Interface
      */
     public static function init()
     {
-        // Admin interface management
-        add_action('admin_menu', [__CLASS__, 'manage_admin_interface'], 999);
+        // Admin interface management - use multiple hooks with different priorities
+        add_action('admin_menu', [__CLASS__, 'early_menu_cleanup'], 1);
+        add_action('admin_menu', [__CLASS__, 'manage_admin_interface'], 100);
+        add_action('admin_menu', [__CLASS__, 'final_menu_cleanup'], 9999);
         add_action('admin_head', [__CLASS__, 'handle_all_admin_head_tasks']);
 
         // List page customizations
@@ -48,10 +49,6 @@ class WA_Admin_Interface
         // Meta boxes and screen options
         add_action('add_meta_boxes', [__CLASS__, 'remove_meta_boxes'], 999);
         add_filter('screen_options_show_screen', [__CLASS__, 'hide_screen_options'], 10, 2);
-
-        // Admin bar customizations
-        add_action('admin_bar_menu', [__CLASS__, 'modify_admin_bar'], 999);
-        add_action('wp_before_admin_bar_render', [__CLASS__, 'remove_admin_bar_nodes']);
     }
 
     /**
@@ -136,7 +133,7 @@ class WA_Admin_Interface
     /**
      * Handle all admin_head tasks for wa_level users
      * 
-     * Consolidates UI hiding, help tab removal, and admin bar CSS into a single method.
+     * Consolidates UI hiding, help tab removal into a single method.
      */
     public static function handle_all_admin_head_tasks()
     {
@@ -149,9 +146,39 @@ class WA_Admin_Interface
 
         // Hide UI elements
         self::hide_ui_elements();
+    }
 
-        // Hide admin bar account CSS
-        self::hide_admin_bar_account_css();
+    /**
+     * Early menu cleanup to catch WordPress core menus as they're added
+     * 
+     * This runs at priority 1 to remove core menus before plugins add theirs.
+     */
+    public static function early_menu_cleanup()
+    {
+        if (!self::is_wa_user()) {
+            return;
+        }
+
+        // Remove core WordPress menus immediately
+        $core_menus_to_remove = [
+            'index.php',                    // Dashboard
+            'edit.php',                     // Posts  
+            'upload.php',                   // Media
+            'edit.php?post_type=page',      // Pages
+            'edit-comments.php',            // Comments
+            'themes.php',                   // Appearance
+            'plugins.php',                  // Plugins
+            'users.php',                    // Users
+            'tools.php',                    // Tools
+            'options-general.php',          // Settings
+            'separator1',                   // Separators
+            'separator2',
+            'separator-last',
+        ];
+
+        foreach ($core_menus_to_remove as $menu_slug) {
+            remove_menu_page($menu_slug);
+        }
     }
 
     /**
@@ -168,7 +195,7 @@ class WA_Admin_Interface
 
         global $menu, $submenu;
 
-        // Remove core WordPress menus
+        // Remove core WordPress menus first
         self::remove_core_wordpress_menus();
 
         // Remove third-party plugin menus
@@ -179,6 +206,75 @@ class WA_Admin_Interface
 
         // Clean up any remaining unauthorized submenus
         self::cleanup_unauthorized_submenus($submenu);
+
+        // Additional aggressive cleanup - remove anything that's not physicians
+        if (is_array($menu)) {
+            foreach ($menu as $key => $menu_item) {
+                if (empty($menu_item[2])) continue;
+
+                // Keep only the physicians menu
+                if ($menu_item[2] !== 'edit.php?post_type=physicians') {
+                    remove_menu_page($menu_item[2]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Final aggressive menu cleanup as a safety net
+     * 
+     * This runs at priority 9999 to catch any menus that might have been
+     * added after our initial cleanup.
+     */
+    public static function final_menu_cleanup()
+    {
+        if (!self::is_wa_user()) {
+            return;
+        }
+
+        global $menu, $submenu;
+
+        // Remove any core WordPress menus that might have been re-added
+        $core_menus_to_remove = [
+            'index.php',                    // Dashboard
+            'edit.php',                     // Posts  
+            'upload.php',                   // Media
+            'edit.php?post_type=page',      // Pages
+            'edit-comments.php',            // Comments
+            'themes.php',                   // Appearance
+            'plugins.php',                  // Plugins
+            'users.php',                    // Users
+            'tools.php',                    // Tools
+            'options-general.php',          // Settings
+            'separator1',                   // Separators
+            'separator2',
+            'separator-last',
+        ];
+
+        foreach ($core_menus_to_remove as $menu_slug) {
+            remove_menu_page($menu_slug);
+        }
+
+        // Aggressively remove any non-physicians menu items
+        if (is_array($menu)) {
+            foreach ($menu as $key => $menu_item) {
+                if (empty($menu_item[2])) continue;
+
+                // Keep only the physicians menu
+                if ($menu_item[2] !== 'edit.php?post_type=physicians') {
+                    unset($menu[$key]);
+                }
+            }
+        }
+
+        // Clean up all submenus except physicians
+        if (is_array($submenu)) {
+            foreach ($submenu as $parent_slug => $submenu_items) {
+                if ($parent_slug !== 'edit.php?post_type=physicians') {
+                    unset($submenu[$parent_slug]);
+                }
+            }
+        }
     }
 
     /**
@@ -363,6 +459,9 @@ class WA_Admin_Interface
         self::hide_admin_notices();
         self::output_menu_text_changes();
 
+        // Add aggressive menu hiding CSS
+        self::output_aggressive_menu_hiding_css();
+
         // Apply page-specific UI modifications
         global $pagenow;
 
@@ -505,14 +604,110 @@ class WA_Admin_Interface
                     // Change "Edit Allergist" to "Edit My Allergist Profile" in page heading
                     $("h1.wp-heading-inline:contains(\'Edit Allergist\')").text("Edit My Allergist Profile");
                 }
+
+                function aggressiveMenuCleanup() {
+                    // Hide all menu items except physicians
+                    $("#adminmenu > li").each(function() {
+                        var $menuItem = $(this);
+                        var href = $menuItem.find("a").attr("href");
+                        
+                        // Show only physicians menu
+                        if (href && href.indexOf("edit.php?post_type=physicians") !== -1) {
+                            $menuItem.show();
+                        } else {
+                            $menuItem.hide();
+                        }
+                    });
+                    
+                    // Hide specific problematic menu items
+                    $("#adminmenu a[href=\'index.php\']").closest("li").hide();
+                    $("#adminmenu a[href=\'edit.php\']").closest("li").hide();
+                    $("#adminmenu a[href=\'upload.php\']").closest("li").hide();
+                    $("#adminmenu a[href=\'edit.php?post_type=page\']").closest("li").hide();
+                    $("#adminmenu a[href=\'edit-comments.php\']").closest("li").hide();
+                    $("#adminmenu a[href=\'themes.php\']").closest("li").hide();
+                    $("#adminmenu a[href=\'plugins.php\']").closest("li").hide();
+                    $("#adminmenu a[href=\'users.php\']").closest("li").hide();
+                    $("#adminmenu a[href=\'tools.php\']").closest("li").hide();
+                    $("#adminmenu a[href=\'options-general.php\']").closest("li").hide();
+                    
+                    // Hide separators
+                    $("#adminmenu .wp-menu-separator").hide();
+                }
                 
                 // Initial execution
                 updateMenuTexts();
+                aggressiveMenuCleanup();
                 
-                // Handle dynamic loading
-                setTimeout(updateMenuTexts, 500);
+                // Handle dynamic loading - run multiple times to catch late-added menus
+                setTimeout(function() {
+                    updateMenuTexts();
+                    aggressiveMenuCleanup();
+                }, 500);
+                
+                setTimeout(function() {
+                    aggressiveMenuCleanup();
+                }, 1000);
+                
+                setTimeout(function() {
+                    aggressiveMenuCleanup();
+                }, 2000);
             });
         </script>';
+    }
+
+    /**
+     * Output aggressive CSS to hide any remaining unauthorized menu items
+     * 
+     * This serves as a final fallback to hide any menu items that might
+     * slip through the PHP-based removal methods.
+     */
+    private static function output_aggressive_menu_hiding_css()
+    {
+        echo '<style>
+            /* Hide all admin menu items except physicians */
+            #adminmenu > li:not([class*="wp-menu-open"]):not([class*="physicians"]) {
+                display: none !important;
+            }
+            
+            /* Hide specific menu items by href */
+            #adminmenu a[href="index.php"],
+            #adminmenu a[href="edit.php"],
+            #adminmenu a[href="upload.php"],
+            #adminmenu a[href="edit.php?post_type=page"],
+            #adminmenu a[href="edit-comments.php"],
+            #adminmenu a[href="themes.php"],
+            #adminmenu a[href="plugins.php"],
+            #adminmenu a[href="users.php"],
+            #adminmenu a[href="tools.php"],
+            #adminmenu a[href="options-general.php"] {
+                display: none !important;
+            }
+            
+            /* Hide separator items */
+            #adminmenu .wp-menu-separator {
+                display: none !important;
+            }
+            
+            /* Show only the physicians menu */
+            #adminmenu a[href*="edit.php?post_type=physicians"] {
+                display: block !important;
+            }
+            
+            /* Hide all menu items and show only physicians */
+            #adminmenu > li {
+                display: none !important;
+            }
+            
+            #adminmenu > li:has(a[href*="edit.php?post_type=physicians"]) {
+                display: block !important;
+            }
+            
+            /* For browsers that don\'t support :has(), use a more specific approach */
+            #menu-posts-physicians {
+                display: block !important;
+            }
+        </style>';
     }
 
     /**
@@ -711,93 +906,5 @@ class WA_Admin_Interface
             return false;
         }
         return $show_screen;
-    }
-
-    /**
-     * Modify admin bar to show only logout link for wa_level users
-     */
-    public static function modify_admin_bar($wp_admin_bar)
-    {
-        if (!self::is_wa_user()) {
-            return;
-        }
-
-        // Remove the main user account menu and all related nodes
-        $wp_admin_bar->remove_node('my-account');
-        $wp_admin_bar->remove_node('my-account-with-avatar');
-        $wp_admin_bar->remove_node('user-actions');
-        $wp_admin_bar->remove_node('user-info');
-        $wp_admin_bar->remove_node('edit-profile');
-
-        // Remove other common admin bar items
-        $wp_admin_bar->remove_node('wp-logo');
-        $wp_admin_bar->remove_node('site-name');
-        $wp_admin_bar->remove_node('new-content');
-        $wp_admin_bar->remove_node('comments');
-        $wp_admin_bar->remove_node('updates');
-        $wp_admin_bar->remove_node('search');
-
-        // Remove items from root-default menu
-        $wp_admin_bar->remove_node('menu-toggle');
-        $wp_admin_bar->remove_node('archive');
-        $wp_admin_bar->remove_node('wpseo-menu');
-        $wp_admin_bar->remove_node('tribe-events');
-
-        // Add a simple logout link
-        $wp_admin_bar->add_node(array(
-            'id'     => 'logout-only',
-            'title'  => 'Logout',
-            'href'   => wp_logout_url(),
-            'parent' => 'top-secondary'
-        ));
-    }
-
-    /**
-     * Remove admin bar nodes using wp_before_admin_bar_render hook
-     */
-    public static function remove_admin_bar_nodes()
-    {
-        if (!self::is_wa_user()) {
-            return;
-        }
-
-        global $wp_admin_bar;
-
-        // Remove account-related nodes
-        $wp_admin_bar->remove_node('my-account');
-        $wp_admin_bar->remove_node('my-account-with-avatar');
-        $wp_admin_bar->remove_node('user-actions');
-        $wp_admin_bar->remove_node('user-info');
-        $wp_admin_bar->remove_node('edit-profile');
-
-        // Remove root-default menu items
-        $wp_admin_bar->remove_node('menu-toggle');
-        $wp_admin_bar->remove_node('archive');
-        $wp_admin_bar->remove_node('wpseo-menu');
-        $wp_admin_bar->remove_node('tribe-events');
-    }
-
-    /**
-     * Hide account elements with CSS as fallback
-     */
-    public static function hide_admin_bar_account_css()
-    {
-        if (!self::is_wa_user()) {
-            return;
-        }
-
-        echo '<style>
-            #wp-admin-bar-my-account,
-            #wp-admin-bar-my-account-with-avatar,
-            #wp-admin-bar-user-actions,
-            #wp-admin-bar-user-info,
-            #wp-admin-bar-edit-profile,
-            #wp-admin-bar-menu-toggle,
-            #wp-admin-bar-archive,
-            #wp-admin-bar-wpseo-menu,
-            #wp-admin-bar-tribe-events {
-                display: none !important;
-            }
-        </style>';
     }
 }
