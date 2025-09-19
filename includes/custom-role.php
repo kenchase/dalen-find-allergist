@@ -481,7 +481,9 @@ class WA_User_Manager
         if (isset($submenu['edit.php?post_type=physicians'])) {
             $allowed_submenu_items = [
                 'edit.php?post_type=physicians',
-                'post-new.php?post_type=physicians'
+                'post-new.php?post_type=physicians',
+                'wa-home-page', // Add our home page link to allowed items
+                'wa-my-account' // Add our my account link to allowed items
             ];
 
             foreach ($submenu['edit.php?post_type=physicians'] as $key => $submenu_item) {
@@ -491,11 +493,58 @@ class WA_User_Manager
             }
         }
 
+        // Add home page link to physicians submenu
+        add_submenu_page(
+            'edit.php?post_type=physicians',
+            __('CSACI Home Page'),
+            __('CSACI Home Page'),
+            'read',
+            'wa-home-page',
+            [__CLASS__, 'render_home_page_redirect']
+        );
+
+        // Add my account link to physicians submenu
+        add_submenu_page(
+            'edit.php?post_type=physicians',
+            __('CSACI My Account Page'),
+            __('CSACI My Account Page'),
+            'read',
+            'wa-my-account',
+            [__CLASS__, 'render_my_account_redirect']
+        );
+
         // Remove "Add New" if user already has a post (enforces one-post limit)
         $existing_posts = self::get_user_physicians_posts();
         if (!empty($existing_posts)) {
             remove_submenu_page('edit.php?post_type=physicians', 'post-new.php?post_type=physicians');
         }
+    }
+
+    /**
+     * Render home page redirect for wa_level users
+     * 
+     * This method handles the home page link functionality by redirecting
+     * wa_level users to the website's home page when they click the link.
+     */
+    public static function render_home_page_redirect()
+    {
+        // Redirect to home page
+        wp_redirect(home_url());
+        exit;
+    }
+
+    /**
+     * Render my account redirect for wa_level users
+     * 
+     * This method handles the my account link functionality by redirecting
+     * wa_level users to the CSACI my account page when they click the link.
+     */
+    public static function render_my_account_redirect()
+    {
+        // Redirect to my account page using current site domain
+        $my_account_url = home_url('/my-account-wa/');
+        wp_redirect($my_account_url);
+        exit;
     }
 
     /**
@@ -512,21 +561,33 @@ class WA_User_Manager
         remove_all_actions('all_admin_notices');
         remove_all_actions('network_admin_notices');
 
+        // Output JavaScript for menu text changes (applies to all physicians pages)
+        self::output_menu_text_changes();
+
         global $pagenow;
 
-        // Hide "Add New" button if user has existing post
+        // Common CSS that applies to all physicians pages
+        $common_css = '
+            /* Hide collapse menu button for wa_level users on physicians pages */
+            #collapse-button,
+            #collapse-menu {
+                display: none !important;
+            }
+        ';
+
+        // Page-specific CSS and functionality
         if ($pagenow == 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] == 'physicians') {
             $existing_posts = self::get_user_physicians_posts();
 
-            echo '<style>
+            $list_page_css = $common_css . '
                 /* Hide search box for all wa_level users on physicians page */
                 .search-box {
                     display: none !important;
                 }
-            </style>';
+            ';
 
             if (!empty($existing_posts)) {
-                echo '<style>
+                $list_page_css .= '
                     /* Hide Add New buttons and related elements */
                     .page-title-action,
                     .add-new-h2,
@@ -540,13 +601,15 @@ class WA_User_Manager
                     #adminmenu .wp-submenu a[href*="post-new.php?post_type=physicians"] {
                         display: none !important;
                     }
-                </style>';
+                ';
             }
+
+            echo '<style>' . $list_page_css . '</style>';
         }
 
-        // Hide author and slug elements that can't be removed via meta boxes
+        // Hide author and slug elements on individual post editing pages
         if (in_array($pagenow, ['post.php', 'post-new.php']) && self::is_physicians_page()) {
-            echo '<style>
+            $edit_page_css = $common_css . '
                 /* Hide author elements in publish meta box */
                 .misc-pub-post-author,
                 .misc-pub-section.misc-pub-author,
@@ -562,7 +625,9 @@ class WA_User_Manager
                 #edit-slug-buttons {
                     display: none !important;
                 }
-            </style>';
+            ';
+
+            echo '<style>' . $edit_page_css . '</style>';
 
             echo '<script>
                 jQuery(document).ready(function($) {
@@ -578,6 +643,38 @@ class WA_User_Manager
                 });
             </script>';
         }
+    }
+
+    /**
+     * Output JavaScript for menu text changes (centralized for efficiency)
+     * 
+     * @since 1.0.0
+     */
+    private static function output_menu_text_changes()
+    {
+        echo '<script>
+            jQuery(document).ready(function($) {
+                function updateMenuTexts() {
+                    // Change "Allergists" to "My Allergist Profile" in the admin menu
+                    $("#adminmenu a[href*=\'edit.php?post_type=physicians\'] .wp-menu-name").text("My Allergist Profile");
+                    
+                    // Change "All Allergists" to "My Allergist Profile" in submenu items
+                    $("#adminmenu a[href*=\'edit.php?post_type=physicians\']:contains(\'All Allergists\')").text("My Allergist Profile");
+                    
+                    // Change "Allergists" to "My Allergist Profile" in page heading
+                    $("h1.wp-heading-inline:contains(\'Allergists\')").text("My Allergist Profile");
+                    
+                    // Change "Edit Allergist" to "Edit My Allergist Profile" in page heading
+                    $("h1.wp-heading-inline:contains(\'Edit Allergist\')").text("Edit My Allergist Profile");
+                }
+                
+                // Initial execution
+                updateMenuTexts();
+                
+                // Handle dynamic loading
+                setTimeout(updateMenuTexts, 500);
+            });
+        </script>';
     }
 
     /**
@@ -611,6 +708,7 @@ class WA_User_Manager
             'edit.php',     // Only with post_type=physicians
             'post.php',     // Only for their own physicians posts
             'post-new.php', // Only for physicians post type
+            'admin.php',    // For custom submenu pages like home page link
             'admin-ajax.php' // For AJAX requests
         ];
 
@@ -619,6 +717,15 @@ class WA_User_Manager
             // Redirect to physicians page instead of showing error
             wp_redirect(admin_url('edit.php?post_type=physicians'));
             exit;
+        }
+
+        // Additional validation for admin.php - only allow wa-home-page and wa-my-account
+        if ($pagenow === 'admin.php') {
+            $allowed_admin_pages = ['wa-home-page', 'wa-my-account'];
+            if (!isset($_GET['page']) || !in_array($_GET['page'], $allowed_admin_pages)) {
+                wp_redirect(admin_url('edit.php?post_type=physicians'));
+                exit;
+            }
         }
 
         // Additional validation for edit.php - must have physicians post_type
@@ -688,7 +795,9 @@ class WA_User_Manager
         $allowed_screens = [
             'edit-physicians',      // Physicians list page
             'physicians',          // Single physician edit page
-            'physicians_page_*'    // Any physicians-related admin pages
+            'physicians_page_*',   // Any physicians-related admin pages
+            'physicians_page_wa-home-page', // Our custom home page link
+            'physicians_page_wa-my-account' // Our custom my account link
         ];
 
         $current_screen_id = $current_screen->id;
@@ -707,7 +816,9 @@ class WA_User_Manager
             if (
                 strpos($current_screen_id, 'physicians') !== false ||
                 strpos($current_screen_base, 'physicians') !== false ||
-                ($current_screen->post_type === 'physicians')
+                ($current_screen->post_type === 'physicians') ||
+                $current_screen_id === 'physicians_page_wa-home-page' ||
+                $current_screen_id === 'physicians_page_wa-my-account'
             ) {
                 $is_allowed = true;
             }
