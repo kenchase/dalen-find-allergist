@@ -3,14 +3,15 @@
 /**
  * Wild Apricot Admin Interface Customization
  * 
- * Handles admin interface modifications, menu management, and UI customization
- * for users with roles beginning with "wa_level_".
+ * Handles essential admin interface modifications for users with roles beginning with "wa_level_".
+ * Relies on proper role capabilities for most access control, only implementing
+ * security-critical overrides and UX improvements.
  * 
  * Key Features:
- * - Admin menu management and cleanup
- * - UI element hiding and customization
- * - Meta box management
- * - List page customizations
+ * - Scalable whitelist-based menu management
+ * - Security-critical UI restrictions (quick edit, own posts only)
+ * - Essential UX improvements (menu text changes)
+ * - One-post limit enforcement
  * 
  * @package Dalen Find Allergist
  * @since 1.0.0
@@ -38,17 +39,22 @@ class WA_Admin_Interface
         add_action('admin_menu', [__CLASS__, 'final_menu_cleanup'], 9999);
         add_action('admin_head', [__CLASS__, 'handle_all_admin_head_tasks']);
 
-        // List page customizations
-        add_filter('bulk_actions-edit-physicians', [__CLASS__, 'modify_bulk_actions']);
-        add_filter('handle_bulk_actions-edit-physicians', [__CLASS__, 'handle_bulk_delete'], 10, 3);
-        add_filter('manage_physicians_posts_columns', [__CLASS__, 'modify_post_columns'], 999);
-        add_filter('post_row_actions', [__CLASS__, 'remove_quick_edit_for_wa_users'], 10, 2);
-        add_filter('views_edit-physicians', [__CLASS__, 'hide_post_status_views']);
-        add_filter('months_dropdown_results', [__CLASS__, 'remove_date_filter_dropdown'], 10, 2);
+        // Hide admin bar for wa_level users - use multiple hooks for reliability
+        add_action('after_setup_theme', [__CLASS__, 'disable_admin_bar_for_wa_users'], 1);
+        add_filter('show_admin_bar', [__CLASS__, 'hide_admin_bar_for_wa_users'], 10, 1);
+        add_action('wp', [__CLASS__, 'disable_admin_bar_for_wa_users'], 1);
+        add_action('admin_init', [__CLASS__, 'disable_admin_bar_for_wa_users'], 1);
 
-        // Meta boxes and screen options
-        add_action('add_meta_boxes', [__CLASS__, 'remove_meta_boxes'], 999);
-        add_filter('screen_options_show_screen', [__CLASS__, 'hide_screen_options'], 10, 2);
+        // Hide Screen Options and Help tabs for wa_level users
+        add_filter('screen_options_show_screen', [__CLASS__, 'hide_screen_options_for_wa_users'], 10, 2);
+        add_filter('contextual_help', [__CLASS__, 'hide_contextual_help_for_wa_users'], 10, 3);
+
+        // List page customizations
+        add_filter('handle_bulk_actions-edit-physicians', [__CLASS__, 'handle_bulk_delete'], 10, 3);
+        add_filter('post_row_actions', [__CLASS__, 'remove_quick_edit_for_wa_users'], 10, 2);
+        add_filter('months_dropdown_results', [__CLASS__, 'remove_date_filter_dropdown'], 10, 2);
+        add_filter('views_edit-physicians', [__CLASS__, 'hide_post_status_views_for_wa_users']);
+        add_filter('manage_physicians_posts_columns', [__CLASS__, 'modify_physicians_columns_for_wa_users'], 999);
     }
 
     /**
@@ -76,6 +82,89 @@ class WA_Admin_Interface
         }
 
         return false;
+    }
+
+    /**
+     * Hide admin bar for wa_level users
+     * 
+     * @param bool $show_admin_bar Whether to show the admin bar
+     * @return bool False if wa_level user, otherwise original value
+     */
+    public static function hide_admin_bar_for_wa_users($show_admin_bar)
+    {
+        if (self::is_wa_user()) {
+            return false;
+        }
+        return $show_admin_bar;
+    }
+
+    /**
+     * Aggressively disable admin bar for wa_level users
+     * 
+     * This method uses multiple robust approaches to ensure the admin bar is hidden
+     * without relying on CSS. Uses WordPress core mechanisms for reliable hiding.
+     */
+    public static function disable_admin_bar_for_wa_users()
+    {
+        if (self::is_wa_user()) {
+            // Primary method: High priority filter override
+            add_filter('show_admin_bar', '__return_false', 999);
+
+            // Remove admin bar initialization hooks
+            remove_action('wp_head', '_admin_bar_bump_cb');
+            remove_action('wp_footer', 'wp_admin_bar_render', 1000);
+
+            // Remove admin bar from admin area
+            remove_action('in_admin_header', 'wp_admin_bar_render', 0);
+
+            // Set user preferences to disable admin bar
+            $current_user_id = get_current_user_id();
+            if ($current_user_id) {
+                update_user_meta($current_user_id, 'show_admin_bar_front', false);
+                update_user_meta($current_user_id, 'show_admin_bar_admin', false);
+            }
+
+            // Remove admin bar capability if it exists
+            $current_user = wp_get_current_user();
+            if ($current_user && $current_user->has_cap('show_admin_bar')) {
+                $current_user->remove_cap('show_admin_bar');
+            }
+
+            // Prevent admin bar from being enqueued
+            wp_dequeue_script('admin-bar');
+            wp_dequeue_style('admin-bar');
+        }
+    }
+
+    /**
+     * Hide Screen Options tab for wa_level users
+     * 
+     * @param bool $show_screen Whether to show screen options
+     * @param WP_Screen $screen Current screen object
+     * @return bool False if wa_level user, otherwise original value
+     */
+    public static function hide_screen_options_for_wa_users($show_screen, $screen)
+    {
+        if (self::is_wa_user()) {
+            return false;
+        }
+        return $show_screen;
+    }
+
+    /**
+     * Hide contextual help for wa_level users
+     * 
+     * @param string $old_help The help content
+     * @param string $screen_id Screen ID
+     * @param WP_Screen $screen Current screen object
+     * @return string Empty string if wa_level user, otherwise original help
+     */
+    public static function hide_contextual_help_for_wa_users($old_help, $screen_id, $screen)
+    {
+        if (self::is_wa_user()) {
+            return '';
+        }
+        return $old_help;
     }
 
     /**
@@ -152,6 +241,7 @@ class WA_Admin_Interface
      * Early menu cleanup to catch WordPress core menus as they're added
      * 
      * This runs at priority 1 to remove core menus before plugins add theirs.
+     * Uses whitelist approach for consistency.
      */
     public static function early_menu_cleanup()
     {
@@ -159,7 +249,12 @@ class WA_Admin_Interface
             return;
         }
 
-        // Remove core WordPress menus immediately
+        // Define allowed menu items (same whitelist as other methods)
+        $allowed_menu_items = [
+            'edit.php?post_type=physicians'
+        ];
+
+        // Remove all core WordPress menus that aren't in whitelist
         $core_menus_to_remove = [
             'index.php',                    // Dashboard
             'edit.php',                     // Posts  
@@ -177,7 +272,9 @@ class WA_Admin_Interface
         ];
 
         foreach ($core_menus_to_remove as $menu_slug) {
-            remove_menu_page($menu_slug);
+            if (!in_array($menu_slug, $allowed_menu_items)) {
+                remove_menu_page($menu_slug);
+            }
         }
     }
 
@@ -195,36 +292,15 @@ class WA_Admin_Interface
 
         global $menu, $submenu;
 
-        // Remove core WordPress menus first
-        self::remove_core_wordpress_menus();
-
-        // Remove third-party plugin menus
-        self::remove_third_party_plugin_menus($menu);
-
-        // Setup physicians submenu
-        self::setup_physicians_submenu($submenu);
-
-        // Clean up any remaining unauthorized submenus
-        self::cleanup_unauthorized_submenus($submenu);
-
-        // Additional aggressive cleanup - remove anything that's not physicians
-        if (is_array($menu)) {
-            foreach ($menu as $key => $menu_item) {
-                if (empty($menu_item[2])) continue;
-
-                // Keep only the physicians menu
-                if ($menu_item[2] !== 'edit.php?post_type=physicians') {
-                    remove_menu_page($menu_item[2]);
-                }
-            }
-        }
+        // Use whitelist-based approach for scalable menu management
+        self::enforce_menu_whitelist($menu, $submenu);
     }
 
     /**
      * Final aggressive menu cleanup as a safety net
      * 
      * This runs at priority 9999 to catch any menus that might have been
-     * added after our initial cleanup.
+     * added after our initial cleanup. Uses the same whitelist approach.
      */
     public static function final_menu_cleanup()
     {
@@ -234,34 +310,18 @@ class WA_Admin_Interface
 
         global $menu, $submenu;
 
-        // Remove any core WordPress menus that might have been re-added
-        $core_menus_to_remove = [
-            'index.php',                    // Dashboard
-            'edit.php',                     // Posts  
-            'upload.php',                   // Media
-            'edit.php?post_type=page',      // Pages
-            'edit-comments.php',            // Comments
-            'themes.php',                   // Appearance
-            'plugins.php',                  // Plugins
-            'users.php',                    // Users
-            'tools.php',                    // Tools
-            'options-general.php',          // Settings
-            'separator1',                   // Separators
-            'separator2',
-            'separator-last',
+        // Use the same whitelist approach for consistency
+        $allowed_menu_items = [
+            'edit.php?post_type=physicians'
         ];
 
-        foreach ($core_menus_to_remove as $menu_slug) {
-            remove_menu_page($menu_slug);
-        }
-
-        // Aggressively remove any non-physicians menu items
+        // Aggressively remove any non-whitelisted menu items
         if (is_array($menu)) {
             foreach ($menu as $key => $menu_item) {
                 if (empty($menu_item[2])) continue;
 
-                // Keep only the physicians menu
-                if ($menu_item[2] !== 'edit.php?post_type=physicians') {
+                if (!in_array($menu_item[2], $allowed_menu_items)) {
+                    remove_menu_page($menu_item[2]);
                     unset($menu[$key]);
                 }
             }
@@ -270,11 +330,53 @@ class WA_Admin_Interface
         // Clean up all submenus except physicians
         if (is_array($submenu)) {
             foreach ($submenu as $parent_slug => $submenu_items) {
-                if ($parent_slug !== 'edit.php?post_type=physicians') {
+                if (!in_array($parent_slug, $allowed_menu_items)) {
                     unset($submenu[$parent_slug]);
                 }
             }
         }
+    }
+
+    /**
+     * Enforce menu whitelist for wa_level users
+     * 
+     * This is a scalable, efficient approach that only allows specific menu items
+     * rather than trying to remove every possible plugin menu individually.
+     * 
+     * @param array $menu WordPress menu array
+     * @param array $submenu WordPress submenu array
+     */
+    private static function enforce_menu_whitelist($menu, $submenu)
+    {
+        // Define allowed menu items (whitelist approach)
+        $allowed_menu_items = [
+            'edit.php?post_type=physicians'  // Only physicians menu allowed
+        ];
+
+        // Remove any menu item not in the whitelist
+        if (is_array($menu)) {
+            foreach ($menu as $key => $menu_item) {
+                if (empty($menu_item[2])) continue;
+
+                if (!in_array($menu_item[2], $allowed_menu_items)) {
+                    remove_menu_page($menu_item[2]);
+                    // Also remove from global menu array for cleanup
+                    unset($menu[$key]);
+                }
+            }
+        }
+
+        // Clean up submenus - only keep physicians submenu
+        if (is_array($submenu)) {
+            foreach ($submenu as $parent_slug => $submenu_items) {
+                if (!in_array($parent_slug, $allowed_menu_items)) {
+                    unset($submenu[$parent_slug]);
+                }
+            }
+        }
+
+        // Setup allowed submenu items for physicians
+        self::setup_physicians_submenu($submenu);
     }
 
     /**
@@ -304,63 +406,11 @@ class WA_Admin_Interface
     }
 
     /**
-     * Remove third-party plugin menus
-     * 
-     * @param array $menu WordPress menu array
-     */
-    private static function remove_third_party_plugin_menus($menu)
-    {
-        // Known plugin menu patterns to remove
-        $plugin_menu_patterns = [
-            'admin.php?page=',              // Most plugin admin pages
-            'options-general.php?page=',    // Plugin settings pages
-            'edit.php?post_type=acf',       // Advanced Custom Fields
-            'edit.php?post_type=elementor', // Elementor
-            'admin.php?page=wc-',           // WooCommerce
-            'admin.php?page=yoast',         // Yoast SEO
-            'admin.php?page=gf_',           // Gravity Forms
-            'admin.php?page=mailchimp',     // MailChimp
-            'admin.php?page=wysija',        // Newsletter plugins
-            'admin.php?page=wp-mail',       // Mail plugins
-            'edit.php?post_type=shop_',     // Shop/eCommerce plugins
-            'edit.php?post_type=product',   // Product post types
-            'edit.php?post_type=download',  // Download plugins
-        ];
-
-        foreach ($menu as $key => $menu_item) {
-            if (empty($menu_item[2])) continue;
-
-            // Skip our physicians menu
-            if ($menu_item[2] === 'edit.php?post_type=physicians') {
-                continue;
-            }
-
-            // Check against known plugin patterns
-            foreach ($plugin_menu_patterns as $pattern) {
-                if (strpos($menu_item[2], $pattern) !== false) {
-                    remove_menu_page($menu_item[2]);
-                    break;
-                }
-            }
-
-            // Remove menus with common plugin indicators
-            if (
-                strpos($menu_item[2], 'plugin') !== false ||
-                strpos($menu_item[2], 'settings') !== false ||
-                strpos($menu_item[2], 'config') !== false ||
-                strpos($menu_item[2], 'dashboard') !== false
-            ) {
-                remove_menu_page($menu_item[2]);
-            }
-        }
-    }
-
-    /**
      * Setup physicians submenu with allowed items
      * 
-     * @param array $submenu WordPress submenu array
+     * @param array $submenu WordPress submenu array (passed by reference in the calling method)
      */
-    private static function setup_physicians_submenu($submenu)
+    private static function setup_physicians_submenu(&$submenu)
     {
         // Clean up existing physicians submenu
         if (isset($submenu['edit.php?post_type=physicians'])) {
@@ -368,7 +418,8 @@ class WA_Admin_Interface
                 'edit.php?post_type=physicians',
                 'post-new.php?post_type=physicians',
                 'wa-home-page',
-                'wa-my-account'
+                'wa-my-account',
+                'wa-logout'
             ];
 
             foreach ($submenu['edit.php?post_type=physicians'] as $key => $submenu_item) {
@@ -397,25 +448,19 @@ class WA_Admin_Interface
             [__CLASS__, 'render_my_account_redirect']
         );
 
+        add_submenu_page(
+            'edit.php?post_type=physicians',
+            __('Logout'),
+            __('Logout'),
+            'read',
+            'wa-logout',
+            [__CLASS__, 'render_logout_redirect']
+        );
+
         // Remove "Add New" if user already has a post (enforces one-post limit)
         $existing_posts = self::get_user_physicians_posts();
         if (!empty($existing_posts)) {
             remove_submenu_page('edit.php?post_type=physicians', 'post-new.php?post_type=physicians');
-        }
-    }
-
-    /**
-     * Clean up any unauthorized submenu items
-     * 
-     * @param array $submenu WordPress submenu array
-     */
-    private static function cleanup_unauthorized_submenus($submenu)
-    {
-        foreach ($submenu as $parent_slug => $submenu_items) {
-            // Keep only physicians submenu
-            if ($parent_slug !== 'edit.php?post_type=physicians') {
-                unset($submenu[$parent_slug]);
-            }
         }
     }
 
@@ -447,6 +492,20 @@ class WA_Admin_Interface
     }
 
     /**
+     * Render logout redirect for wa_level users
+     * 
+     * This method handles the logout link functionality by logging out
+     * wa_level users and redirecting them to the home page.
+     */
+    public static function render_logout_redirect()
+    {
+        // Log out the user and redirect to home page
+        wp_logout();
+        wp_redirect(home_url());
+        exit;
+    }
+
+    /**
      * Hide UI elements via CSS and JavaScript (main coordinator method)
      */
     public static function hide_ui_elements()
@@ -458,9 +517,6 @@ class WA_Admin_Interface
         // Remove admin notices and output menu changes
         self::hide_admin_notices();
         self::output_menu_text_changes();
-
-        // Add aggressive menu hiding CSS
-        self::output_aggressive_menu_hiding_css();
 
         // Apply page-specific UI modifications
         global $pagenow;
@@ -604,110 +660,12 @@ class WA_Admin_Interface
                     // Change "Edit Allergist" to "Edit My Allergist Profile" in page heading
                     $("h1.wp-heading-inline:contains(\'Edit Allergist\')").text("Edit My Allergist Profile");
                 }
-
-                function aggressiveMenuCleanup() {
-                    // Hide all menu items except physicians
-                    $("#adminmenu > li").each(function() {
-                        var $menuItem = $(this);
-                        var href = $menuItem.find("a").attr("href");
-                        
-                        // Show only physicians menu
-                        if (href && href.indexOf("edit.php?post_type=physicians") !== -1) {
-                            $menuItem.show();
-                        } else {
-                            $menuItem.hide();
-                        }
-                    });
-                    
-                    // Hide specific problematic menu items
-                    $("#adminmenu a[href=\'index.php\']").closest("li").hide();
-                    $("#adminmenu a[href=\'edit.php\']").closest("li").hide();
-                    $("#adminmenu a[href=\'upload.php\']").closest("li").hide();
-                    $("#adminmenu a[href=\'edit.php?post_type=page\']").closest("li").hide();
-                    $("#adminmenu a[href=\'edit-comments.php\']").closest("li").hide();
-                    $("#adminmenu a[href=\'themes.php\']").closest("li").hide();
-                    $("#adminmenu a[href=\'plugins.php\']").closest("li").hide();
-                    $("#adminmenu a[href=\'users.php\']").closest("li").hide();
-                    $("#adminmenu a[href=\'tools.php\']").closest("li").hide();
-                    $("#adminmenu a[href=\'options-general.php\']").closest("li").hide();
-                    
-                    // Hide separators
-                    $("#adminmenu .wp-menu-separator").hide();
-                }
                 
-                // Initial execution
+                // Initial execution and handle dynamic loading
                 updateMenuTexts();
-                aggressiveMenuCleanup();
-                
-                // Handle dynamic loading - run multiple times to catch late-added menus
-                setTimeout(function() {
-                    updateMenuTexts();
-                    aggressiveMenuCleanup();
-                }, 500);
-                
-                setTimeout(function() {
-                    aggressiveMenuCleanup();
-                }, 1000);
-                
-                setTimeout(function() {
-                    aggressiveMenuCleanup();
-                }, 2000);
+                setTimeout(updateMenuTexts, 500);
             });
         </script>';
-    }
-
-    /**
-     * Output aggressive CSS to hide any remaining unauthorized menu items
-     * 
-     * This serves as a final fallback to hide any menu items that might
-     * slip through the PHP-based removal methods.
-     */
-    private static function output_aggressive_menu_hiding_css()
-    {
-        echo '<style>
-            /* Hide all admin menu items except physicians */
-            #adminmenu > li:not([class*="wp-menu-open"]):not([class*="physicians"]) {
-                display: none !important;
-            }
-            
-            /* Hide specific menu items by href */
-            #adminmenu a[href="index.php"],
-            #adminmenu a[href="edit.php"],
-            #adminmenu a[href="upload.php"],
-            #adminmenu a[href="edit.php?post_type=page"],
-            #adminmenu a[href="edit-comments.php"],
-            #adminmenu a[href="themes.php"],
-            #adminmenu a[href="plugins.php"],
-            #adminmenu a[href="users.php"],
-            #adminmenu a[href="tools.php"],
-            #adminmenu a[href="options-general.php"] {
-                display: none !important;
-            }
-            
-            /* Hide separator items */
-            #adminmenu .wp-menu-separator {
-                display: none !important;
-            }
-            
-            /* Show only the physicians menu */
-            #adminmenu a[href*="edit.php?post_type=physicians"] {
-                display: block !important;
-            }
-            
-            /* Hide all menu items and show only physicians */
-            #adminmenu > li {
-                display: none !important;
-            }
-            
-            #adminmenu > li:has(a[href*="edit.php?post_type=physicians"]) {
-                display: block !important;
-            }
-            
-            /* For browsers that don\'t support :has(), use a more specific approach */
-            #menu-posts-physicians {
-                display: block !important;
-            }
-        </style>';
     }
 
     /**
@@ -723,35 +681,6 @@ class WA_Admin_Interface
         if ($screen) {
             $screen->remove_help_tabs();
         }
-    }
-
-    /**
-     * Modify post list columns
-     * 
-     * @param array $columns
-     * @return array
-     */
-    public static function modify_post_columns($columns)
-    {
-        if (self::is_wa_user()) {
-            // Keep checkbox column for delete functionality
-            // unset($columns['cb']); // Commented out to allow bulk actions like delete
-
-            // Remove author column
-            unset($columns['author']);
-
-            // Remove date column
-            unset($columns['date']);
-
-            // Remove Yoast SEO columns (try different possible names)
-            unset($columns['wpseo-links']);
-            unset($columns['wpseo-linked']);
-            unset($columns['wpseo_links']);
-            unset($columns['wpseo_linked']);
-            unset($columns['yoast-seo-links']);
-            unset($columns['yoast-seo-linked']);
-        }
-        return $columns;
     }
 
     /**
@@ -782,21 +711,6 @@ class WA_Admin_Interface
     }
 
     /**
-     * Hide post status views for wa_level users
-     * 
-     * @param array $views
-     * @return array
-     */
-    public static function hide_post_status_views($views)
-    {
-        if (self::is_wa_user()) {
-            // Return empty array to hide all views (All, Published, Drafts, Private)
-            return [];
-        }
-        return $views;
-    }
-
-    /**
      * Remove date filter dropdown for physicians post type
      * 
      * @param array $months
@@ -813,24 +727,59 @@ class WA_Admin_Interface
     }
 
     /**
-     * Modify bulk actions for wa_level users to ensure delete option is available
+     * Hide post status views for wa_level users
      * 
-     * @param array $actions
-     * @return array
+     * Removes the "All | Mine | Published | Drafts | Private" filters from the physicians list page.
+     * 
+     * @param array $views Array of view links
+     * @return array Empty array if wa_level user, otherwise original views
      */
-    public static function modify_bulk_actions($actions)
+    public static function hide_post_status_views_for_wa_users($views)
     {
         if (self::is_wa_user()) {
-            // Ensure trash/delete action is available for wa_level users
-            if (!isset($actions['trash'])) {
-                $actions['trash'] = __('Move to Trash');
-            }
+            // Remove all views (All, Mine, Published, Drafts, Private)
+            return [];
         }
-        return $actions;
+        return $views;
+    }
+
+    /**
+     * Modify physicians list table columns for wa_level users
+     * 
+     * Removes unnecessary columns like Author, Date, and Yoast SEO links
+     * to provide a cleaner interface for wa_level users.
+     * 
+     * @param array $columns Array of column headers
+     * @return array Modified columns array
+     */
+    public static function modify_physicians_columns_for_wa_users($columns)
+    {
+        if (self::is_wa_user()) {
+            // Remove author column (wa_level users only see their own posts anyway)
+            unset($columns['author']);
+
+            // Remove date column (simplifies the interface)
+            unset($columns['date']);
+
+            // Remove Yoast SEO columns (try different possible names)
+            unset($columns['wpseo-links']);
+            unset($columns['wpseo-linked']);
+            unset($columns['wpseo_links']);
+            unset($columns['wpseo_linked']);
+            unset($columns['yoast-seo-links']);
+            unset($columns['yoast-seo-linked']);
+
+            // Keep checkbox column for bulk actions like delete
+            // Keep title column for editing posts
+            // Keep other essential columns
+        }
+        return $columns;
     }
 
     /**
      * Handle bulk delete operations for wa_level users
+     * 
+     * Security measure to ensure wa_level users can only delete their own posts.
      * 
      * @param string $redirect_to
      * @param string $doaction
@@ -862,49 +811,5 @@ class WA_Admin_Interface
         }
 
         return $redirect_to;
-    }
-
-    /**
-     * Remove meta boxes for wa_level users
-     */
-    public static function remove_meta_boxes()
-    {
-        if (!self::is_wa_user()) {
-            return;
-        }
-
-        // Remove author meta box
-        remove_meta_box('authordiv', 'physicians', 'normal');
-        remove_meta_box('authordiv', 'physicians', 'side');
-        remove_meta_box('authordiv', 'physicians', 'advanced');
-
-        // Remove slug meta box
-        remove_meta_box('slugdiv', 'physicians', 'normal');
-        remove_meta_box('slugdiv', 'physicians', 'side');
-        remove_meta_box('slugdiv', 'physicians', 'advanced');
-
-        // Remove other potentially problematic meta boxes
-        remove_meta_box('commentstatusdiv', 'physicians', 'normal');
-        remove_meta_box('commentsdiv', 'physicians', 'normal');
-        remove_meta_box('trackbacksdiv', 'physicians', 'normal');
-        remove_meta_box('postcustom', 'physicians', 'normal');
-        remove_meta_box('postexcerpt', 'physicians', 'normal');
-        remove_meta_box('formatdiv', 'physicians', 'normal');
-        remove_meta_box('pageparentdiv', 'physicians', 'normal');
-    }
-
-    /**
-     * Hide screen options for wa_level users
-     * 
-     * @param bool $show_screen
-     * @param WP_Screen $screen
-     * @return bool
-     */
-    public static function hide_screen_options($show_screen, $screen)
-    {
-        if (self::is_wa_user() && $screen->post_type === 'physicians') {
-            return false;
-        }
-        return $show_screen;
     }
 }
