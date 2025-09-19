@@ -40,11 +40,14 @@ class WA_User_Manager
      */
     public static function init()
     {
-        // TEMPORARY: Disable most restrictions to test basic delete functionality
         // Core capability management
         add_filter('user_has_cap', [__CLASS__, 'manage_physicians_capabilities'], 9, 4);
+        add_filter('map_meta_cap', [__CLASS__, 'map_physicians_meta_capabilities'], 10, 4);
         add_action('init', [__CLASS__, 'assign_wa_role_capabilities'], 10);
         add_action('admin_init', [__CLASS__, 'force_wa_capabilities'], 999);
+
+        // Additional capability check for publishing specifically
+        add_filter('user_has_cap', [__CLASS__, 'ensure_publishing_capabilities'], 999, 4);
 
         // Keep only essential restrictions
         add_action('pre_get_posts', [__CLASS__, 'restrict_posts_query']);
@@ -182,6 +185,7 @@ class WA_User_Manager
             'edit_physician',
             'read_physician',
             'delete_physician',
+            'publish_physician',
             'create_physicians',
             'edit_published_physicians',
             // Additional capabilities that might be needed for delete operations
@@ -206,7 +210,7 @@ class WA_User_Manager
             return $allcaps;
         }
 
-        // Essential capabilities for physicians post management and delete operations
+        // Essential capabilities for physicians post management and publishing
         $essential_caps = [
             'read',
             'edit_posts',
@@ -220,15 +224,32 @@ class WA_User_Manager
             'publish_physicians',
             'edit_physician',
             'delete_physician',
+            'publish_physician',
             'create_physicians',
             'edit_published_physicians',
-            // These are needed for WordPress to properly handle delete operations
+            // Additional capabilities for publishing functionality
             'edit_others_posts',
-            'delete_others_posts' // WordPress checks these for bulk operations
+            'delete_others_posts',
+            'read_private_posts',
+            'edit_private_posts',
+            'delete_private_posts',
+            'publish_private_posts'
         ];
 
         foreach ($essential_caps as $cap) {
             $allcaps[$cap] = true;
+        }
+
+        // Special handling for specific capability checks that WordPress performs during publishing
+        if (!empty($caps)) {
+            foreach ($caps as $cap) {
+                if (in_array($cap, ['publish_posts', 'publish_physicians', 'publish_physician'])) {
+                    $allcaps[$cap] = true;
+                }
+                if (in_array($cap, ['edit_posts', 'edit_physicians', 'edit_physician'])) {
+                    $allcaps[$cap] = true;
+                }
+            }
         }
 
         return $allcaps;
@@ -263,12 +284,263 @@ class WA_User_Manager
             'publish_physicians',
             'edit_physician',
             'delete_physician',
+            'publish_physician',
             'create_physicians',
             'edit_published_physicians'
         ];
 
         foreach ($essential_caps as $cap) {
             $current_user->add_cap($cap);
+        }
+    }
+
+    /**
+     * Ensure publishing capabilities are always available for wa_level users
+     * This runs late to override any restrictions from other plugins
+     * 
+     * @param array $allcaps All capabilities
+     * @param array $caps Capabilities being checked
+     * @param array $args Arguments
+     * @param WP_User $user User object
+     * @return array
+     */
+    public static function ensure_publishing_capabilities($allcaps, $caps, $args, $user)
+    {
+        if (!self::is_wa_user($user)) {
+            return $allcaps;
+        }
+
+        // Critical publishing capabilities that must always be true for wa_level users
+        $publishing_caps = [
+            'publish_posts',
+            'publish_physicians',
+            'publish_physician',
+            'edit_posts',
+            'edit_physicians',
+            'edit_physician',
+            'edit_published_posts',
+            'edit_published_physicians'
+        ];
+
+        // If any publishing-related capability is being checked, ensure it's granted
+        if (!empty($caps)) {
+            foreach ($caps as $cap) {
+                if (in_array($cap, $publishing_caps)) {
+                    $allcaps[$cap] = true;
+                }
+            }
+        }
+
+        // Always ensure these capabilities are available
+        foreach ($publishing_caps as $cap) {
+            $allcaps[$cap] = true;
+        }
+
+        return $allcaps;
+    }
+
+    /*
+     * DEBUGGING METHODS - Commented out but kept for future troubleshooting
+     * These were used to diagnose and fix the publishing issue for WA users
+     * Uncomment and re-enable the hooks in init() if debugging is needed again
+     */
+
+    /**
+     * Debug publishing attempts (for troubleshooting)
+     * 
+     * @param int $post_id Post ID
+     * @param WP_Post $post Post object  
+     * @param bool $update Whether this is an update
+     */
+    /*
+    public static function debug_publishing($post_id, $post, $update)
+    {
+        if ($post->post_type !== 'physicians' || !self::is_wa_user($post->post_author)) {
+            return;
+        }
+
+        // Log publishing attempts for debugging
+        $debug_msg = 'WA User Publishing Debug: Post ID ' . $post_id . ', Status: ' . $post->post_status . ', Update: ' . ($update ? 'yes' : 'no');
+        error_log($debug_msg);
+
+        // Also write to a file in the plugin directory for easier debugging
+        $debug_file = dirname(__FILE__) . '/../debug.log';
+        file_put_contents($debug_file, date('Y-m-d H:i:s') . ' - ' . $debug_msg . "\n", FILE_APPEND);
+
+        // Check current user capabilities
+        $current_user = wp_get_current_user();
+        if ($current_user && $current_user->ID == $post->post_author) {
+            $caps_to_check = ['publish_posts', 'publish_physicians', 'publish_physician'];
+            foreach ($caps_to_check as $cap) {
+                $has_cap = current_user_can($cap) ? 'YES' : 'NO';
+                $cap_msg = 'WA User Publishing Debug: User has ' . $cap . ': ' . $has_cap;
+                error_log($cap_msg);
+                file_put_contents($debug_file, date('Y-m-d H:i:s') . ' - ' . $cap_msg . "\n", FILE_APPEND);
+            }
+        }
+    }
+    /**
+     * Debug status transitions (temporary)
+     * 
+     * @param string $new_status New post status
+     * @param string $old_status Old post status
+     * @param WP_Post $post Post object
+     */
+    public static function debug_status_transition($new_status, $old_status, $post)
+    {
+        if ($post->post_type !== 'physicians' || !self::is_wa_user($post->post_author)) {
+            return;
+        }
+
+        $debug_msg = 'WA User Status Transition: Post ID ' . $post->ID . ', From: ' . $old_status . ' To: ' . $new_status;
+        error_log($debug_msg);
+
+        // Also write to debug file
+        $debug_file = dirname(__FILE__) . '/../debug.log';
+        file_put_contents($debug_file, date('Y-m-d H:i:s') . ' - ' . $debug_msg . "\n", FILE_APPEND);
+
+        // If trying to publish, check capabilities at this moment
+        if ($new_status === 'publish') {
+            $current_user = wp_get_current_user();
+            if ($current_user && $current_user->ID == $post->post_author) {
+                $can_publish = current_user_can('publish_posts') && current_user_can('publish_physicians');
+                $cap_msg = 'WA User Status Transition: Can publish = ' . ($can_publish ? 'YES' : 'NO');
+                error_log($cap_msg);
+                file_put_contents($debug_file, date('Y-m-d H:i:s') . ' - ' . $cap_msg . "\n", FILE_APPEND);
+            }
+        }
+    }
+
+    /**
+     * Add a test button to check publishing capabilities (temporary debugging)
+     */
+    public static function add_publish_test_button()
+    {
+        if (!self::is_wa_user() || !self::is_physicians_page()) {
+            return;
+        }
+
+        $debug_file = dirname(__FILE__) . '/../debug.log';
+
+?>
+        <script>
+            function testPublishCapabilities() {
+                // Send AJAX request to test capabilities
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'action=test_wa_publish_caps'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Capability test results:', data);
+                        alert('Capability test completed. Check debug.log file in plugin directory.');
+                    });
+            }
+        </script>
+        <div style="position: fixed; top: 50px; right: 20px; z-index: 9999; background: #fff; border: 1px solid #ccc; padding: 10px;">
+            <button onclick="testPublishCapabilities()" style="background: #0073aa; color: white; padding: 5px 10px; border: none; cursor: pointer;">
+                Test Publish Capabilities
+            </button>
+            <br><small>Debug file: <?php echo $debug_file; ?></small>
+        </div>
+<?php
+    }
+
+    /**
+     * AJAX handler to test publish capabilities (temporary debugging)
+     */
+    public static function test_publish_capabilities_ajax()
+    {
+        if (!self::is_wa_user()) {
+            wp_die('Not a WA user');
+        }
+
+        $debug_file = dirname(__FILE__) . '/../debug.log';
+        $current_user = wp_get_current_user();
+
+        $results = [
+            'user_id' => $current_user->ID,
+            'user_roles' => $current_user->roles,
+            'capabilities' => []
+        ];
+
+        // Test all publishing-related capabilities
+        $caps_to_test = [
+            'publish_posts',
+            'publish_physicians',
+            'publish_physician',
+            'edit_posts',
+            'edit_physicians',
+            'edit_physician',
+            'edit_published_posts',
+            'edit_published_physicians',
+            'create_physicians'
+        ];
+
+        foreach ($caps_to_test as $cap) {
+            $has_cap = current_user_can($cap);
+            $results['capabilities'][$cap] = $has_cap;
+
+            $debug_msg = 'WA User Capability Test: ' . $cap . ' = ' . ($has_cap ? 'YES' : 'NO');
+            file_put_contents($debug_file, date('Y-m-d H:i:s') . ' - ' . $debug_msg . "\n", FILE_APPEND);
+        }
+
+        // Also test meta capabilities with a sample post
+        $user_posts = get_posts([
+            'post_type' => 'physicians',
+            'author' => $current_user->ID,
+            'numberposts' => 1,
+            'post_status' => ['draft', 'publish']
+        ]);
+
+        if (!empty($user_posts)) {
+            $post = $user_posts[0];
+            $meta_caps_to_test = ['publish_post', 'edit_post'];
+
+            foreach ($meta_caps_to_test as $cap) {
+                $has_cap = current_user_can($cap, $post->ID);
+                $results['meta_capabilities'][$cap] = $has_cap;
+
+                $debug_msg = 'WA User Meta Capability Test: ' . $cap . ' (post ' . $post->ID . ') = ' . ($has_cap ? 'YES' : 'NO');
+                file_put_contents($debug_file, date('Y-m-d H:i:s') . ' - ' . $debug_msg . "\n", FILE_APPEND);
+            }
+        }
+
+        wp_send_json_success($results);
+    }
+
+    // END OF DEBUGGING METHODS */
+
+    /**
+     */
+    public static function debug_save_post($post_id, $post, $update)
+    {
+        if ($post->post_type !== 'physicians' || !self::is_wa_user($post->post_author)) {
+            return;
+        }
+
+        $debug_msg = 'WA User Save Post: Post ID ' . $post_id . ', Status: ' . $post->post_status . ', Update: ' . ($update ? 'yes' : 'no') . ', Author: ' . $post->post_author;
+        error_log($debug_msg);
+
+        // Also write to debug file
+        $debug_file = dirname(__FILE__) . '/../debug.log';
+        file_put_contents($debug_file, date('Y-m-d H:i:s') . ' - ' . $debug_msg . "\n", FILE_APPEND);
+
+        // Check if this is a publish attempt
+        if (isset($_POST['post_status']) && $_POST['post_status'] === 'publish') {
+            $publish_msg = 'WA User Save Post: PUBLISH ATTEMPT detected via $_POST[post_status]';
+            error_log($publish_msg);
+            file_put_contents($debug_file, date('Y-m-d H:i:s') . ' - ' . $publish_msg . "\n", FILE_APPEND);
+        }
+
+        // Log some $_POST data to see what's being submitted
+        if (isset($_POST['action'])) {
+            $action_msg = 'WA User Save Post: Action = ' . $_POST['action'];
+            error_log($action_msg);
+            file_put_contents($debug_file, date('Y-m-d H:i:s') . ' - ' . $action_msg . "\n", FILE_APPEND);
         }
     }
 
@@ -287,8 +559,16 @@ class WA_User_Manager
             return $caps;
         }
 
-        $post_caps = ['edit_post', 'delete_post', 'edit_published_post', 'delete_published_post'];
-        $specific_caps = ['edit_physician', 'read_physician', 'delete_physician'];
+        // Log capability checks for debugging
+        if (!empty($args) && isset($args[0])) {
+            $post = get_post($args[0]);
+            if ($post && $post->post_type === 'physicians') {
+                error_log('WA User Meta Cap Check: ' . $cap . ' for post ' . $post->ID . ' by user ' . $user_id);
+            }
+        }
+
+        $post_caps = ['edit_post', 'delete_post', 'edit_published_post', 'delete_published_post', 'publish_post', 'read_post'];
+        $specific_caps = ['edit_physician', 'read_physician', 'delete_physician', 'publish_physician'];
 
         if (in_array($cap, array_merge($post_caps, $specific_caps)) && !empty($args)) {
             $post_id = $args[0];
@@ -296,12 +576,22 @@ class WA_User_Manager
 
             if ($post && $post->post_type === 'physicians') {
                 if ($post->post_author == $user_id) {
-                    // Allow editing/deleting own posts
-                    return in_array($cap, ['delete_post', 'delete_published_post', 'delete_physician'])
-                        ? ['delete_physicians']
-                        : ['edit_physicians'];
+                    // Allow editing/deleting/publishing own posts
+                    if (in_array($cap, ['delete_post', 'delete_published_post', 'delete_physician'])) {
+                        error_log('WA User Meta Cap: Granting delete_physicians for ' . $cap);
+                        return ['delete_physicians'];
+                    } elseif (in_array($cap, ['publish_post', 'publish_physician'])) {
+                        error_log('WA User Meta Cap: Granting publish_physicians for ' . $cap);
+                        return ['publish_physicians'];
+                    } elseif (in_array($cap, ['read_post', 'read_physician'])) {
+                        return ['read'];
+                    } else {
+                        error_log('WA User Meta Cap: Granting edit_physicians for ' . $cap);
+                        return ['edit_physicians'];
+                    }
                 } else {
                     // Deny access to others' posts
+                    error_log('WA User Meta Cap: Denying access to others post for ' . $cap);
                     return ['do_not_allow'];
                 }
             }
@@ -309,9 +599,16 @@ class WA_User_Manager
 
         // For bulk operations or when no specific post ID, allow if user has general capability
         if (in_array($cap, $post_caps) && empty($args)) {
-            return in_array($cap, ['delete_post', 'delete_published_post'])
-                ? ['delete_physicians']
-                : ['edit_physicians'];
+            if (in_array($cap, ['delete_post', 'delete_published_post'])) {
+                return ['delete_physicians'];
+            } elseif (in_array($cap, ['publish_post'])) {
+                error_log('WA User Meta Cap: Granting publish_physicians for bulk ' . $cap);
+                return ['publish_physicians'];
+            } elseif (in_array($cap, ['read_post'])) {
+                return ['read'];
+            } else {
+                return ['edit_physicians'];
+            }
         }
 
         return $caps;
@@ -344,6 +641,7 @@ class WA_User_Manager
                         'edit_physician',
                         'read_physician',
                         'delete_physician',
+                        'publish_physician',
                         'create_physicians',
                         'edit_published_physicians'
                     ];
@@ -371,6 +669,7 @@ class WA_User_Manager
                 'edit_physician',
                 'read_physician',
                 'delete_physician',
+                'publish_physician',
                 'create_physicians',
                 'edit_published_physicians',
                 'delete_others_physicians',
@@ -414,7 +713,7 @@ class WA_User_Manager
      * 
      * Enforces security rules:
      * - Prevents author changes (users can only edit their own posts)
-     * - Prevents slug changes (maintains URL consistency)
+     * - Allows slug changes when publishing (WordPress needs this for draft-to-published transitions)
      * - Blocks duplicate post creation (one post per user limit)
      * 
      * @param array $post_data Post data being saved
@@ -434,7 +733,12 @@ class WA_User_Manager
             $existing_post = get_post($postarr['ID']);
             if ($existing_post) {
                 $post_data['post_author'] = $existing_post->post_author;
-                $post_data['post_name'] = $existing_post->post_name; // Prevent slug changes
+
+                // Only prevent slug changes if not transitioning to published status
+                // WordPress needs to update slugs when publishing drafts
+                if ($post_data['post_status'] !== 'publish' || $existing_post->post_status === 'publish') {
+                    $post_data['post_name'] = $existing_post->post_name;
+                }
             }
         } else {
             $post_data['post_author'] = $current_user->ID;
@@ -475,7 +779,7 @@ class WA_User_Manager
     }
 
     /**
-     * Restrict duplicate post creation
+     * Restrict duplicate post creation (but allow publishing of existing drafts)
      * 
      * @param array $allcaps All capabilities
      * @param array $caps Capabilities being checked
@@ -485,11 +789,14 @@ class WA_User_Manager
      */
     public static function restrict_duplicate_posts($allcaps, $caps, $args, $user)
     {
+        // Only restrict creation of new posts, not publishing of existing ones
         if (in_array('create_physicians', $caps) && self::is_wa_user($user)) {
             if (!self::can_create_physicians_post($user->ID)) {
                 $allcaps['create_physicians'] = false;
             }
         }
+
+        // Always allow publishing of existing posts - don't restrict publish capabilities here
         return $allcaps;
     }
 
@@ -820,8 +1127,10 @@ class WA_User_Manager
 
         // Validation for post.php - must be their own physicians post
         if ($pagenow === 'post.php') {
-            if (isset($_GET['action']) && isset($_GET['post'])) {
-                $post = get_post(intval($_GET['post']));
+            if (isset($_GET['post']) || isset($_POST['post_ID'])) {
+                // Get post ID from either GET (viewing) or POST (submitting/publishing)
+                $post_id = isset($_GET['post']) ? intval($_GET['post']) : intval($_POST['post_ID']);
+                $post = get_post($post_id);
 
                 // Check if post exists and is physicians post type
                 if (!$post || $post->post_type !== 'physicians') {
@@ -834,14 +1143,22 @@ class WA_User_Manager
                     wp_die(__('You do not have permission to access this post.'));
                 }
 
-                // Allow edit, delete, trash, and other post-related actions for own posts
-                $allowed_actions = ['edit', 'delete', 'trash', 'untrash', 'restore'];
-                if (!in_array($_GET['action'], $allowed_actions)) {
-                    wp_redirect(admin_url('edit.php?post_type=physicians'));
-                    exit;
+                // Allow POST requests (form submissions like publishing) without action validation
+                if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                    return; // Allow all POST requests for own posts (publishing, saving, etc.)
                 }
+
+                // For GET requests, validate the action if present
+                if (isset($_GET['action'])) {
+                    $allowed_actions = ['edit', 'delete', 'trash', 'untrash', 'restore'];
+                    if (!in_array($_GET['action'], $allowed_actions)) {
+                        wp_redirect(admin_url('edit.php?post_type=physicians'));
+                        exit;
+                    }
+                }
+                // If no action parameter on GET request, it's likely a normal edit page access - allow it
             } else {
-                // No valid post ID or action, redirect to physicians list
+                // No valid post ID, redirect to physicians list
                 wp_redirect(admin_url('edit.php?post_type=physicians'));
                 exit;
             }
