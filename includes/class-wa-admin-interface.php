@@ -49,6 +49,24 @@ class WA_Admin_Interface
         add_filter('screen_options_show_screen', [__CLASS__, 'hide_screen_options_for_wa_users'], 10, 2);
         add_filter('contextual_help', [__CLASS__, 'hide_contextual_help_for_wa_users'], 10, 3);
 
+        // Remove meta boxes for wa_level users
+        add_action('add_meta_boxes', [__CLASS__, 'remove_meta_boxes_for_wa_users'], 999);
+
+        // Robust slug and author field removal for wa_level users
+        add_action('admin_init', [__CLASS__, 'remove_slug_and_author_capabilities'], 999);
+        add_filter('user_can_richedit', [__CLASS__, 'modify_editor_capabilities'], 10, 1);
+        add_action('admin_enqueue_scripts', [__CLASS__, 'remove_slug_author_functionality'], 999);
+        add_filter('get_sample_permalink_html', [__CLASS__, 'remove_permalink_ui'], 10, 5);
+        add_action('edit_form_after_title', [__CLASS__, 'remove_permalink_from_edit_form']);
+        add_filter('wp_insert_post_data', [__CLASS__, 'prevent_slug_modification'], 10, 2);
+
+        // Robust list page modifications
+        add_action('load-edit.php', [__CLASS__, 'modify_list_page_for_wa_users']);
+        add_filter('post_type_labels_physicians', [__CLASS__, 'modify_post_type_labels'], 10, 1);
+        add_filter('admin_title', [__CLASS__, 'modify_admin_page_titles'], 10, 2);
+        add_filter('get_user_option_screen_layout_edit-physicians', [__CLASS__, 'force_single_column_layout']);
+        add_action('admin_head', [__CLASS__, 'remove_search_box_for_wa_users']);
+
         // List page customizations
         add_filter('handle_bulk_actions-edit-physicians', [__CLASS__, 'handle_bulk_delete'], 10, 3);
         add_filter('post_row_actions', [__CLASS__, 'remove_quick_edit_for_wa_users'], 10, 2);
@@ -542,64 +560,31 @@ class WA_Admin_Interface
 
     /**
      * Hide UI elements on physicians list page
+     * Note: Search box and Add New button removal is now handled by robust WordPress hooks
      */
     private static function hide_physicians_list_page_elements()
     {
-        $existing_posts = self::get_user_physicians_posts();
-
-        $list_page_css = self::get_common_css() . '
-            /* Hide search box for all wa_level users on physicians page */
-            .search-box {
-                display: none !important;
-            }
-        ';
-
-        if (!empty($existing_posts)) {
-            $list_page_css .= '
-                /* Hide Add New buttons and related elements */
-                .page-title-action,
-                .add-new-h2,
-                #favorite-actions,
-                .tablenav .alignleft .button,
-                .wrap .page-title-action,
-                .wrap h1 .page-title-action,
-                a.page-title-action,
-                .wp-heading-inline + .page-title-action,
-                input[value="Add New"],
-                #adminmenu .wp-submenu a[href*="post-new.php?post_type=physicians"] {
-                    display: none !important;
-                }
-            ';
-        }
+        // Only include the common CSS (collapse button hiding)
+        // Search and Add New button hiding is now handled by WordPress-level hooks
+        $list_page_css = self::get_common_css();
 
         echo '<style>' . $list_page_css . '</style>';
     }
 
     /**
      * Hide UI elements on physicians edit pages
+     * Note: Slug and author hiding is now handled by robust WordPress hooks
      */
     private static function hide_physicians_edit_page_elements()
     {
-        $edit_page_css = self::get_common_css() . '
-            /* Hide author elements in publish meta box */
-            .misc-pub-post-author,
-            .misc-pub-section.misc-pub-author,
-            
-            /* Hide slug elements in publish meta box and permalink */
-            #edit-slug-box,
-            #editable-post-name,
-            #editable-post-name-full,
-            .edit-slug,
-            #sample-permalink,
-            .sample-permalink,
-            #post-slug-edit,
-            #edit-slug-buttons {
-                display: none !important;
-            }
-        ';
+        // Only include the common CSS (collapse button hiding)
+        // Slug and author hiding is now handled by WordPress-level hooks
+        $edit_page_css = self::get_common_css();
 
         echo '<style>' . $edit_page_css . '</style>';
-        self::output_permalink_removal_script();
+
+        // The permalink removal script is no longer needed as it's handled by 
+        // the remove_slug_author_functionality method with proper WordPress hooks
     }
 
     /**
@@ -625,45 +610,83 @@ class WA_Admin_Interface
     {
         echo '<script>
             jQuery(document).ready(function($) {
-                // Remove permalink editing functionality
-                $("#edit-slug-box, .edit-slug").remove();
-                $("#sample-permalink a").off("click");
+                console.log("WA Interface: Starting slug/author removal for physicians");
                 
-                // Handle dynamic content
-                setTimeout(function() {
-                    $("#edit-slug-box, .edit-slug").remove();
+                function removeSlugAndAuthorElements() {
+                    // Remove slug elements
+                    $("#edit-slug-box, .edit-slug, #post-slug-edit, #edit-slug-buttons, .edit-slug-buttons").remove();
                     $("#sample-permalink a").off("click");
-                }, 1000);
+                    $("#slugdiv").remove();
+                    
+                    // Remove author elements
+                    $(".misc-pub-post-author, .misc-pub-section.misc-pub-author, #authordiv").remove();
+                    
+                    // Remove any parent sections that might be empty
+                    $(".misc-pub-section").each(function() {
+                        if ($(this).find(".misc-pub-post-author").length > 0) {
+                            $(this).remove();
+                        }
+                    });
+                    
+                    console.log("WA Interface: Removed elements - slug boxes:", $("#edit-slug-box").length, "author sections:", $(".misc-pub-post-author").length);
+                }
+                
+                // Initial execution
+                removeSlugAndAuthorElements();
+                
+                // Handle dynamic content with multiple intervals
+                setTimeout(removeSlugAndAuthorElements, 500);
+                setTimeout(removeSlugAndAuthorElements, 1000);
+                setTimeout(removeSlugAndAuthorElements, 2000);
+                
+                // Watch for DOM changes (for AJAX-loaded content)
+                if (window.MutationObserver) {
+                    var observer = new MutationObserver(function(mutations) {
+                        var shouldRerun = false;
+                        mutations.forEach(function(mutation) {
+                            if (mutation.addedNodes.length > 0) {
+                                shouldRerun = true;
+                            }
+                        });
+                        if (shouldRerun) {
+                            setTimeout(removeSlugAndAuthorElements, 100);
+                        }
+                    });
+                    
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true
+                    });
+                }
             });
         </script>';
     }
 
     /**
      * Output JavaScript for menu text changes (centralized for efficiency)
+     * Note: Most text changes are now handled by robust WordPress hooks (post_type_labels, admin_title)
+     * This is kept as a fallback for any edge cases
      * 
      * @since 1.0.0
      */
     private static function output_menu_text_changes()
     {
+        // Most menu text changes are now handled by modify_post_type_labels() and modify_admin_page_titles()
+        // This method is kept minimal as a fallback
         echo '<script>
             jQuery(document).ready(function($) {
+                // Fallback text changes for any elements not caught by WordPress hooks
                 function updateMenuTexts() {
-                    // Change "Allergists" to "My Allergist Profile" in the admin menu
-                    $("#adminmenu a[href*=\'edit.php?post_type=physicians\'] .wp-menu-name").text("My Allergist Profile");
-                    
-                    // Change "All Allergists" to "My Allergist Profile" in submenu items
-                    $("#adminmenu a[href*=\'edit.php?post_type=physicians\']:contains(\'All Allergists\')").text("My Allergist Profile");
-                    
-                    // Change "Allergists" to "My Allergist Profile" in page heading
-                    $("h1.wp-heading-inline:contains(\'Allergists\')").text("My Allergist Profile");
-                    
-                    // Change "Edit Allergist" to "Edit My Allergist Profile" in page heading
-                    $("h1.wp-heading-inline:contains(\'Edit Allergist\')").text("Edit My Allergist Profile");
+                    // Only handle specific edge cases that WordPress hooks might miss
+                    $("a[href*=\'edit.php?post_type=physicians\']:contains(\'Allergists\')").each(function() {
+                        if ($(this).text() === "Allergists") {
+                            $(this).text("My Allergist Profile");
+                        }
+                    });
                 }
                 
-                // Initial execution and handle dynamic loading
+                // Single execution - most changes handled by WordPress hooks now
                 updateMenuTexts();
-                setTimeout(updateMenuTexts, 500);
             });
         </script>';
     }
@@ -811,5 +834,307 @@ class WA_Admin_Interface
         }
 
         return $redirect_to;
+    }
+
+    /**
+     * Remove meta boxes that contain slug and author fields for wa_level users
+     */
+    public static function remove_meta_boxes_for_wa_users()
+    {
+        if (!self::is_wa_user()) {
+            return;
+        }
+
+        global $pagenow;
+
+        // Only apply on post edit pages
+        if (!in_array($pagenow, ['post.php', 'post-new.php'])) {
+            return;
+        }
+
+        // Check if we're editing a physicians post
+        if (self::is_physicians_page()) {
+            // Remove author meta box
+            remove_meta_box('authordiv', 'physicians', 'normal');
+            remove_meta_box('authordiv', 'physicians', 'side');
+            remove_meta_box('authordiv', 'physicians', 'advanced');
+
+            // Remove slug meta box if it exists
+            remove_meta_box('slugdiv', 'physicians', 'normal');
+            remove_meta_box('slugdiv', 'physicians', 'side');
+            remove_meta_box('slugdiv', 'physicians', 'advanced');
+
+            // Also try to remove for any post type (in case of edge cases)
+            remove_meta_box('authordiv', 'post', 'normal');
+            remove_meta_box('authordiv', 'post', 'side');
+            remove_meta_box('authordiv', 'post', 'advanced');
+            remove_meta_box('slugdiv', 'post', 'normal');
+            remove_meta_box('slugdiv', 'post', 'side');
+            remove_meta_box('slugdiv', 'post', 'advanced');
+        }
+    }
+
+    /**
+     * Remove slug and author capabilities and UI elements for wa_level users
+     * This is a more robust approach than CSS hiding
+     */
+    public static function remove_slug_and_author_capabilities()
+    {
+        if (!self::is_wa_user()) {
+            return;
+        }
+
+        global $pagenow;
+
+        // Only apply on post edit pages
+        if (!in_array($pagenow, ['post.php', 'post-new.php'])) {
+            return;
+        }
+
+        // Check if we're editing a physicians post
+        if (self::is_physicians_page()) {
+            // Remove the author dropdown functionality
+            add_filter('wp_dropdown_users_args', [__CLASS__, 'remove_author_dropdown'], 10, 1);
+
+            // Remove author-related capabilities temporarily
+            $current_user = wp_get_current_user();
+            if ($current_user) {
+                $current_user->remove_cap('edit_others_posts');
+                $current_user->remove_cap('edit_others_pages');
+            }
+        }
+    }
+
+    /**
+     * Remove author dropdown arguments for wa_level users
+     */
+    public static function remove_author_dropdown($args)
+    {
+        if (self::is_wa_user() && self::is_physicians_page()) {
+            // Return empty args to prevent dropdown from showing
+            return [];
+        }
+        return $args;
+    }
+
+    /**
+     * Modify editor capabilities for wa_level users
+     */
+    public static function modify_editor_capabilities($can_richedit)
+    {
+        if (self::is_wa_user() && self::is_physicians_page()) {
+            // Additional capability modifications can go here
+            return $can_richedit;
+        }
+        return $can_richedit;
+    }
+
+    /**
+     * Remove slug and author functionality via JavaScript - more targeted than CSS
+     */
+    public static function remove_slug_author_functionality()
+    {
+        if (!self::is_wa_user()) {
+            return;
+        }
+
+        global $pagenow;
+
+        // Only apply on post edit pages for physicians
+        if (in_array($pagenow, ['post.php', 'post-new.php']) && self::is_physicians_page()) {
+            wp_add_inline_script('jquery', '
+                jQuery(document).ready(function($) {
+                    // Remove permalink edit functionality completely
+                    $("#edit-slug-box").remove();
+                    $("#sample-permalink a").removeAttr("href").off("click");
+                    $(".edit-slug").remove();
+                    $("#post-slug-edit, #edit-slug-buttons").remove();
+                    
+                    // Remove author meta box completely
+                    $("#authordiv").remove();
+                    $(".misc-pub-post-author").parent().remove();
+                    
+                    // Disable any remaining permalink editing
+                    $(document).on("click", "#sample-permalink a, .edit-slug", function(e) {
+                        e.preventDefault();
+                        return false;
+                    });
+                    
+                    // Watch for dynamically added content
+                    var observer = new MutationObserver(function(mutations) {
+                        $("#edit-slug-box, .edit-slug, #authordiv, .misc-pub-post-author").remove();
+                        $("#sample-permalink a").removeAttr("href").off("click");
+                    });
+                    
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true
+                    });
+                });
+            ');
+        }
+    }
+
+    /**
+     * Remove permalink UI completely for wa_level users
+     */
+    public static function remove_permalink_ui($return, $post_id, $new_title, $new_slug, $post)
+    {
+        if (self::is_wa_user() && $post && $post->post_type === 'physicians') {
+            return ''; // Return empty string to remove permalink UI
+        }
+        return $return;
+    }
+
+    /**
+     * Remove permalink from edit form
+     */
+    public static function remove_permalink_from_edit_form($post)
+    {
+        if (self::is_wa_user() && $post && $post->post_type === 'physicians') {
+            // Remove the permalink editing section entirely
+            echo '<style>#edit-slug-box, #sample-permalink { display: none !important; }</style>';
+            echo '<script>
+                jQuery(document).ready(function($) {
+                    $("#edit-slug-box, #sample-permalink").remove();
+                });
+            </script>';
+        }
+    }
+
+    /**
+     * Prevent slug modification by wa_level users
+     */
+    public static function prevent_slug_modification($data, $postarr)
+    {
+        if (self::is_wa_user() && isset($data['post_type']) && $data['post_type'] === 'physicians') {
+            // If this is an update to an existing post, preserve the original slug
+            if (!empty($postarr['ID'])) {
+                $original_post = get_post($postarr['ID']);
+                if ($original_post) {
+                    $data['post_name'] = $original_post->post_name;
+                }
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Modify list page functionality for wa_level users using WordPress hooks
+     */
+    public static function modify_list_page_for_wa_users()
+    {
+        if (!self::is_wa_user()) {
+            return;
+        }
+
+        // Only apply to physicians list page
+        if (!isset($_GET['post_type']) || $_GET['post_type'] !== 'physicians') {
+            return;
+        }
+
+        // Remove "Add New" capability temporarily for list page
+        $existing_posts = self::get_user_physicians_posts();
+        if (!empty($existing_posts)) {
+            $current_user = wp_get_current_user();
+            if ($current_user) {
+                // Temporarily remove the capability to create new posts
+                add_filter('user_has_cap', [__CLASS__, 'remove_add_new_capability'], 10, 4);
+            }
+        }
+    }
+
+    /**
+     * Remove "Add New" capability for wa_level users when they already have posts
+     */
+    public static function remove_add_new_capability($allcaps, $caps, $args, $user)
+    {
+        if (!self::is_wa_user($user)) {
+            return $allcaps;
+        }
+
+        // Only apply on physicians list page when user has existing posts
+        if (isset($_GET['post_type']) && $_GET['post_type'] === 'physicians') {
+            $existing_posts = self::get_user_physicians_posts();
+            if (!empty($existing_posts)) {
+                $allcaps['create_physicians'] = false;
+                $allcaps['edit_physicians'] = true; // Keep edit capability
+            }
+        }
+
+        return $allcaps;
+    }
+
+    /**
+     * Modify post type labels for wa_level users
+     */
+    public static function modify_post_type_labels($labels)
+    {
+        if (!self::is_wa_user()) {
+            return $labels;
+        }
+
+        $labels->name = 'My Allergist Profile';
+        $labels->singular_name = 'My Allergist Profile';
+        $labels->menu_name = 'My Allergist Profile';
+        $labels->all_items = 'My Allergist Profile';
+        $labels->edit_item = 'Edit My Allergist Profile';
+        $labels->view_item = 'View My Allergist Profile';
+        $labels->search_items = 'Search My Profile';
+        $labels->not_found = 'Profile not found';
+        $labels->not_found_in_trash = 'Profile not found in trash';
+
+        return $labels;
+    }
+
+    /**
+     * Modify admin page titles for wa_level users
+     */
+    public static function modify_admin_page_titles($admin_title, $title)
+    {
+        if (!self::is_wa_user()) {
+            return $admin_title;
+        }
+
+        global $pagenow;
+
+        if ($pagenow === 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] === 'physicians') {
+            return str_replace('Allergists', 'My Allergist Profile', $admin_title);
+        }
+
+        if (in_array($pagenow, ['post.php', 'post-new.php']) && self::is_physicians_page()) {
+            $admin_title = str_replace('Edit Allergist', 'Edit My Allergist Profile', $admin_title);
+            $admin_title = str_replace('Add New Allergist', 'Add My Allergist Profile', $admin_title);
+        }
+
+        return $admin_title;
+    }
+
+    /**
+     * Force single column layout for wa_level users to simplify interface
+     */
+    public static function force_single_column_layout($result)
+    {
+        if (self::is_wa_user()) {
+            return 1; // Force single column
+        }
+        return $result;
+    }
+
+    /**
+     * Remove search box for wa_level users on physicians list page using CSS
+     */
+    public static function remove_search_box_for_wa_users()
+    {
+        if (!self::is_wa_user()) {
+            return;
+        }
+
+        $screen = get_current_screen();
+        if (!$screen || 'edit-physicians' !== $screen->id) {
+            return;
+        }
+
+        echo '<style>#post-search-input, #search-submit, .search-box { display: none !important; }</style>';
     }
 }
