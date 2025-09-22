@@ -513,13 +513,14 @@ class WA_Admin_Interface
      * Render logout redirect for wa_level users
      * 
      * This method handles the logout link functionality by logging out
-     * wa_level users and redirecting them to the home page.
+     * wa_level users and redirecting them to the my-account-wa page.
      */
     public static function render_logout_redirect()
     {
-        // Log out the user and redirect to home page
+        // Log out the user and redirect to my account page
         wp_logout();
-        wp_redirect(home_url());
+        $my_account_url = home_url('/my-account-wa/');
+        wp_redirect($my_account_url);
         exit;
     }
 
