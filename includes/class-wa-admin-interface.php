@@ -878,6 +878,8 @@ class WA_Admin_Interface
     /**
      * Remove slug and author capabilities and UI elements for wa_level users
      * This is a more robust approach than CSS hiding
+     * 
+     * IMPORTANT: Only affects wa_level users, administrators and other users are unaffected
      */
     public static function remove_slug_and_author_capabilities()
     {
@@ -897,11 +899,14 @@ class WA_Admin_Interface
             // Remove the author dropdown functionality
             add_filter('wp_dropdown_users_args', [__CLASS__, 'remove_author_dropdown'], 10, 1);
 
-            // Remove author-related capabilities temporarily
+            // Remove author-related capabilities temporarily for wa_level users only
             $current_user = wp_get_current_user();
-            if ($current_user) {
-                $current_user->remove_cap('edit_others_posts');
-                $current_user->remove_cap('edit_others_pages');
+            if ($current_user && self::is_wa_user($current_user)) {
+                // Only remove capabilities for wa_level users, not administrators
+                if (!user_can($current_user, 'manage_options')) {
+                    $current_user->remove_cap('edit_others_posts');
+                    $current_user->remove_cap('edit_others_pages');
+                }
             }
         }
     }
