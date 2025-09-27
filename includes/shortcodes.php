@@ -23,6 +23,7 @@ function dalen_find_allergist_init_shortcodes()
     require_once plugin_dir_path(__FILE__) . 'shortcodes/class-find-allergist-form.php';
     require_once plugin_dir_path(__FILE__) . 'shortcodes/class-find-allergist-results.php';
     require_once plugin_dir_path(__FILE__) . 'shortcodes/class-find-allergist-single.php';
+    require_once plugin_dir_path(__FILE__) . 'shortcodes/class-acf-form.php';
 
     // Initialize shortcode instances
     new Find_Allergist_Form_Shortcode();

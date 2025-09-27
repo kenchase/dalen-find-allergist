@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
 function initializeApp() {
   // Cache DOM elements to avoid repeated queries
   AppState.elements = {
-    form: document.getElementById('allergistfrm'),
+    form: document.getElementById('allergist-search-form'),
     searchBtn: document.getElementById('btn-search'),
     clearBtn: document.getElementById('btn-clear'),
     results: document.getElementById('results'),
@@ -674,9 +674,7 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
   parts.push(`
 		<div class="far-physician-info">
 			<h3 class="far-physician-name">
-				<a href="${escapeHTML(physicianInfo.link)}" target="_blank">
-					${escapeHTML(physicianInfo.title)}
-				</a>
+			  ${escapeHTML(physicianInfo.title)}
 				${physicianInfo.credentials ? `, ${escapeHTML(physicianInfo.credentials)}` : ''}
 			</h3>
 		</div>
@@ -694,47 +692,108 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
     const state = org.institution_gmap?.state || '';
     const postalCode = org.institution_gmap?.post_code || '';
     const phone = org.institution_phone || '';
+    const phone_ext = org.intitution_ext || '';
+    const fax = org.institution_fax || '';
     const distance = org.distance_km;
+
+    // Adding New Fields
+    const practiceSetting = org.institution_practice_setting || '';
+    const practicesOIT = org.institution_oit_practices || '';
+    const specialAreasOfInterest = org.institution_special_areas_of_interest || '';
+    const treatmentServicesOffered = org.institution_treatment_services_offered || [];
+    const treatmentServicesOfferedOther = org.institution_treatment_services_offered_other || '';
+    const siteForClinicalTrials = org.institution_site_for_clinical_trials || '';
+    const consultationServices = org.institution_consultation_services || [];
+    const practicePopulation = org.institution_practice_population || '';
 
     // Check if this organization will have a marker on the map
     const hasMapMarker = orgIdsWithMarkers.has(orgId);
 
     parts.push(`<div class="far-org" id="${orgId}">`);
+
+    // Org Summary section
+    parts.push(`<div class="far-org__summary">`);
     parts.push(`<h4 class="far-org-title">${escapeHTML(orgName)}</h4>`);
-    parts.push(`<ul class="far-org-list">`);
+
+    parts.push(`<p class="far-org-address">`);
 
     if (address) {
-      parts.push(`<li class="far-org-list-item"> ${escapeHTML(address)}</li>`);
+      parts.push(`<span class="far-org-address_street"> ${escapeHTML(address)}</span>`);
     }
 
     if (city || state) {
       const cityStateParts = [city, state].filter(Boolean);
-      parts.push(`<li class="far-org-list-item"> ${escapeHTML(cityStateParts.join(', '))}</li>`);
+      parts.push(`<span class="far-org-address_city-state">, ${escapeHTML(cityStateParts.join(', '))}</span>`);
     }
 
     if (postalCode) {
-      parts.push(`<li class="far-org-list-item"> ${escapeHTML(postalCode)}</li>`);
+      parts.push(`<span class="far-org-address_postal">, ${escapeHTML(postalCode)}</span>`);
     }
+
+    parts.push(`</p>`);
 
     if (phone) {
-      parts.push(`<li class="far-org-list-item"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}</li>`);
+      parts.push(`<p class="far-org-phone"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}</p>`);
     }
 
-    if (distance !== undefined) {
-      parts.push(`<li class="far-org-list-item"><strong>Distance:</strong> ${distance} km</li>`);
-    }
+    parts.push(`</div>`); // Close org summary
 
-    // Add "Show on map" link if this organization has a marker
-    if (hasMapMarker) {
-      parts.push(`<li class="far-org-list-item far-org-list-item--map-link"><a href="#" class="show-on-map-link" data-org-id="${orgId}">📍 Show on map</a></li>`);
-    }
+    // Org Body section
+    parts.push(`<div class="far-org__body">`);
 
-    parts.push(`</ul>`);
+    // Org Body section  Row 1
+    parts.push(`<div class="far-org__body-grid">`);
+    if (practiceSetting) {
+      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practice Setting:</span> ${escapeHTML(practiceSetting)}</p>`);
+    }
+    if (practicesOIT) {
+      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practices OIT:</span> ${escapeHTML(practicesOIT)}</p>`);
+    }
+    if (practicePopulation) {
+      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practices Population:</span> ${escapeHTML(practicePopulation)}</p>`);
+    }
     parts.push(`</div>`);
+    parts.push(`<div class="far-org__body-grid">`);
+    if (specialAreasOfInterest) {
+      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label-lb">Special Areas of Interest:</span> ${escapeHTML(specialAreasOfInterest)}</p>`);
+    }
+    parts.push(`</div>`);
+
+    // Org Body section Row 2
+    parts.push(`<div class="far-org__body-grid">`);
+    if (consultationServices && consultationServices.length > 0) {
+      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label-lb">Consultation Services:</span> ${escapeHTML(consultationServices.join(', '))}</p>`);
+    }
+    if (siteForClinicalTrials) {
+      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label-lb">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</p>`);
+    }
+    parts.push(`</div>`);
+    parts.push(`<div class="far-org__body-grid">`);
+    if (treatmentServicesOffered && treatmentServicesOffered.length > 0) {
+      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label-lb">Treatment Services Offered:</span> ${escapeHTML(treatmentServicesOffered.join(', '))}</p>`);
+    }
+    if (treatmentServicesOfferedOther) {
+      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label-lb">Special Areas of Interest:</span> ${escapeHTML(treatmentServicesOfferedOther)}</p>`);
+    }
+    parts.push(`</div>`);
+
+    parts.push(`</div>`); // Close org body
+    parts.push(`</div>`); // Close org
   }
 
-  parts.push(`</div>`);
+  parts.push(`</div>`); // Close orgs
   return parts.join('');
+
+  // Don't know where to include this yet
+  // if (distance !== undefined) {
+  //   parts.push(`<span class="far-org-list-item"><strong>Distance:</strong> ${distance} km</span>`);
+  // }
+
+  // Don't know where to include this yet
+  // Add "Show on map" link if this organization has a marker
+  // if (hasMapMarker) {
+  //   parts.push(`<li class="far-org-list-item far-org-list-item--map-link"><a href="#" class="show-on-map-link" data-org-id="${orgId}">📍 Show on map</a></li>`);
+  // }
 }
 
 /**
