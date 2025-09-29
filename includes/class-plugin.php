@@ -101,9 +101,9 @@ class Dalen_Find_Allergist_Plugin
     private function load_dependencies()
     {
         // Core functionality
-        // require_once $this->plugin_path . 'includes/custom-role.php';
         require_once $this->plugin_path . 'includes/custom-post.php';
         require_once $this->plugin_path . 'includes/shortcodes.php';
+        require_once $this->plugin_path . 'includes/custom-role.php';
         require_once $this->plugin_path . 'includes/rest-api-search.php';
 
         // Admin functionality
