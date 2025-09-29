@@ -44,7 +44,9 @@ function csaci_custom_allergist_post()
             'attributes' => 'Allergist Attributes',
         ),
         'public' => true,
+        'publicly_queryable' => false, // Prevents direct URL access
         'show_ui' => true,
+        'show_in_menu' => true,
         'show_in_rest' => true,
         'has_archive' => true,
         'menu_position' => 2,

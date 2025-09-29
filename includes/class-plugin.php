@@ -101,7 +101,7 @@ class Dalen_Find_Allergist_Plugin
     private function load_dependencies()
     {
         // Core functionality
-        require_once $this->plugin_path . 'includes/custom-role.php';
+        // require_once $this->plugin_path . 'includes/custom-role.php';
         require_once $this->plugin_path . 'includes/custom-post.php';
         require_once $this->plugin_path . 'includes/shortcodes.php';
         require_once $this->plugin_path . 'includes/rest-api-search.php';
@@ -110,11 +110,6 @@ class Dalen_Find_Allergist_Plugin
         if (is_admin()) {
             require_once $this->plugin_path . 'admin/class-admin.php';
             new Dalen_Find_Allergist_Admin();
-        }
-
-        // Initialize WA User Manager
-        if (class_exists('WA_User_Manager')) {
-            WA_User_Manager::init();
         }
     }
 
