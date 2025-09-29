@@ -32,7 +32,7 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
     {
         // Check if ACF is available and acf_form function exists
         if (!function_exists('acf_form')) {
-            return '<div class="acf-form-error">Error: Advanced Custom Fields plugin is not active or acf_form() function is not available.</div>';
+            return '<div class="acf-form-error">' . __('Error: Advanced Custom Fields plugin is not active or acf_form() function is not available.', 'dalen-find-allergist') . '</div>';
         }
 
         // Summary:
@@ -51,26 +51,16 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
             // Get current user
             $current_user = wp_get_current_user();
 
-            // Display all capabilities
-            echo '<h3>User Capabilities:</h3>';
-            echo '<ul>';
-            foreach ($current_user->allcaps as $cap => $grant) {
-                if ($grant) {
-                    echo '<li>' . esc_html($cap) . '</li>';
-                }
-            }
-            echo '</ul>';
-
             $user_posts = get_posts([
                 'author'        => $user_ID,
                 'post_type'     => 'physicians',
                 'numberposts'   => 1,
-                'post_status'   => 'publish',
+                'post_status'   => ['publish', 'draft', 'pending']
             ]);
             if (!empty($user_posts)) {
                 $post_id = $user_posts[0]->ID;
             } else {
-                return '<div class="acf-form-error">No profile found for the current user.</div>';
+                return '<div class="acf-form-error">' . __('No profile found for the current user.', 'dalen-find-allergist') . '</div>';
             }
         }
 
@@ -90,7 +80,7 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
             acf_form_head();
             acf_form($atts);
         } else {
-            echo '<div class="acf-form-error">You do not have permission to edit this profile.</div>';
+            echo '<div class="acf-form-error">' . __('You do not have permission to edit this profile.', 'dalen-find-allergist') . '</div>';
         }
 
         return $this->get_output_buffer();

@@ -48,59 +48,14 @@ function csaci_custom_allergist_post()
         'show_ui' => true,
         'show_in_menu' => true,
         'show_in_rest' => true,
-        'has_archive' => true,
+        'has_archive' => false,
         'menu_position' => 2,
         'menu_icon' => 'dashicons-groups',
         'rewrite' => array('slug' => 'allergists'),
         'exclude_from_search' => true,
-        'capability_type' => 'physicians',
-        'map_meta_cap' => true,
-        'capabilities' => [
-            'edit_post'             => 'edit_physician',
-            'read_post'             => 'read_physician',
-            'delete_post'           => 'delete_physician',
-            'edit_posts'            => 'edit_physicians',
-            'edit_others_posts'     => 'edit_others_physicians',
-            'publish_posts'         => 'publish_physicians',
-            'read_private_posts'    => 'read_private_physicians',
-            'delete_posts'          => 'delete_physicians',
-            'delete_others_posts'   => 'delete_others_physicians',
-            'delete_published_posts' => 'delete_published_physicians',
-            'edit_published_posts'  => 'edit_published_physicians',
-            'create_posts'          => 'create_physicians',
-        ],
         'hierarchical' => false,
         'supports' => array('title', 'author'),
     );
-    // Although named 'physicians', this post type is for Allergists.
-    // Content was already created in the database, so we continue to use 'physicians' as the post type name.
-    // Changing this to 'allergists' would require a database migration which is out of scope at this time 
     register_post_type('physicians', $post_type_args);
 }
 add_action('init', 'csaci_custom_allergist_post');
-
-/**
- * Make title mandatory for physicians post type
- * 
- * @since 1.0.0
- */
-function make_physician_title_required()
-{
-    global $pagenow, $post_type;
-
-    if (($pagenow === 'post.php' || $pagenow === 'post-new.php') && $post_type === 'physicians') {
-        echo '<script>
-            jQuery(document).ready(function($) {
-                $("#publish, #save-post").click(function(e) {
-                    var title = $("#title").val().trim();
-                    if (title === "") {
-                        alert("Title is required for this post type.");
-                        $("#title").focus();
-                        return false;
-                    }
-                });
-            });
-        </script>';
-    }
-}
-add_action('admin_footer', 'make_physician_title_required');
