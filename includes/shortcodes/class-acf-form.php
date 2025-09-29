@@ -75,9 +75,11 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
             'submit_value'  => __('Update Profile', 'dalen-find-allergist'),
         ], $atts, 'acf-form');
 
+
         // Call ACF form functions if the current user can edit the post
         if (current_user_can('edit_post', $post_id)) {
             acf_form_head();
+            echo '<h1>' . esc_html($current_user->first_name . ' ' . $current_user->last_name) . __(' - Find an Allergist profile', 'dalen-find-allergist') . '</h1>';
             acf_form($atts);
         } else {
             echo '<div class="acf-form-error">' . __('You do not have permission to edit this profile.', 'dalen-find-allergist') . '</div>';

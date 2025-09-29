@@ -91,6 +91,15 @@ class Dalen_Find_Allergist_Admin
             'dalen-find-allergist-settings',
             'dalen_find_allergist_general'
         );
+
+        // Edit Profile Page Slug
+        add_settings_field(
+            'edit_profile_page_slug',
+            'Find an Allergist - Edit Profile Page Slug',
+            array($this, 'edit_profile_page_slug_callback'),
+            'dalen-find-allergist-settings',
+            'dalen_find_allergist_general'
+        );
     }
 
     /**
@@ -208,12 +217,27 @@ class Dalen_Find_Allergist_Admin
     }
 
     /**
+     * Edit Profile Page Slug field callback
+     */
+    public function edit_profile_page_slug_callback()
+    {
+        $value = $this->get_option_value('edit_profile_page_slug');
+
+        printf(
+            '<input type="text" id="edit_profile_page_slug" name="dalen_find_allergist_options[edit_profile_page_slug]" value="%s" class="regular-text" />',
+            esc_attr($value)
+        );
+        echo '<p class="description">' . esc_html__('Enter the slug for the "Find an Allergist - Edit Profile" page.', 'dalen-find-allergist') . '</p>';
+    }
+
+    /**
      * Get default settings
      */
     public function get_default_settings()
     {
         return array(
-            'google_maps_api_key' => ''
+            'google_maps_api_key' => '',
+            'edit_profile_page_slug' => 'find-an-allergist-edit-profile'
         );
     }
 
@@ -237,6 +261,11 @@ class Dalen_Find_Allergist_Admin
                     'error'
                 );
             }
+        }
+
+        // Sanitize Edit Profile Page Slug
+        if (isset($input['edit_profile_page_slug'])) {
+            $sanitized['edit_profile_page_slug'] = sanitize_text_field($input['edit_profile_page_slug']);
         }
 
         return $sanitized;

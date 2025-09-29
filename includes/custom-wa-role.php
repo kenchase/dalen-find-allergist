@@ -81,8 +81,11 @@ function fa_redirect_wa_users_from_admin()
         // Check if user has any role starting with "wa_"
         foreach ((array) $user->roles as $role) {
             if (strpos($role, 'wa_') === 0) {
+                // Get the edit profile page slug from plugin settings
+                $edit_profile_slug = get_option('fa_edit_profile_page_slug', 'my-account-wa');
+
                 // Redirect to the front-end edit page
-                wp_redirect(home_url('/my-account-wa/'));
+                wp_redirect(home_url('/' . $edit_profile_slug . '/'));
                 exit;
             }
         }
