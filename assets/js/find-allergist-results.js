@@ -751,6 +751,8 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 
     if (phone) {
       parts.push(`<p class="far-org-phone"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}</p>`);
+    } else {
+      parts.push(`<p class="far-org-phone far-org-phone--no-phone">Not available</p>`);
     }
 
     parts.push(`<button class="far-org-view-more">View More</button>`);

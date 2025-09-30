@@ -153,9 +153,6 @@
 /*** Search Results ***/
 
 /* Target Divi's entry-content specifically to override its styles */
-#page-container .find-allergists-results,
-.find-allergists-results {
-}
 
 #page-container .far-items,
 .far-items {
@@ -190,14 +187,15 @@
 .far-org__summary {
   display: grid;
   gap: var(--spacing-4);
-  grid-template-columns: 1fr 2fr 1fr 1fr;
+  grid-template-columns: 3fr 5fr 3fr 1fr;
 }
 
 #page-container .far-org__body,
 .far-org__body {
   display: grid;
   gap: var(--spacing-4);
-  grid-template-columns: 1fr 3fr;
+  grid-template-columns: 3fr 9fr;
+  padding-bottom: var(--spacing-8);
 }
 
 #page-container .far-org__body--hidden,
@@ -210,7 +208,7 @@
 }
 
 /* Add spacing between items in a grid cell that need it */
-#page-container .far-org__body-grid-cell--spacer p + p {
+#page-container .far-org__body-grid-cell--spacer div {
   margin-top: var(--spacing-4);
 }
 
@@ -218,7 +216,7 @@
 .far-org__body-grid-item {
   margin: 0;
   padding: 0;
-  line-height: 1em;
+  line-height: 1.25em;
 }
 
 #page-container .far-org__body-grid-item-label,
@@ -247,11 +245,23 @@
   line-height: 1em;
 }
 
-#page-container .far-org-phone,
+#page-container .far-org-,
 .far-org-phone {
   margin: 0;
   padding: 0;
+}
+
+#page-container .far-org-view-more,
+.far-org-view-more {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
   text-align: right;
+  line-height: 1.1em;
 }
 
 #page-container .far-org-list-item--map-link,
