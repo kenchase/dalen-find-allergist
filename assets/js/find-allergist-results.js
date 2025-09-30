@@ -115,6 +115,9 @@ function bindEventHandlers() {
       toggleRangeField();
     });
   }
+
+  // Add event listener for clicks using event delegation
+  document.addEventListener('click', handleDocumentClick);
 }
 
 /**
@@ -750,44 +753,47 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
       parts.push(`<p class="far-org-phone"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}</p>`);
     }
 
+    parts.push(`<button class="far-org-view-more">View More</button>`);
+
     parts.push(`</div>`); // Close org summary
 
     // Org Body section
-    parts.push(`<div class="far-org__body">`);
+    parts.push(`<div class="far-org__body far-org__body--hidden">`);
 
     // Org Body section  Row 1
-    parts.push(`<div class="far-org__body-grid">`);
+    parts.push(`<div class="far-org__body-grid-cell">`);
     if (practiceSetting) {
-      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practice Setting:</span> ${escapeHTML(practiceSetting)}</p>`);
+      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practice Setting(s):</span> ${escapeHTML(practiceSetting)}</div>`);
     }
     if (practicesOIT) {
-      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practices OIT:</span> ${escapeHTML(practicesOIT)}</p>`);
+      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practices OIT:</span> ${escapeHTML(practicesOIT)}</div>`);
     }
     if (practicePopulation) {
-      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practices Population:</span> ${escapeHTML(practicePopulation)}</p>`);
+      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practices Population:</span> ${escapeHTML(practicePopulation)}</div>`);
     }
     parts.push(`</div>`);
-    parts.push(`<div class="far-org__body-grid">`);
+    parts.push(`<div class="far-org__body-grid-cell">`);
     if (specialAreasOfInterest) {
-      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label-lb">Special Areas of Interest:</span> ${escapeHTML(specialAreasOfInterest)}</p>`);
+      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label--lb">Special Areas of Interest:</span> ${escapeHTML(specialAreasOfInterest)}</div>`);
     }
     parts.push(`</div>`);
 
     // Org Body section Row 2
-    parts.push(`<div class="far-org__body-grid">`);
+    parts.push(`<div class="far-org__body-grid-cell far-org__body-grid-cell--spacer">`);
     if (consultationServices && consultationServices.length > 0) {
-      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label-lb">Consultation Services:</span> ${escapeHTML(consultationServices.join(', '))}</p>`);
+      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label--lb">Consultation Services:</span> ${escapeHTML(consultationServices.join(', '))}</div>`);
     }
     if (siteForClinicalTrials) {
-      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label-lb">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</p>`);
+      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label--lb">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
     }
     parts.push(`</div>`);
-    parts.push(`<div class="far-org__body-grid">`);
+    parts.push(`<div class="far-org__body-grid-cell far-org__body-grid-cell--spacer">`);
     if (treatmentServicesOffered && treatmentServicesOffered.length > 0) {
-      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label-lb">Treatment Services Offered:</span> ${escapeHTML(treatmentServicesOffered.join(', '))}</p>`);
+      const treatmentServicesList = treatmentServicesOffered.map((service) => `<li class="far-org__body-grid-item_list-item">${escapeHTML(service)}</li>`).join('');
+      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label--lb">Treatment Services Offered:</span> <ul class="far-org__body-grid-item_list">${treatmentServicesList}</ul></div>`);
     }
     if (treatmentServicesOfferedOther) {
-      parts.push(`<p class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label-lb">Special Areas of Interest:</span> ${escapeHTML(treatmentServicesOfferedOther)}</p>`);
+      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label--lb">Special Areas of Interest:</span> ${escapeHTML(treatmentServicesOfferedOther)}</div>`);
     }
     parts.push(`</div>`);
 
@@ -1006,10 +1012,44 @@ function handleDocumentClick(event) {
       showMarkerOnMap(orgId);
     }
   }
+
+  // Handle "View More" button clicks
+  if (event.target.classList.contains('far-org-view-more')) {
+    event.preventDefault();
+    toggleOrgDetails(event.target);
+  }
 }
 
-// Add event listener for clicks using event delegation
-document.addEventListener('click', handleDocumentClick);
+/**
+ * Toggle organization details visibility
+ * @param {HTMLElement} button - The "View More" button that was clicked
+ */
+function toggleOrgDetails(button) {
+  // Find the parent organization container
+  const orgContainer = button.closest('.far-org');
+  if (!orgContainer) {
+    return;
+  }
+
+  // Find the organization body element
+  const orgBody = orgContainer.querySelector('.far-org__body');
+  if (!orgBody) {
+    return;
+  }
+
+  // Toggle the hidden class
+  const isCurrentlyHidden = orgBody.classList.contains('far-org__body--hidden');
+
+  if (isCurrentlyHidden) {
+    // Show the content
+    orgBody.classList.remove('far-org__body--hidden');
+    button.textContent = 'View Less';
+  } else {
+    // Hide the content
+    orgBody.classList.add('far-org__body--hidden');
+    button.textContent = 'View More';
+  }
+}
 
 /**
  * Optimized HTML escaper for titles/strings we render
