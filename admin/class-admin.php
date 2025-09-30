@@ -75,6 +75,27 @@ class Dalen_Find_Allergist_Admin
             )
         );
 
+        // Register individual settings for the search form
+        register_setting(
+            'dalen_find_allergist_settings',
+            'dalen_search_form_title',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => 'Find an Allergist Near You'
+            )
+        );
+
+        register_setting(
+            'dalen_find_allergist_settings',
+            'dalen_search_form_intro',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'wp_kses_post',
+                'default' => ''
+            )
+        );
+
         // General Settings Section
         add_settings_section(
             'dalen_find_allergist_general',

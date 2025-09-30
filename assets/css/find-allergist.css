@@ -1,9 +1,11 @@
 /* CSS Custom Properties using Tailwind naming conventions */
 :root {
   /* Colors */
-  --blue-600: #007cba;
-  --blue-700: #005a87;
-  --blue-50: #f0f8ff;
+
+  --color-opacity: 1;
+  --blue-500: 84 150 184; /* RGB values */
+
+  --blue-700: #222e50;
 
   --gray-100: #f5f5f5;
   --gray-200: #e0e0e0;
@@ -16,11 +18,6 @@
 
   --red-600: #d63638;
 
-  --slate-50: #f8fafc;
-  --slate-100: #f1f5f9;
-  --slate-200: #f0f0f1;
-  --slate-700: #2271b1;
-
   --neutral-50: #f9f9f9;
   --white: #fff;
 
@@ -30,7 +27,10 @@
   --spacing-3: 0.75rem;
   --spacing-4: 1rem;
   --spacing-6: 1.5rem;
-  --spacing-16: 16px;
+  --spacing-8: 2rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
 
   /* Border radius */
   --rounded: 4px;
@@ -42,32 +42,43 @@
   --text-base: 0.9rem;
   --text-lg: 1rem;
   --text-xl: 1.1rem;
+  --text-2xl: 1.25rem;
+  --text-3xl: 1.5rem;
+  --text-5xl: 2.5rem;
 
   /* Transitions */
-  --transition-all: all 0.2s ease;
-  --transition-bg: background-color 0.2s ease;
+  --transition-all: all 0.3s ease;
+  --transition-bg: background-color 0.3s ease;
 }
 
-/* Form Styles */
+/*** Search Form ***/
 
 .allergist-search {
-  background-color: #719db8;
+  --color-opacity: 0.75;
+  background-color: rgb(var(--blue-500) / var(--color-opacity));
   border-radius: var(--rounded-lg);
-  margin-top: var(--spacing-16);
+  margin-top: var(--spacing-8);
   margin-bottom: var(--spacing-8);
-  padding: 3rem;
+  padding: var(--spacing-20);
 }
 
 .allergist-search-intro {
   text-align: center;
-  margin-top: var(--spacing-16);
   margin-bottom: var(--spacing-8);
   font-size: var(--text-lg);
   color: var(--white);
 }
 
+.allergist-search-intro__title {
+  color: var(--blue-700);
+  font-size: var(--text-5xl);
+  font-weight: 500;
+  margin-bottom: var(--spacing-4);
+  padding: 0;
+}
+
 .allergist-search-intro__text {
-  font-size: 1.25rem;
+  font-size: var(--text-3xl);
   margin: 0 auto;
   max-width: 600px;
 }
@@ -75,9 +86,7 @@
 .allergist-search-form {
   display: grid;
   gap: var(--spacing-4);
-  padding: var(--spacing-4);
-  margin: 0 auto;
-  padding: 3rem 0;
+  margin: 0 auto 0 auto;
   max-width: var(--max-width);
   /* The magic: create up to 3 columns, each at least --min-col wide.
      The "3" limits to 3 columns on large screens. */
@@ -87,17 +96,22 @@
 .allergist-search-form input,
 .allergist-search-form select {
   width: 100%;
-  padding: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
   border: 1px solid var(--gray-300);
   border-radius: var(--rounded);
   font-size: var(--text-base);
   transition: var(--transition-all);
 }
 
-.allergist-search-form .form-field__label {
+.allergist-search-form ::placeholder {
+  color: rgb(var(--blue-500));
   font-weight: 600;
-  margin-bottom: var(--spacing-1);
+}
+
+.allergist-search-form .form-field__label {
   display: block;
+  font-weight: 600;
+  margin-bottom: 0;
   color: var(--white);
 }
 
@@ -131,6 +145,8 @@
 .allergist-search-form .form-actions_btn-secondary {
   background-color: transparent;
 }
+
+/*** Search Results ***/
 
 /* Target Divi's entry-content specifically to override its styles */
 #page-container .find-allergists-results,

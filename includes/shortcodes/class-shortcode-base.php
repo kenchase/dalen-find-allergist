@@ -83,10 +83,10 @@ abstract class Find_Allergist_Shortcode_Base
     {
         $asset_base_url = $this->plugin_url . '../assets/';
         wp_enqueue_style(
-            'find-allergist-results-css',
-            dalen_get_asset_url('css/find-allergist-results.css', $asset_base_url),
+            'find-allergist-css',
+            dalen_get_asset_url('css/find-allergist.css', $asset_base_url),
             array(),
-            dalen_get_asset_version('css/find-allergist-results.css')
+            dalen_get_asset_version('css/find-allergist.css')
         );
     }
 

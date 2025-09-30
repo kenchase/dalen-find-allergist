@@ -69,10 +69,20 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
         <!-- Search Form -->
         <div id="allergist-search" class="allergist-search">
             <div class="allergist-search-intro">
-                <h1><?php _e('Find An Allergist', 'dalen-find-allergist'); ?></h1>
+                <h1 class="allergist-search-intro__title"><?php echo esc_html(get_option('dalen_search_form_title', 'Find An Allergist')); ?></h1>
                 <div class="allergist-search-intro__text">
-                    <p><?php _e('Welcome to CSACI Find an Allergist. The search options below can be used to locate an allergist/immunologist close to you.', 'dalen-find-allergist'); ?></p>
-                    <p><?php _e('Please either enter a name, city and/or postal code to start your search.', 'dalen-find-allergist'); ?></p>
+                    <?php
+                    $intro_text = get_option('dalen_search_form_intro', '');
+                    if (!empty($intro_text)) {
+                        echo wp_kses_post($intro_text);
+                    } else {
+                        // Fallback to default text if no custom intro is set
+                    ?>
+                        <p><?php _e('Welcome to CSACI Find an Allergist. The search options below can be used to locate an allergist/immunologist close to you.', 'dalen-find-allergist'); ?></p>
+                        <p><?php _e('Please either enter a name, city and/or postal code to start your search.', 'dalen-find-allergist'); ?></p>
+                    <?php
+                    }
+                    ?>
                 </div>
             </div>
             <!-- Form submission is handled via JavaScript -->

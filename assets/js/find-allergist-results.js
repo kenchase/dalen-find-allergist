@@ -50,7 +50,6 @@ function initializeApp() {
     results: document.getElementById('results'),
     postalInput: document.getElementById('phy_postal'),
     rangeSelect: document.getElementById('phy_kms'),
-    rangeContainer: document.getElementById('range-field-container'),
     postalError: document.getElementById('postal-error'),
     rangeHelpText: document.getElementById('range-help-text'),
   };
@@ -264,9 +263,10 @@ window.addEventListener('beforeunload', cleanup);
  * Toggle the range field based on postal code input
  */
 function toggleRangeField() {
-  const { postalInput, rangeSelect, rangeContainer, rangeHelpText } = AppState.elements;
+  const { postalInput, rangeSelect } = AppState.elements;
 
-  if (!postalInput || !rangeSelect || !rangeContainer) {
+  if (!postalInput || !rangeSelect) {
+    console.warn('toggleRangeField: Required elements not found');
     return;
   }
 
@@ -275,21 +275,35 @@ function toggleRangeField() {
 
   if (hasValidPostalCode) {
     rangeSelect.disabled = false;
-    rangeContainer.classList.remove('disabled');
-    rangeContainer.style.opacity = '1';
-    rangeContainer.style.pointerEvents = 'auto';
+    rangeSelect.removeAttribute('disabled');
+
+    // If there's a container element, update its styling too
+    const container = rangeSelect.closest('.form-group, .field-container') || rangeSelect.parentElement;
+    if (container) {
+      container.classList.remove('disabled');
+      container.style.opacity = '1';
+      container.style.pointerEvents = 'auto';
+    }
 
     // Hide help text when field is enabled
+    const { rangeHelpText } = AppState.elements;
     if (rangeHelpText) {
       rangeHelpText.style.display = 'none';
     }
   } else {
     rangeSelect.disabled = true;
-    rangeContainer.classList.add('disabled');
-    rangeContainer.style.opacity = '0.5';
-    rangeContainer.style.pointerEvents = 'none';
+    rangeSelect.setAttribute('disabled', 'disabled');
+
+    // If there's a container element, update its styling too
+    const container = rangeSelect.closest('.form-group, .field-container') || rangeSelect.parentElement;
+    if (container) {
+      container.classList.add('disabled');
+      container.style.opacity = '0.5';
+      container.style.pointerEvents = 'none';
+    }
 
     // Show help text when field is disabled
+    const { rangeHelpText } = AppState.elements;
     if (rangeHelpText) {
       rangeHelpText.style.display = 'block';
     }
