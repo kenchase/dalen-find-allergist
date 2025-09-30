@@ -152,16 +152,11 @@
 
 /*** Search Results ***/
 
-/* Target Divi's entry-content specifically to override its styles */
-
-#page-container .far-items,
 .far-items {
   display: grid;
   gap: var(--spacing-4);
 }
 
-/* Add styles for the new organization structure */
-#page-container .far-item,
 .far-item {
   margin-bottom: var(--spacing-2);
   padding: var(--spacing-6);
@@ -170,35 +165,35 @@
   background-color: var(--neutral-50);
 }
 
-#page-container .far-orgs,
 .far-orgs {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
 }
-
-#page-container .far-org,
 .far-org {
   font-size: var(--text-base);
   color: var(--gray-800);
 }
 
-#page-container .far-org__summary,
 .far-org__summary {
   display: grid;
   gap: var(--spacing-4);
-  grid-template-columns: 3fr 5fr 3fr 1fr;
+  grid-template-columns: 1fr;
+  @media (min-width: 768px) {
+    grid-template-columns: 3fr 9fr 3fr 1fr;
+  }
 }
 
-#page-container .far-org__body,
 .far-org__body {
   display: grid;
   gap: var(--spacing-4);
-  grid-template-columns: 3fr 9fr;
+  grid-template-columns: 1fr;
   padding-bottom: var(--spacing-8);
+  @media (min-width: 768px) {
+    grid-template-columns: 3fr 9fr;
+  }
 }
 
-#page-container .far-org__body--hidden,
 .far-org__body--hidden {
   visibility: hidden;
   height: 0;
@@ -208,24 +203,22 @@
 }
 
 /* Add spacing between items in a grid cell that need it */
-#page-container .far-org__body-grid-cell--spacer div {
+.far-org__body-grid-cell--spacer div {
   margin-top: var(--spacing-4);
 }
 
-#page-container .far-org__body-grid-item,
 .far-org__body-grid-item {
   margin: 0;
   padding: 0;
   line-height: 1.25em;
 }
 
-#page-container .far-org__body-grid-item-label,
 .far-org__body-grid-item-label {
   font-weight: bold;
 }
 
 /* Add a line break for labels that need it */
-#page-container .far-org__body-grid-item-label--lb,
+
 .far-org__body-grid-item-label-lb {
   display: block;
 }
