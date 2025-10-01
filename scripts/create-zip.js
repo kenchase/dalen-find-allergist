@@ -85,12 +85,68 @@ async function createProductionZip() {
     console.log('⚠️  No admin directory found');
   }
 
-  // Handle assets with better error checking
+  // Handle assets with better error checking and file mapping
   const distAssetsDir = path.join(__dirname, '..', 'dist', 'assets');
   const originalAssetsDir = path.join(__dirname, '..', 'assets');
 
   if (fs.existsSync(distAssetsDir)) {
-    archive.directory(distAssetsDir, `${pluginName}/assets/`);
+    // Manually add assets with proper file name mapping
+    const cssDir = path.join(distAssetsDir, 'css');
+    const jsDir = path.join(distAssetsDir, 'js');
+
+    // Handle CSS files
+    if (fs.existsSync(cssDir)) {
+      const minifiedCss = path.join(cssDir, 'find-allergist-styles.min.css');
+      const regularCss = path.join(cssDir, 'find-allergist.css');
+
+      if (fs.existsSync(minifiedCss)) {
+        // Add minified CSS as the expected filename
+        archive.file(minifiedCss, { name: `${pluginName}/assets/css/find-allergist.css` });
+        console.log('✓ Added minified CSS as find-allergist.css');
+      } else if (fs.existsSync(regularCss)) {
+        archive.file(regularCss, { name: `${pluginName}/assets/css/find-allergist.css` });
+        console.log('✓ Added CSS file');
+      }
+    }
+
+    // Handle JS files
+    if (fs.existsSync(jsDir)) {
+      const jsFiles = fs.readdirSync(jsDir).filter((file) => file.endsWith('.js'));
+
+      if (jsFiles.length > 0) {
+        // Look for specific patterns first
+        const minifiedJs = jsFiles.find((file) => file.includes('find-allergist') && file.includes('.min.js'));
+        const regularJs = jsFiles.find((file) => file === 'find-allergist.js');
+        const anyJs = jsFiles[0]; // fallback to first JS file found
+
+        let jsFileToUse = minifiedJs || regularJs || anyJs;
+
+        if (jsFileToUse) {
+          const jsFilePath = path.join(jsDir, jsFileToUse);
+          archive.file(jsFilePath, { name: `${pluginName}/assets/js/find-allergist.js` });
+          console.log(`✓ Added ${jsFileToUse} as find-allergist.js`);
+        }
+      } else {
+        console.log('⚠️  No JS files found in dist/assets/js');
+      }
+    }
+
+    // Add any other asset directories/files (images, etc.)
+    const items = fs.readdirSync(distAssetsDir);
+    items.forEach((item) => {
+      if (item !== 'css' && item !== 'js') {
+        const itemPath = path.join(distAssetsDir, item);
+        const stat = fs.statSync(itemPath);
+        if (stat.isDirectory()) {
+          archive.directory(itemPath, `${pluginName}/assets/${item}/`);
+          console.log(`✓ Added ${item} directory`);
+        } else {
+          archive.file(itemPath, { name: `${pluginName}/assets/${item}` });
+          console.log(`✓ Added ${item} file`);
+        }
+      }
+    });
+
     console.log('✓ Added built assets from dist/assets');
   } else if (fs.existsSync(originalAssetsDir)) {
     console.log('⚠️  No dist/assets found. Using original assets directory.');
@@ -126,15 +182,6 @@ async function createProductionZip() {
   await archive.finalize();
 }
 
-// Files and directories to exclude from production
-const excludeFromProduction = ['node_modules/', 'src/', 'scripts/', 'dist/', '.git/', '.gitignore', '.gitattributes', 'package.json', 'package-lock.json', 'vite.config.js', 'postcss.config.js', '.env', '.env.example', 'composer.json', 'composer.lock', 'phpunit.xml', 'tests/', '*.zip', '.DS_Store', 'Thumbs.db'];
-
-// Run the script
-if (require.main === module) {
-  createProductionZip().catch(console.error);
-}
-
-module.exports = { createProductionZip };
 // Files and directories to exclude from production
 const excludeFromProduction = ['node_modules/', 'src/', 'scripts/', 'dist/', '.git/', '.gitignore', '.gitattributes', 'package.json', 'package-lock.json', 'vite.config.js', 'postcss.config.js', '.env', '.env.example', 'composer.json', 'composer.lock', 'phpunit.xml', 'tests/', '*.zip', '.DS_Store', 'Thumbs.db'];
 
