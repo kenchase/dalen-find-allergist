@@ -44,7 +44,8 @@ document.addEventListener('DOMContentLoaded', function () {
 function initializeApp() {
   // Cache DOM elements to avoid repeated queries
   AppState.elements = {
-    form: document.getElementById('allergist-search-form'),
+    formSection: document.getElementById('fa-search'),
+    form: document.getElementById('fa-search-form'),
     searchBtn: document.getElementById('btn-search'),
     clearBtn: document.getElementById('btn-clear'),
     results: document.getElementById('results'),
@@ -53,6 +54,11 @@ function initializeApp() {
     postalError: document.getElementById('postal-error'),
     rangeHelpText: document.getElementById('range-help-text'),
   };
+
+  // Find the first parent element with class "et_pb_section"
+  if (AppState.elements.formSection) {
+    AppState.elements.parentSection = AppState.elements.formSection.closest('.et_pb_section');
+  }
 
   bindEventHandlers();
   initializeRangeFieldState();
@@ -141,6 +147,9 @@ function clearForm() {
 
   // Reset range field state
   toggleRangeField();
+
+  // Show parent section when clearing form
+  showParentSection();
 }
 
 /**
@@ -452,10 +461,15 @@ function getOrganizationsWithMarkers(results) {
  * @param {boolean} isNewSearch - Whether this is a new search (requires map initialization)
  */
 function renderPaginatedResults(page, isNewSearch = false) {
+  // Hide parent section when showing results
+  if (isNewSearch) {
+    hideParentSection();
+  }
+
   if (!Array.isArray(AppState.allSearchResults) || AppState.allSearchResults.length === 0) {
     if (isNewSearch) {
       // For new searches, set up the complete structure even with no results
-      const fullResultParts = ['<div id="allergist-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px; display: none;"></div>', '<div id="search-results-content"><p>No matches found.</p></div>'];
+      const fullResultParts = ['<div id="far-map" class="far-map"></div>', '<div id="far-content"><p>No matches found.</p></div>'];
       setResultsHTML(fullResultParts.join(''));
     } else {
       // For pagination, just update the content area
@@ -477,7 +491,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
   // For new searches, ensure we have a map container
   if (isNewSearch) {
     // Create the complete layout with map container
-    const fullResultParts = ['<div id="allergist-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px;"></div>', '<div id="search-results-content"></div>'];
+    const fullResultParts = ['<div id="far-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px;"></div>', '<div id="far-content" class="far-content"></div>'];
     setResultsHTML(fullResultParts.join(''));
   }
 
@@ -535,7 +549,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
  * @param {Array} results - Array of search results containing organizations
  */
 function initializeMap(results) {
-  const mapContainer = document.getElementById('allergist-map');
+  const mapContainer = document.getElementById('far-map');
   if (!mapContainer || !window.google) {
     return;
   }
@@ -885,7 +899,7 @@ function isValidPostalCode(postalCode) {
  * Basic helper to set results container HTML
  */
 function setResultsHTML(html) {
-  const container = document.getElementById('results');
+  const container = document.getElementById('far-section');
   if (container) container.innerHTML = html;
 }
 
@@ -893,7 +907,7 @@ function setResultsHTML(html) {
  * Helper to set search results content HTML (for pagination updates)
  */
 function setSearchResultsContentHTML(html) {
-  const container = document.getElementById('search-results-content');
+  const container = document.getElementById('far-content');
   if (container) {
     container.innerHTML = html;
   } else {
@@ -990,7 +1004,7 @@ function showMarkerOnMap(orgId) {
   google.maps.event.trigger(marker, 'click');
 
   // Scroll to the map for better user experience
-  const mapContainer = document.getElementById('allergist-map');
+  const mapContainer = document.getElementById('far-map');
   if (mapContainer) {
     mapContainer.scrollIntoView({
       behavior: 'smooth',
@@ -1168,4 +1182,24 @@ function validateForm() {
   }
 
   return isValid;
+}
+
+/**
+ * Hide the parent section (form section)
+ */
+function hideParentSection() {
+  const { parentSection } = AppState.elements;
+  if (parentSection) {
+    parentSection.style.display = 'none';
+  }
+}
+
+/**
+ * Show the parent section (form section)
+ */
+function showParentSection() {
+  const { parentSection } = AppState.elements;
+  if (parentSection) {
+    parentSection.style.display = '';
+  }
 }

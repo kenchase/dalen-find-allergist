@@ -52,7 +52,7 @@
 
 /*** Search Form ***/
 
-.allergist-search {
+.fa-search {
   --color-opacity: 0.75;
   background-color: rgb(var(--blue-500) / var(--color-opacity));
   border-radius: var(--rounded-lg);
@@ -61,14 +61,14 @@
   padding: var(--spacing-20);
 }
 
-.allergist-search-intro {
+.fa-search-intro {
   text-align: center;
   margin-bottom: var(--spacing-8);
   font-size: var(--text-lg);
   color: var(--white);
 }
 
-.allergist-search-intro__title {
+.fa-search-intro__title {
   color: rgb(var(--blue-700));
   font-size: var(--text-5xl);
   font-weight: 500;
@@ -76,20 +76,20 @@
   padding: 0;
 }
 
-.allergist-search-intro__text {
+.fa-search-intro__text {
   font-size: var(--text-3xl);
   margin: 0 auto;
   max-width: 600px;
 }
 
-.allergist-search-form {
+.fa-search-form {
   display: grid;
   grid-template-columns: 1fr; /* Add this for 2 columns on mobile */
   gap: var(--spacing-4);
 }
 
-.allergist-search-form input,
-.allergist-search-form select {
+.fa-search-form input,
+.fa-search-form select {
   width: 100%;
   padding: var(--spacing-2) var(--spacing-4);
   border: 1px solid var(--gray-300);
@@ -98,26 +98,26 @@
   transition: var(--transition-all);
 }
 
-.allergist-search-form ::placeholder {
+.fa-search-form ::placeholder {
   color: rgb(var(--blue-500) / var(--color-opacity));
   font-weight: 600;
 }
 
-.allergist-search-form .form-field__label {
+.fa-search-form .fa-form-field__label {
   display: block;
   font-weight: 600;
   margin-bottom: 0;
   color: var(--white);
 }
 
-.allergist-search-form .form-actions {
+.fa-search-form .form-actions {
   display: flex;
   gap: var(--spacing-2);
   flex-direction: column;
   margin-top: var(--spacing-2);
 }
 
-.allergist-search-form .form-actions_btn {
+.fa-search-form .form-actions_btn {
   --color-opacity: 0.75;
   width: 100%;
   background-color: rgb(var(--blue-700) / var(--color-opacity));
@@ -130,27 +130,45 @@
   transition: var(--transition-bg);
 }
 
-.allergist-search-form .form-actions_btn-primary {
+.fa-search-form .form-actions_btn-primary {
   --color-opacity: 0.75;
   background-color: rgb(var(--blue-700) / var(--color-opacity));
 }
 
-.allergist-search-form .form-actions_btn-secondary {
+.fa-search-form .form-actions_btn-secondary {
   background-color: transparent;
 }
 
 /* Responsive layout for larger screens */
 
 @media (min-width: 768px) {
-  .allergist-search-form {
+  .fa-search-form {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .allergist-search-form .form-actions {
+  .fa-search-form .form-actions {
     grid-column: 2 / 3;
   }
 }
 
-/*** Search Results ***/
+/*** Search Results (far = Find Allergist Results) ***/
+
+.far-section {
+}
+
+.far-map {
+  width: 100%;
+  height: 400px;
+  margin-bottom: 2rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  display: none;
+}
+
+.far-content {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-4);
+}
 
 .far-items {
   display: grid;
