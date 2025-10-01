@@ -496,8 +496,11 @@ function renderPaginatedResults(page, isNewSearch = false) {
   }
 
   // Build the paginated content (without map container)
-  const resultParts = [`<div class="search-results-info">`, `<p>Found ${totalResults} result${totalResults === 1 ? '' : 's'}${totalResults > RESULTS_PER_PAGE ? ` - showing ${startIndex + 1} to ${endIndex}` : ''}</p>`, `</div>`];
-
+  const resultParts = [];
+  resultParts.push(`<div class="fa-res-head">`);
+  resultParts.push(`<div class="fa-res-head__item fa-res-head__start-over"><a href="#" id="fa-res-head__start-over-link">Back to Search</a></div>`);
+  resultParts.push(`<div class="fa-res-head__item fa-res-head__info">`, `<p>Found ${totalResults} result${totalResults === 1 ? '' : 's'}${totalResults > RESULTS_PER_PAGE ? ` - showing ${startIndex + 1} to ${endIndex}` : ''}</p>`);
+  resultParts.push(`</div>`);
   // Add pagination controls at the top if there are multiple pages
   if (totalPages > 1) {
     const prevPage = page > 1 ? page - 1 : null;
@@ -505,7 +508,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
     resultParts.push(generatePaginationHTML(page, totalPages, prevPage, nextPage));
   }
 
-  resultParts.push('<div class="fa-res-items">');
+  resultParts.push(`<div class="fa-res-items">`);
 
   for (const item of currentPageResults) {
     const city = item.acf?.city || '';
@@ -1044,11 +1047,53 @@ function handleDocumentClick(event) {
     }
   }
 
+  // Handle "Back to Search" link clicks
+  if (event.target.id === 'fa-res-head__start-over-link') {
+    event.preventDefault();
+    handleStartOver();
+  }
+
   // Handle "View More" button clicks
   if (event.target.classList.contains('fa-res-org-view-more')) {
     event.preventDefault();
     toggleOrgDetails(event.target);
   }
+}
+
+/**
+ * Handle start over process - reset form and show search with loading transition
+ */
+function handleStartOver() {
+  // Show loading overlay
+  showLoadingOverlay();
+
+  // Clean up map resources
+  cleanupMap();
+
+  // Reset all state
+  AppState.currentSearchData = null;
+  AppState.currentPage = 1;
+  AppState.allSearchResults = [];
+
+  // Clear results
+  setResultsHTML('');
+
+  // Show parent section (search form)
+  showParentSection();
+
+  // Hide loading overlay after a brief delay to show transition
+  setTimeout(() => {
+    hideLoadingOverlay();
+
+    // Scroll to search form
+    const { formSection } = AppState.elements;
+    if (formSection) {
+      formSection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  }, 500);
 }
 
 /**
