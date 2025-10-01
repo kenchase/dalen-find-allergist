@@ -243,92 +243,94 @@ function clearPostalValidation() {
 }
 
 /**
- * Cleanup function for preventing memory leaks
+ * Show loading overlay with spinner
  */
-function cleanup() {
-  // Clear any pending timeouts
-  if (AppState.validationTimeout) {
-    clearTimeout(AppState.validationTimeout);
-    AppState.validationTimeout = null;
+function showLoadingOverlay() {
+  // Remove existing overlay if present
+  hideLoadingOverlay();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'search-loading-overlay';
+  overlay.innerHTML = `
+    <div class="search-loading-content">
+      <div class="search-spinner"></div>
+      <p>Searching for allergists...</p>
+    </div>
+  `;
+
+  // Add CSS styles
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(2px);
+  `;
+
+  const content = overlay.querySelector('.search-loading-content');
+  content.style.cssText = `
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+  `;
+
+  const spinner = overlay.querySelector('.search-spinner');
+  spinner.style.cssText = `
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007cba;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem auto;
+  `;
+
+  // Add CSS animation
+  if (!document.getElementById('search-spinner-styles')) {
+    const style = document.createElement('style');
+    style.id = 'search-spinner-styles';
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
   }
 
-  // Abort any pending requests
-  if (AppState.searchController) {
-    AppState.searchController.abort();
-    AppState.searchController = null;
-  }
-}
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', cleanup);
-
-/**
- * Toggle the range field based on postal code input
- */
-function toggleRangeField() {
-  const { postalInput, rangeSelect } = AppState.elements;
-
-  if (!postalInput || !rangeSelect) {
-    console.warn('toggleRangeField: Required elements not found');
-    return;
-  }
-
-  const postalValue = postalInput.value.trim();
-  const hasValidPostalCode = postalValue.length > 0 && isValidPostalCode(postalValue);
-
-  if (hasValidPostalCode) {
-    rangeSelect.disabled = false;
-    rangeSelect.removeAttribute('disabled');
-
-    // If there's a container element, update its styling too
-    const container = rangeSelect.closest('.form-group, .field-container') || rangeSelect.parentElement;
-    if (container) {
-      container.classList.remove('disabled');
-      container.style.opacity = '1';
-      container.style.pointerEvents = 'auto';
-    }
-
-    // Hide help text when field is enabled
-    const { rangeHelpText } = AppState.elements;
-    if (rangeHelpText) {
-      rangeHelpText.style.display = 'none';
-    }
-  } else {
-    rangeSelect.disabled = true;
-    rangeSelect.setAttribute('disabled', 'disabled');
-
-    // If there's a container element, update its styling too
-    const container = rangeSelect.closest('.form-group, .field-container') || rangeSelect.parentElement;
-    if (container) {
-      container.classList.add('disabled');
-      container.style.opacity = '0.5';
-      container.style.pointerEvents = 'none';
-    }
-
-    // Show help text when field is disabled
-    const { rangeHelpText } = AppState.elements;
-    if (rangeHelpText) {
-      rangeHelpText.style.display = 'block';
-    }
-  }
+  document.body.appendChild(overlay);
 }
 
 /**
- * Validate the entire form before submission
+ * Hide loading overlay
  */
-function validateForm() {
-  const { postalInput } = AppState.elements;
-
-  let isValid = true;
-
-  // Validate postal code if provided
-  if (postalInput && postalInput.value.trim()) {
-    if (!validatePostalCode()) {
-      isValid = false;
-    }
+function hideLoadingOverlay() {
+  const overlay = document.getElementById('search-loading-overlay');
+  if (overlay) {
+    overlay.remove();
   }
+}
 
-  return isValid;
+/**
+ * Scroll to results container smoothly
+ */
+function scrollToResults() {
+  const resultsContainer = document.getElementById('results');
+  if (resultsContainer) {
+    resultsContainer.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }
 }
 
 /**
@@ -347,6 +349,9 @@ async function handleSearchSubmit(page = 1) {
   const isNewSearch = !AppState.currentSearchData || JSON.stringify(AppState.currentSearchData) !== JSON.stringify(formData);
 
   if (isNewSearch) {
+    // Show loading overlay for new searches
+    showLoadingOverlay();
+
     // Abort previous request if still pending
     if (AppState.searchController) {
       AppState.searchController.abort();
@@ -385,7 +390,14 @@ async function handleSearchSubmit(page = 1) {
       // Store all results for client-side pagination
       AppState.allSearchResults = data.results || [];
       renderPaginatedResults(1, true); // isNewSearch = true
+
+      // Hide overlay and scroll to results
+      hideLoadingOverlay();
+      setTimeout(() => scrollToResults(), 100);
     } catch (err) {
+      // Hide overlay on error
+      hideLoadingOverlay();
+
       // Don't show error for aborted requests
       if (err.name === 'AbortError') {
         return;
@@ -394,6 +406,9 @@ async function handleSearchSubmit(page = 1) {
       console.error('Search error:', err);
       setResultsHTML('<p role="alert">Sorry, something went wrong. Please try again.</p>');
       AppState.allSearchResults = [];
+
+      // Still scroll to results to show error
+      setTimeout(() => scrollToResults(), 100);
     } finally {
       AppState.searchController = null;
     }
@@ -1061,4 +1076,96 @@ function escapeHTML(str) {
 
   // Use a more efficient approach with replace chain
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+/**
+ * Cleanup function for preventing memory leaks
+ */
+function cleanup() {
+  // Clear any pending timeouts
+  if (AppState.validationTimeout) {
+    clearTimeout(AppState.validationTimeout);
+    AppState.validationTimeout = null;
+  }
+
+  // Abort any pending requests
+  if (AppState.searchController) {
+    AppState.searchController.abort();
+    AppState.searchController = null;
+  }
+
+  // Hide loading overlay
+  hideLoadingOverlay();
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', cleanup);
+
+/**
+ * Toggle the range field based on postal code input
+ */
+function toggleRangeField() {
+  const { postalInput, rangeSelect } = AppState.elements;
+
+  if (!postalInput || !rangeSelect) {
+    console.warn('toggleRangeField: Required elements not found');
+    return;
+  }
+
+  const postalValue = postalInput.value.trim();
+  const hasValidPostalCode = postalValue.length > 0 && isValidPostalCode(postalValue);
+
+  if (hasValidPostalCode) {
+    rangeSelect.disabled = false;
+    rangeSelect.removeAttribute('disabled');
+
+    // If there's a container element, update its styling too
+    const container = rangeSelect.closest('.form-group, .field-container') || rangeSelect.parentElement;
+    if (container) {
+      container.classList.remove('disabled');
+      container.style.opacity = '1';
+      container.style.pointerEvents = 'auto';
+    }
+
+    // Hide help text when field is enabled
+    const { rangeHelpText } = AppState.elements;
+    if (rangeHelpText) {
+      rangeHelpText.style.display = 'none';
+    }
+  } else {
+    rangeSelect.disabled = true;
+    rangeSelect.setAttribute('disabled', 'disabled');
+
+    // If there's a container element, update its styling too
+    const container = rangeSelect.closest('.form-group, .field-container') || rangeSelect.parentElement;
+    if (container) {
+      container.classList.add('disabled');
+      container.style.opacity = '0.5';
+      container.style.pointerEvents = 'none';
+    }
+
+    // Show help text when field is disabled
+    const { rangeHelpText } = AppState.elements;
+    if (rangeHelpText) {
+      rangeHelpText.style.display = 'block';
+    }
+  }
+}
+
+/**
+ * Validate the entire form before submission
+ */
+function validateForm() {
+  const { postalInput } = AppState.elements;
+
+  let isValid = true;
+
+  // Validate postal code if provided
+  if (postalInput && postalInput.value.trim()) {
+    if (!validatePostalCode()) {
+      isValid = false;
+    }
+  }
+
+  return isValid;
 }
