@@ -19,7 +19,7 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
      */
     protected function init()
     {
-        add_shortcode('acf-form', [$this, 'render']);
+        add_shortcode('acf-allergist-form', [$this, 'render']);
     }
 
     /**
@@ -73,7 +73,7 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
             'post_title'    => false,
             'post_content'  => false,
             'submit_value'  => __('Update Profile', 'dalen-find-allergist'),
-        ], $atts, 'acf-form');
+        ], $atts, 'acf-allergist-form');
 
 
         // Call ACF form functions if the current user can edit the post
