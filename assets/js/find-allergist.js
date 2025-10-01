@@ -456,6 +456,33 @@ function getOrganizationsWithMarkers(results) {
 }
 
 /**
+ * Generate results header with pagination info and controls
+ * @param {number} totalResults - Total number of results
+ * @param {number} startIndex - Start index for current page
+ * @param {number} endIndex - End index for current page
+ * @param {number} page - Current page number
+ * @param {number} totalPages - Total number of pages
+ * @returns {string} HTML string for results header
+ */
+function generateResultsNav(totalResults, startIndex, endIndex, page, totalPages) {
+  const resultParts = [];
+
+  resultParts.push(`<div class="fa-res-head__item fa-res-start-over"><a href="#" id="fa-res-head__start-over-link">Back to Search</a></div>`);
+  resultParts.push(`<div class="fa-res-head__item fa-res-pagination-info">`, `<p>Found ${totalResults} result${totalResults === 1 ? '' : 's'}${totalResults > RESULTS_PER_PAGE ? ` - showing ${startIndex + 1} to ${endIndex}` : ''}</p></div>`);
+
+  // Add pagination controls if there are multiple pages
+  if (totalPages > 1) {
+    const prevPage = page > 1 ? page - 1 : null;
+    const nextPage = page < totalPages ? page + 1 : null;
+    resultParts.push(`<div class="fa-res-head__item fa-res-pagination">`);
+    resultParts.push(generatePaginationHTML(page, totalPages, prevPage, nextPage));
+    resultParts.push(`</div>`);
+  }
+
+  return resultParts.join('');
+}
+
+/**
  * Render paginated results using client-side pagination
  * @param {number} page - Page number to render
  * @param {boolean} isNewSearch - Whether this is a new search (requires map initialization)
@@ -497,19 +524,12 @@ function renderPaginatedResults(page, isNewSearch = false) {
 
   // Build the paginated content (without map container)
   const resultParts = [];
-  resultParts.push(`<div class="fa-res-head">`);
-  resultParts.push(`<div class="fa-res-head__item fa-res-start-over"><a href="#" id="fa-res-head__start-over-link">Back to Search</a></div>`);
-  resultParts.push(`<div class="fa-res-head__item fa-res-pagination-info">`, `<p>Found ${totalResults} result${totalResults === 1 ? '' : 's'}${totalResults > RESULTS_PER_PAGE ? ` - showing ${startIndex + 1} to ${endIndex}` : ''}</p></div>`);
 
-  // Add pagination controls at the top if there are multiple pages
-  if (totalPages > 1) {
-    const prevPage = page > 1 ? page - 1 : null;
-    const nextPage = page < totalPages ? page + 1 : null;
-    resultParts.push(`<div class="fa-res-head__item fa-res-pagination">`);
-    resultParts.push(generatePaginationHTML(page, totalPages, prevPage, nextPage));
-    resultParts.push(`</div>`);
-  }
+  // Add header at the top
+  resultParts.push(`<div class="fa-res-head">`);
+  resultParts.push(generateResultsNav(totalResults, startIndex, endIndex, page, totalPages));
   resultParts.push(`</div>`);
+
   resultParts.push(`<div class="fa-res-items">`);
 
   for (const item of currentPageResults) {
@@ -534,12 +554,10 @@ function renderPaginatedResults(page, isNewSearch = false) {
 
   resultParts.push('</div>');
 
-  // Add pagination controls at the bottom if there are multiple pages
-  if (totalPages > 1) {
-    const prevPage = page > 1 ? page - 1 : null;
-    const nextPage = page < totalPages ? page + 1 : null;
-    resultParts.push(generatePaginationHTML(page, totalPages, prevPage, nextPage));
-  }
+  // Add header at the bottom
+  resultParts.push(`<div class="fa-res-footer">`);
+  resultParts.push(generateResultsNav(totalResults, startIndex, endIndex, page, totalPages));
+  resultParts.push(`</div>`);
 
   setSearchResultsContentHTML(resultParts.join(''));
 
