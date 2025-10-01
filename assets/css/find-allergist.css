@@ -296,7 +296,7 @@
 
 /* Add a line break for labels that need it */
 
-.fa-res-org__body-grid-item-label-lb {
+.fa-res-org__body-grid-item-label--lb {
   display: block;
 }
 

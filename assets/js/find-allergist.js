@@ -847,7 +847,7 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
       parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Treatment Services Offered:</span> <ul class="fa-res-org__body-grid-item_list">${treatmentServicesList}</ul></div>`);
     }
     if (treatmentServicesOfferedOther) {
-      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Special Areas of Interest:</span> ${escapeHTML(treatmentServicesOfferedOther)}</div>`);
+      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Other areas of special interest unique to your practice:</span> ${escapeHTML(treatmentServicesOfferedOther)}</div>`);
     }
     parts.push(`</div>`);
 
