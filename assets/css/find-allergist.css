@@ -52,7 +52,7 @@
 
 /*** Search Form ***/
 
-.fa-search {
+.fa-search-wrap {
   --color-opacity: 0.75;
   background-color: rgb(var(--blue-500) / var(--color-opacity));
   border-radius: var(--rounded-lg);

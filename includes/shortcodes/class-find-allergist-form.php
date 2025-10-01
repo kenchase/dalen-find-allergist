@@ -67,7 +67,7 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
     {
 ?>
         <!-- Search Form -->
-        <div id="fa-search" class="fa-search">
+        <div id="fa-search" class="fa-search-wrap">
             <div class="fa-search-intro">
                 <h1 class="fa-search-intro__title"><?php echo esc_html(get_option('dalen_search_form_title', 'Find An Allergist')); ?></h1>
                 <div class="fa-search-intro__text">
