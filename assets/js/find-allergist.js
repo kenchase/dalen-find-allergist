@@ -498,16 +498,18 @@ function renderPaginatedResults(page, isNewSearch = false) {
   // Build the paginated content (without map container)
   const resultParts = [];
   resultParts.push(`<div class="fa-res-head">`);
-  resultParts.push(`<div class="fa-res-head__item fa-res-head__start-over"><a href="#" id="fa-res-head__start-over-link">Back to Search</a></div>`);
-  resultParts.push(`<div class="fa-res-head__item fa-res-head__info">`, `<p>Found ${totalResults} result${totalResults === 1 ? '' : 's'}${totalResults > RESULTS_PER_PAGE ? ` - showing ${startIndex + 1} to ${endIndex}` : ''}</p>`);
-  resultParts.push(`</div>`);
+  resultParts.push(`<div class="fa-res-head__item fa-res-start-over"><a href="#" id="fa-res-head__start-over-link">Back to Search</a></div>`);
+  resultParts.push(`<div class="fa-res-head__item fa-res-pagination-info">`, `<p>Found ${totalResults} result${totalResults === 1 ? '' : 's'}${totalResults > RESULTS_PER_PAGE ? ` - showing ${startIndex + 1} to ${endIndex}` : ''}</p></div>`);
+
   // Add pagination controls at the top if there are multiple pages
   if (totalPages > 1) {
     const prevPage = page > 1 ? page - 1 : null;
     const nextPage = page < totalPages ? page + 1 : null;
+    resultParts.push(`<div class="fa-res-head__item fa-res-pagination">`);
     resultParts.push(generatePaginationHTML(page, totalPages, prevPage, nextPage));
+    resultParts.push(`</div>`);
   }
-
+  resultParts.push(`</div>`);
   resultParts.push(`<div class="fa-res-items">`);
 
   for (const item of currentPageResults) {
@@ -932,13 +934,13 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
 
   // Previous page button
   if (prevPage) {
-    paginationParts.push(`<button type="button" class="fa-res-pagination-btn" data-page="${prevPage}">← Previous</button>`);
+    paginationParts.push(`<button type="button" class="fa-res-pagination-btn" data-page="${prevPage}">← Prev</button>`);
   } else {
-    paginationParts.push(`<button type="button" class="fa-res-pagination-btn disabled" disabled>← Previous</button>`);
+    paginationParts.push(`<button type="button" class="fa-res-pagination-btn disabled" disabled>← Prev</button>`);
   }
 
   // Page numbers
-  paginationParts.push('<span class="fa-res-pagination-info">');
+  paginationParts.push('<span class="fa-res-pagination-numbers">');
 
   // Show page numbers with ellipsis for large page counts
   const maxVisible = 5;

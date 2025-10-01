@@ -152,14 +152,76 @@
 
 /*** Search Results (fa-res = Find Allergist Results) ***/
 
-.fa-res-section {
-}
+/* Search Results - Map */
 
 .fa-res-map {
   width: 100%;
   height: 400px;
   margin-bottom: 2rem;
 }
+
+/* Search Results - Header */
+
+.fa-res-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.fa-res-start-over {
+}
+
+.fa-res-pagination-info {
+  text-align: center;
+}
+
+/* Pagination  */
+
+.fa-res-pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.fa-res-pagination-btn {
+  background-color: rgb(var(--blue-500) / var(--color-opacity));
+  color: var(--white);
+  border: none;
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--rounded);
+  font-size: var(--text-lg);
+  cursor: pointer;
+  transition: var(--transition-bg);
+}
+
+.fa-respagination-btn.current {
+  background-color: rgb(var(--blue-700) / var(--color-opacity));
+}
+
+.pagination-btn.disabled {
+  --color-opacity: 0.5;
+  background-color: rgb(var(--blue-500) / var(--color-opacity));
+  cursor: not-allowed;
+}
+
+.fa-res-pagination-ellipsis {
+  padding: var(--spacing-2) var(--spacing-1);
+  color: var(--gray-500);
+}
+
+.fa-res-pagination-numbers {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+/* Search Results - Content */
 
 .fa-res-content {
   max-width: 1080px;
@@ -238,7 +300,6 @@
   display: block;
 }
 
-#page-container .fa-res-org-title,
 .fa-res-org-title {
   font-size: var(--text-base);
   font-weight: normal;
@@ -246,20 +307,18 @@
   padding: 0;
   line-height: 1.1em;
 }
-#page-container .fa-res-org-address,
+
 .fa-res-org-address {
   margin: 0;
   padding: 0;
   line-height: 1em;
 }
 
-#page-container .fa-res-org-,
 .fa-res-org-phone {
   margin: 0;
   padding: 0;
 }
 
-#page-container .fa-res-org-view-more,
 .fa-res-org-view-more {
   background: none;
   border: none;
@@ -272,24 +331,21 @@
   line-height: 1.1em;
 }
 
-#page-container .fa-res-org-list-item--map-link,
 .fa-res-org-list-item--map-link {
   margin-top: var(--spacing-4);
 }
 
-#page-container .fa-res-physician-info,
 .fa-res-physician-info {
   margin-bottom: var(--spacing-3);
 }
 
-#page-container .fa-res-physician-name,
 .fa-res-physician-name {
   font-size: var(--text-2xl);
   font-weight: bold;
 }
 
 /* Distance Display */
-#page-container .fa-res-distance,
+
 .fa-res-distance {
   font-size: var(--text-base);
   color: var(--red-600);
@@ -301,23 +357,21 @@
   display: inline-block;
 }
 
-#page-container .fa-res-org-info,
 .fa-res-org-info {
   border-top: 1px solid var(--gray-200);
   padding-top: var(--spacing-2);
 }
 
 /* View on Map Link */
-#page-container .fa-res-view-map,
+
 .fa-res-view-map {
   margin-top: var(--spacing-2);
 }
 
-#page-container .fa-res-map-link,
 .fa-res-map-link {
   display: inline-block;
   padding: var(--spacing-1) var(--spacing-2);
-  background-color: var(--blue-600);
+  background-color: var(--blue-500);
   color: var(--white) !important;
   text-decoration: none;
   border-radius: var(--rounded);
@@ -325,36 +379,24 @@
   transition: var(--transition-bg);
 }
 
-#page-container .fa-res-map-link:hover,
 .fa-res-map-link:hover {
   background-color: var(--blue-700);
   text-decoration: none;
   color: var(--white) !important;
 }
 
-/* Google Map Styles */
-#page-container #allergist-map,
-#allergist-map {
-  width: 100%;
-  height: 400px;
-  margin-bottom: 2rem;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--rounded-lg);
-  background-color: var(--gray-100);
-}
-
 /* Map Info Window Styles */
 .map-info-window h4 {
   margin: 0 0 var(--spacing-2) 0;
-  color: var(--blue-600);
+  color: tgb(var(--blue-500));
   font-size: var(--text-lg);
   font-weight: bold;
 }
 
 .map-info-window p {
-  margin: var(--spacing-1) 0;
+  margin: 0;
   font-size: var(--text-base);
-  line-height: 1.4;
+  line-height: 1.1em;
 }
 
 .map-info-window strong {
@@ -366,83 +408,8 @@
   font-style: italic;
 }
 
-/* Pagination Styles */
-#page-container .pagination-container,
-.pagination-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--spacing-2);
-  margin: var(--spacing-6) 0;
-  padding: var(--spacing-4) 0;
-}
-
-#page-container .pagination-btn,
-.pagination-btn {
-  padding: var(--spacing-2) var(--spacing-4);
-  border: 1px solid var(--blue-600);
-  background-color: var(--white);
-  color: var(--blue-600);
-  cursor: pointer;
-  border-radius: var(--rounded);
-  font-size: var(--text-base);
-  transition: var(--transition-all);
-  min-width: 44px;
-  text-align: center;
-}
-
-#page-container .pagination-btn:hover:not(.disabled):not(.current),
-.pagination-btn:hover:not(.disabled):not(.current) {
-  background-color: var(--blue-600);
-  color: var(--white);
-}
-
-#page-container .pagination-btn.current,
-.pagination-btn.current {
-  background-color: var(--blue-600);
-  color: var(--white);
-  font-weight: bold;
-}
-
-#page-container .pagination-btn.disabled,
-.pagination-btn.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  color: var(--gray-400);
-  border-color: var(--gray-300);
-}
-
-#page-container .pagination-info,
-.pagination-info {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-1);
-}
-
-#page-container .pagination-ellipsis,
-.pagination-ellipsis {
-  padding: var(--spacing-2) var(--spacing-1);
-  color: var(--gray-500);
-}
-
-#page-container .search-results-info,
-.search-results-info {
-  margin-bottom: var(--spacing-4);
-  padding: var(--spacing-3);
-  background-color: var(--blue-50);
-  border: 1px solid var(--blue-600);
-  border-radius: var(--rounded);
-}
-
-#page-container .search-results-info p,
-.search-results-info p {
-  margin: 0;
-  color: var(--gray-700);
-  font-weight: 500;
-}
-
 /* Postal code validation styles */
-#page-container .field-error,
+
 .field-error {
   color: var(--red-600);
   font-size: var(--text-sm);
@@ -450,13 +417,12 @@
   display: none;
 }
 
-#page-container .field-error.show,
 .field-error.show {
   display: block;
 }
 
 /* Help text styles */
-#page-container .field-help-text,
+
 .field-help-text {
   color: var(--gray-500);
   font-size: var(--text-xs);
@@ -465,91 +431,64 @@
   line-height: 1.3;
 }
 
-#page-container input.error,
 input.error {
   border-color: var(--red-600);
   box-shadow: 0 0 0 1px var(--red-600);
 }
 
-#page-container input.error:focus,
 input.error:focus {
   outline: 2px solid var(--red-600);
   outline-offset: 2px;
 }
 
-#page-container input.valid,
 input.valid {
   border-color: #10b981;
   box-shadow: 0 0 0 1px #10b981;
 }
 
-#page-container input.valid:focus,
 input.valid:focus {
   outline: 2px solid #10b981;
   outline-offset: 2px;
 }
 
 /* Enhanced focus states for accessibility */
-#page-container input:focus,
+
 input:focus,
-#page-container select:focus,
 select:focus {
-  outline: 2px solid var(--blue-600);
+  outline: 2px solid var(--blue-500);
   outline-offset: 2px;
 }
 
-#page-container select:disabled:focus,
 select:disabled:focus {
   outline: none;
 }
 
 /* Range field disabled state styles */
-#page-container #range-field-container,
+
 #range-field-container {
   transition: opacity 0.3s ease, pointer-events 0.3s ease;
 }
 
-#page-container #range-field-container.disabled,
 #range-field-container.disabled {
   opacity: 0.5;
   pointer-events: none;
 }
 
-#page-container #range-field-container.disabled .field-help-text,
 #range-field-container.disabled .field-help-text {
   opacity: 1; /* Keep help text fully visible when disabled */
   color: var(--gray-600); /* Slightly darker when disabled for better readability */
 }
 
-#page-container #range-field-container select:disabled,
 #range-field-container select:disabled {
   background-color: var(--gray-100);
   color: var(--gray-500);
   cursor: not-allowed;
 }
 
-#page-container #range-field-container label,
 #range-field-container label {
   transition: color 0.3s ease;
 }
 
-#page-container #range-field-container.disabled label,
 #range-field-container.disabled label {
   color: var(--gray-500);
-}
-
-/* Responsive pagination for mobile */
-@media (max-width: 768px) {
-  #page-container .fa-res-pagination-container,
-  .fa-res-pagination-container {
-    flex-wrap: wrap;
-    gap: var(--spacing-1);
-  }
-
-  #page-container .fa-res-pagination-btn,
-  .fa-res-pagination-btn {
-    padding: 0.4rem 0.7rem;
-    font-size: var(--text-xs);
-    min-width: 36px;
-  }
 }
