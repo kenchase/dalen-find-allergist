@@ -150,32 +150,29 @@
   }
 }
 
-/*** Search Results (far = Find Allergist Results) ***/
+/*** Search Results (fa-res = Find Allergist Results) ***/
 
-.far-section {
+.fa-res-section {
 }
 
-.far-map {
+.fa-res-map {
   width: 100%;
   height: 400px;
   margin-bottom: 2rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  display: none;
 }
 
-.far-content {
+.fa-res-content {
   max-width: 1080px;
   margin: 0 auto;
   padding: 0 var(--spacing-4);
 }
 
-.far-items {
+.fa-res-items {
   display: grid;
   gap: var(--spacing-4);
 }
 
-.far-item {
+.fa-res-item {
   margin-bottom: var(--spacing-2);
   padding: var(--spacing-6);
   border: 1px solid var(--gray-300);
@@ -183,17 +180,17 @@
   background-color: var(--neutral-50);
 }
 
-.far-orgs {
+.fa-res-orgs {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
 }
-.far-org {
+.fa-res-org {
   font-size: var(--text-base);
   color: var(--gray-800);
 }
 
-.far-org__summary {
+.fa-res-org__summary {
   display: grid;
   gap: var(--spacing-4);
   grid-template-columns: 1fr;
@@ -202,7 +199,7 @@
   }
 }
 
-.far-org__body {
+.fa-res-org__body {
   display: grid;
   gap: var(--spacing-4);
   grid-template-columns: 1fr;
@@ -212,7 +209,7 @@
   }
 }
 
-.far-org__body--hidden {
+.fa-res-org__body--hidden {
   visibility: hidden;
   height: 0;
   margin: 0;
@@ -221,49 +218,49 @@
 }
 
 /* Add spacing between items in a grid cell that need it */
-.far-org__body-grid-cell--spacer div {
+.fa-res-org__body-grid-cell--spacer div {
   margin-top: var(--spacing-4);
 }
 
-.far-org__body-grid-item {
+.fa-res-org__body-grid-item {
   margin: 0;
   padding: 0;
   line-height: 1.25em;
 }
 
-.far-org__body-grid-item-label {
+.fa-res-org__body-grid-item-label {
   font-weight: bold;
 }
 
 /* Add a line break for labels that need it */
 
-.far-org__body-grid-item-label-lb {
+.fa-res-org__body-grid-item-label-lb {
   display: block;
 }
 
-#page-container .far-org-title,
-.far-org-title {
+#page-container .fa-res-org-title,
+.fa-res-org-title {
   font-size: var(--text-base);
   font-weight: normal;
   margin: 0;
   padding: 0;
   line-height: 1.1em;
 }
-#page-container .far-org-address,
-.far-org-address {
+#page-container .fa-res-org-address,
+.fa-res-org-address {
   margin: 0;
   padding: 0;
   line-height: 1em;
 }
 
-#page-container .far-org-,
-.far-org-phone {
+#page-container .fa-res-org-,
+.fa-res-org-phone {
   margin: 0;
   padding: 0;
 }
 
-#page-container .far-org-view-more,
-.far-org-view-more {
+#page-container .fa-res-org-view-more,
+.fa-res-org-view-more {
   background: none;
   border: none;
   padding: 0;
@@ -275,25 +272,25 @@
   line-height: 1.1em;
 }
 
-#page-container .far-org-list-item--map-link,
-.far-org-list-item--map-link {
+#page-container .fa-res-org-list-item--map-link,
+.fa-res-org-list-item--map-link {
   margin-top: var(--spacing-4);
 }
 
-#page-container .far-physician-info,
-.far-physician-info {
+#page-container .fa-res-physician-info,
+.fa-res-physician-info {
   margin-bottom: var(--spacing-3);
 }
 
-#page-container .far-physician-name,
-.far-physician-name {
+#page-container .fa-res-physician-name,
+.fa-res-physician-name {
   font-size: var(--text-2xl);
   font-weight: bold;
 }
 
 /* Distance Display */
-#page-container .far-distance,
-.far-distance {
+#page-container .fa-res-distance,
+.fa-res-distance {
   font-size: var(--text-base);
   color: var(--red-600);
   margin-top: var(--spacing-1);
@@ -304,20 +301,20 @@
   display: inline-block;
 }
 
-#page-container .far-org-info,
-.far-org-info {
+#page-container .fa-res-org-info,
+.fa-res-org-info {
   border-top: 1px solid var(--gray-200);
   padding-top: var(--spacing-2);
 }
 
 /* View on Map Link */
-#page-container .far-view-map,
-.far-view-map {
+#page-container .fa-res-view-map,
+.fa-res-view-map {
   margin-top: var(--spacing-2);
 }
 
-#page-container .far-map-link,
-.far-map-link {
+#page-container .fa-res-map-link,
+.fa-res-map-link {
   display: inline-block;
   padding: var(--spacing-1) var(--spacing-2);
   background-color: var(--blue-600);
@@ -328,8 +325,8 @@
   transition: var(--transition-bg);
 }
 
-#page-container .far-map-link:hover,
-.far-map-link:hover {
+#page-container .fa-res-map-link:hover,
+.fa-res-map-link:hover {
   background-color: var(--blue-700);
   text-decoration: none;
   color: var(--white) !important;

@@ -44,7 +44,7 @@ class Find_Allergist_Results_Shortcode extends Find_Allergist_Shortcode_Base
     {
 ?>
         <!-- Search Results -->
-        <div id="far-section" class="far-section"></div>
+        <div id="fa-res-section" class="fa-res-section"></div>
 <?php
     }
 }

@@ -469,7 +469,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
   if (!Array.isArray(AppState.allSearchResults) || AppState.allSearchResults.length === 0) {
     if (isNewSearch) {
       // For new searches, set up the complete structure even with no results
-      const fullResultParts = ['<div id="far-map" class="far-map"></div>', '<div id="far-content"><p>No matches found.</p></div>'];
+      const fullResultParts = ['<div id="fa-res-map" class="fa-res-map"></div>', '<div id="fa-res-content"><p>No matches found.</p></div>'];
       setResultsHTML(fullResultParts.join(''));
     } else {
       // For pagination, just update the content area
@@ -491,7 +491,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
   // For new searches, ensure we have a map container
   if (isNewSearch) {
     // Create the complete layout with map container
-    const fullResultParts = ['<div id="far-map" style="width: 100%; height: 400px; margin-bottom: 2rem; border: 1px solid #ddd; border-radius: 8px;"></div>', '<div id="far-content" class="far-content"></div>'];
+    const fullResultParts = ['<div id="fa-res-map" class="fa-res-map"></div>', '<div id="fa-res-content" class="fa-res-content"></div>'];
     setResultsHTML(fullResultParts.join(''));
   }
 
@@ -505,7 +505,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
     resultParts.push(generatePaginationHTML(page, totalPages, prevPage, nextPage));
   }
 
-  resultParts.push('<div class="far-items">');
+  resultParts.push('<div class="fa-res-items">');
 
   for (const item of currentPageResults) {
     const city = item.acf?.city || '';
@@ -523,7 +523,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
     const organizationsHTML = generateOrganizationsHTML(item.acf?.organizations_details, physicianInfo, orgIdsWithMarkers);
 
     if (organizationsHTML) {
-      resultParts.push(`<div class="far-item">${organizationsHTML}</div>`);
+      resultParts.push(`<div class="fa-res-item">${organizationsHTML}</div>`);
     }
   }
 
@@ -549,7 +549,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
  * @param {Array} results - Array of search results containing organizations
  */
 function initializeMap(results) {
-  const mapContainer = document.getElementById('far-map');
+  const mapContainer = document.getElementById('fa-res-map');
   if (!mapContainer || !window.google) {
     return;
   }
@@ -718,8 +718,8 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 
   // Physician header
   parts.push(`
-		<div class="far-physician-info">
-			<h3 class="far-physician-name">
+		<div class="fa-res-physician-info">
+			<h3 class="fa-res-physician-name">
 			  ${escapeHTML(physicianInfo.title)}
 				${physicianInfo.credentials ? `, ${escapeHTML(physicianInfo.credentials)}` : ''}
 			</h3>
@@ -727,7 +727,7 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 	`);
 
   // Organizations container
-  parts.push(`<div class="far-orgs">`);
+  parts.push(`<div class="fa-res-orgs">`);
 
   for (const org of organizations) {
     // Generate the same org ID used in map initialization
@@ -755,76 +755,76 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
     // Check if this organization will have a marker on the map
     const hasMapMarker = orgIdsWithMarkers.has(orgId);
 
-    parts.push(`<div class="far-org" id="${orgId}">`);
+    parts.push(`<div class="fa-res-org" id="${orgId}">`);
 
     // Org Summary section
-    parts.push(`<div class="far-org__summary">`);
-    parts.push(`<h4 class="far-org-title">${escapeHTML(orgName)}</h4>`);
+    parts.push(`<div class="fa-res-org__summary">`);
+    parts.push(`<h4 class="fa-res-org-title">${escapeHTML(orgName)}</h4>`);
 
-    parts.push(`<p class="far-org-address">`);
+    parts.push(`<p class="fa-res-org-address">`);
 
     if (address) {
-      parts.push(`<span class="far-org-address_street"> ${escapeHTML(address)}</span>`);
+      parts.push(`<span class="fa-res-org-address_street"> ${escapeHTML(address)}</span>`);
     }
 
     if (city || state) {
       const cityStateParts = [city, state].filter(Boolean);
-      parts.push(`<span class="far-org-address_city-state">, ${escapeHTML(cityStateParts.join(', '))}</span>`);
+      parts.push(`<span class="fa-res-org-address_city-state">, ${escapeHTML(cityStateParts.join(', '))}</span>`);
     }
 
     if (postalCode) {
-      parts.push(`<span class="far-org-address_postal">, ${escapeHTML(postalCode)}</span>`);
+      parts.push(`<span class="fa-res-org-address_postal">, ${escapeHTML(postalCode)}</span>`);
     }
 
     parts.push(`</p>`);
 
     if (phone) {
-      parts.push(`<p class="far-org-phone"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}</p>`);
+      parts.push(`<p class="fa-res-org-phone"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}</p>`);
     } else {
-      parts.push(`<p class="far-org-phone far-org-phone--no-phone">Not available</p>`);
+      parts.push(`<p class="fa-res-org-phone fa-res-org-phone--no-phone">Not available</p>`);
     }
 
-    parts.push(`<button class="far-org-view-more">View More</button>`);
+    parts.push(`<button class="fa-res-org-view-more">View More</button>`);
 
     parts.push(`</div>`); // Close org summary
 
     // Org Body section
-    parts.push(`<div class="far-org__body far-org__body--hidden">`);
+    parts.push(`<div class="fa-res-org__body fa-res-org__body--hidden">`);
 
     // Org Body section  Row 1
-    parts.push(`<div class="far-org__body-grid-cell">`);
+    parts.push(`<div class="fa-res-org__body-grid-cell">`);
     if (practiceSetting) {
-      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practice Setting(s):</span> ${escapeHTML(practiceSetting)}</div>`);
+      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label">Practice Setting(s):</span> ${escapeHTML(practiceSetting)}</div>`);
     }
     if (practicesOIT) {
-      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practices OIT:</span> ${escapeHTML(practicesOIT)}</div>`);
+      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label">Practices OIT:</span> ${escapeHTML(practicesOIT)}</div>`);
     }
     if (practicePopulation) {
-      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label">Practices Population:</span> ${escapeHTML(practicePopulation)}</div>`);
+      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label">Practices Population:</span> ${escapeHTML(practicePopulation)}</div>`);
     }
     parts.push(`</div>`);
-    parts.push(`<div class="far-org__body-grid-cell">`);
+    parts.push(`<div class="fa-res-org__body-grid-cell">`);
     if (specialAreasOfInterest) {
-      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label--lb">Special Areas of Interest:</span> ${escapeHTML(specialAreasOfInterest)}</div>`);
+      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Special Areas of Interest:</span> ${escapeHTML(specialAreasOfInterest)}</div>`);
     }
     parts.push(`</div>`);
 
     // Org Body section Row 2
-    parts.push(`<div class="far-org__body-grid-cell far-org__body-grid-cell--spacer">`);
+    parts.push(`<div class="fa-res-org__body-grid-cell fa-res-org__body-grid-cell--spacer">`);
     if (consultationServices && consultationServices.length > 0) {
-      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label--lb">Consultation Services:</span> ${escapeHTML(consultationServices.join(', '))}</div>`);
+      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Consultation Services:</span> ${escapeHTML(consultationServices.join(', '))}</div>`);
     }
     if (siteForClinicalTrials) {
-      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label--lb">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
+      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
     }
     parts.push(`</div>`);
-    parts.push(`<div class="far-org__body-grid-cell far-org__body-grid-cell--spacer">`);
+    parts.push(`<div class="fa-res-org__body-grid-cell fa-res-org__body-grid-cell--spacer">`);
     if (treatmentServicesOffered && treatmentServicesOffered.length > 0) {
-      const treatmentServicesList = treatmentServicesOffered.map((service) => `<li class="far-org__body-grid-item_list-item">${escapeHTML(service)}</li>`).join('');
-      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label--lb">Treatment Services Offered:</span> <ul class="far-org__body-grid-item_list">${treatmentServicesList}</ul></div>`);
+      const treatmentServicesList = treatmentServicesOffered.map((service) => `<li class="fa-res-org__body-grid-item_list-item">${escapeHTML(service)}</li>`).join('');
+      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Treatment Services Offered:</span> <ul class="fa-res-org__body-grid-item_list">${treatmentServicesList}</ul></div>`);
     }
     if (treatmentServicesOfferedOther) {
-      parts.push(`<div class="far-org__body-grid-item"><span class="far-org__body-grid-item-label far-org__body-grid-item-label--lb">Special Areas of Interest:</span> ${escapeHTML(treatmentServicesOfferedOther)}</div>`);
+      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Special Areas of Interest:</span> ${escapeHTML(treatmentServicesOfferedOther)}</div>`);
     }
     parts.push(`</div>`);
 
@@ -837,13 +837,13 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 
   // Don't know where to include this yet
   // if (distance !== undefined) {
-  //   parts.push(`<span class="far-org-list-item"><strong>Distance:</strong> ${distance} km</span>`);
+  //   parts.push(`<span class="fa-res-org-list-item"><strong>Distance:</strong> ${distance} km</span>`);
   // }
 
   // Don't know where to include this yet
   // Add "Show on map" link if this organization has a marker
   // if (hasMapMarker) {
-  //   parts.push(`<li class="far-org-list-item far-org-list-item--map-link"><a href="#" class="show-on-map-link" data-org-id="${orgId}">📍 Show on map</a></li>`);
+  //   parts.push(`<li class="fa-res-org-list-item fa-res-org-list-item--map-link"><a href="#" class="show-on-map-link" data-org-id="${orgId}">📍 Show on map</a></li>`);
   // }
 }
 
@@ -899,7 +899,7 @@ function isValidPostalCode(postalCode) {
  * Basic helper to set results container HTML
  */
 function setResultsHTML(html) {
-  const container = document.getElementById('far-section');
+  const container = document.getElementById('fa-res-section');
   if (container) container.innerHTML = html;
 }
 
@@ -907,7 +907,7 @@ function setResultsHTML(html) {
  * Helper to set search results content HTML (for pagination updates)
  */
 function setSearchResultsContentHTML(html) {
-  const container = document.getElementById('far-content');
+  const container = document.getElementById('fa-res-content');
   if (container) {
     container.innerHTML = html;
   } else {
@@ -1004,7 +1004,7 @@ function showMarkerOnMap(orgId) {
   google.maps.event.trigger(marker, 'click');
 
   // Scroll to the map for better user experience
-  const mapContainer = document.getElementById('far-map');
+  const mapContainer = document.getElementById('fa-res-map');
   if (mapContainer) {
     mapContainer.scrollIntoView({
       behavior: 'smooth',
@@ -1045,7 +1045,7 @@ function handleDocumentClick(event) {
   }
 
   // Handle "View More" button clicks
-  if (event.target.classList.contains('far-org-view-more')) {
+  if (event.target.classList.contains('fa-res-org-view-more')) {
     event.preventDefault();
     toggleOrgDetails(event.target);
   }
@@ -1057,27 +1057,27 @@ function handleDocumentClick(event) {
  */
 function toggleOrgDetails(button) {
   // Find the parent organization container
-  const orgContainer = button.closest('.far-org');
+  const orgContainer = button.closest('.fa-res-org');
   if (!orgContainer) {
     return;
   }
 
   // Find the organization body element
-  const orgBody = orgContainer.querySelector('.far-org__body');
+  const orgBody = orgContainer.querySelector('.fa-res-org__body');
   if (!orgBody) {
     return;
   }
 
   // Toggle the hidden class
-  const isCurrentlyHidden = orgBody.classList.contains('far-org__body--hidden');
+  const isCurrentlyHidden = orgBody.classList.contains('fa-res-org__body--hidden');
 
   if (isCurrentlyHidden) {
     // Show the content
-    orgBody.classList.remove('far-org__body--hidden');
+    orgBody.classList.remove('fa-res-org__body--hidden');
     button.textContent = 'View Less';
   } else {
     // Hide the content
-    orgBody.classList.add('far-org__body--hidden');
+    orgBody.classList.add('fa-res-org__body--hidden');
     button.textContent = 'View More';
   }
 }
