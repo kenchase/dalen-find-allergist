@@ -928,17 +928,17 @@ function setSearchResultsContentHTML(html) {
  * @returns {string} HTML string for pagination
  */
 function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
-  const paginationParts = ['<div class="pagination-container">'];
+  const paginationParts = ['<div class="fa-res-pagination-container">'];
 
   // Previous page button
   if (prevPage) {
-    paginationParts.push(`<button type="button" class="pagination-btn" data-page="${prevPage}">← Previous</button>`);
+    paginationParts.push(`<button type="button" class="fa-res-pagination-btn" data-page="${prevPage}">← Previous</button>`);
   } else {
-    paginationParts.push(`<button type="button" class="pagination-btn disabled" disabled>← Previous</button>`);
+    paginationParts.push(`<button type="button" class="fa-res-pagination-btn disabled" disabled>← Previous</button>`);
   }
 
   // Page numbers
-  paginationParts.push('<span class="pagination-info">');
+  paginationParts.push('<span class="fa-res-pagination-info">');
 
   // Show page numbers with ellipsis for large page counts
   const maxVisible = 5;
@@ -952,7 +952,7 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
 
   // Show first page if not in range
   if (startPage > 1) {
-    paginationParts.push(`<button type="button" class="pagination-btn page-number" data-page="1">1</button>`);
+    paginationParts.push(`<button type="button" class="fa-res-pagination-btn page-number" data-page="1">1</button>`);
     if (startPage > 2) {
       paginationParts.push('<span class="pagination-ellipsis">...</span>');
     }
@@ -961,27 +961,27 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
   // Show page numbers in range
   for (let i = startPage; i <= endPage; i++) {
     if (i === currentPage) {
-      paginationParts.push(`<button type="button" class="pagination-btn page-number current" disabled>${i}</button>`);
+      paginationParts.push(`<button type="button" class="fa-res-pagination-btn page-number current" disabled>${i}</button>`);
     } else {
-      paginationParts.push(`<button type="button" class="pagination-btn page-number" data-page="${i}">${i}</button>`);
+      paginationParts.push(`<button type="button" class="fa-res-pagination-btn page-number" data-page="${i}">${i}</button>`);
     }
   }
 
   // Show last page if not in range
   if (endPage < totalPages) {
     if (endPage < totalPages - 1) {
-      paginationParts.push('<span class="pagination-ellipsis">...</span>');
+      paginationParts.push('<span class="fa-res-pagination-ellipsis">...</span>');
     }
-    paginationParts.push(`<button type="button" class="pagination-btn page-number" data-page="${totalPages}">${totalPages}</button>`);
+    paginationParts.push(`<button type="button" class="fa-res-pagination-btn page-number" data-page="${totalPages}">${totalPages}</button>`);
   }
 
   paginationParts.push('</span>');
 
   // Next page button
   if (nextPage) {
-    paginationParts.push(`<button type="button" class="pagination-btn" data-page="${nextPage}">Next →</button>`);
+    paginationParts.push(`<button type="button" class="fa-res-pagination-btn" data-page="${nextPage}">Next →</button>`);
   } else {
-    paginationParts.push(`<button type="button" class="pagination-btn disabled" disabled>Next →</button>`);
+    paginationParts.push(`<button type="button" class="fa-res-pagination-btn disabled" disabled>Next →</button>`);
   }
 
   paginationParts.push('</div>');
@@ -1021,7 +1021,7 @@ function showMarkerOnMap(orgId) {
  */
 function handleDocumentClick(event) {
   // Handle pagination button clicks
-  if (event.target.classList.contains('pagination-btn') && !event.target.disabled) {
+  if (event.target.classList.contains('fa-res-pagination-btn') && !event.target.disabled) {
     const page = parseInt(event.target.dataset.page);
     if (page && AppState.currentSearchData) {
       // Scroll to top of results

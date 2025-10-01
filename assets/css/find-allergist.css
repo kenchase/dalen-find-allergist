@@ -540,14 +540,14 @@ select:disabled:focus {
 
 /* Responsive pagination for mobile */
 @media (max-width: 768px) {
-  #page-container .pagination-container,
-  .pagination-container {
+  #page-container .fa-res-pagination-container,
+  .fa-res-pagination-container {
     flex-wrap: wrap;
     gap: var(--spacing-1);
   }
 
-  #page-container .pagination-btn,
-  .pagination-btn {
+  #page-container .fa-res-pagination-btn,
+  .fa-res-pagination-btn {
     padding: 0.4rem 0.7rem;
     font-size: var(--text-xs);
     min-width: 36px;
