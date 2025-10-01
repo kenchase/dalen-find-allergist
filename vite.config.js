@@ -6,16 +6,16 @@ export default defineConfig({
   build: {
     // Output directory
     outDir: 'dist',
-    
+
     // Don't empty the output directory (we'll handle this in our zip script)
     emptyOutDir: false,
-    
+
     // Generate source maps for debugging (set to false for production)
     sourcemap: false,
-    
+
     // Minify using terser
     minify: 'terser',
-    
+
     // Configure terser options
     terserOptions: {
       compress: {
@@ -23,15 +23,15 @@ export default defineConfig({
         drop_debugger: true, // Remove debugger statements
       },
     },
-    
+
     // Configure rollup options
     rollupOptions: {
       input: {
         // JavaScript files
-        'find-allergist-results': resolve(__dirname, 'assets/js/find-allergist-results.js'),
-        'admin': resolve(__dirname, 'assets/js/admin.js'),
+        'find-allergist-scripts': resolve(__dirname, 'assets/js/find-allergist.js'),
+        admin: resolve(__dirname, 'assets/js/admin.js'),
         // CSS files directly
-        'find-allergist-results-styles': resolve(__dirname, 'assets/css/find-allergist-results.css'),
+        'find-allergist-styles': resolve(__dirname, 'assets/css/find-allergist.css'),
         'admin-styles': resolve(__dirname, 'assets/css/admin.css'),
       },
       output: {
@@ -60,7 +60,7 @@ export default defineConfig({
       },
     },
   },
-  
+
   // Configure CSS processing
   css: {
     postcss: {
@@ -71,7 +71,7 @@ export default defineConfig({
       ],
     },
   },
-  
+
   // Configure dev server (optional, for development)
   server: {
     port: 3000,
