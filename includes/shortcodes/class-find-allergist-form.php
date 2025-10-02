@@ -67,10 +67,10 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
     {
 ?>
         <!-- Search Form -->
-        <div id="fa-search" class="fa-search-wrap">
-            <div class="fa-search-intro">
-                <h1 class="fa-search-intro__title"><?php echo esc_html(get_option('dalen_search_form_title', 'Find An Allergist')); ?></h1>
-                <div class="fa-search-intro__text">
+        <div id="faa-search" class="faa-search-wrap">
+            <div class="faa-search-intro">
+                <h1 class="faa-search-intro__title"><?php echo esc_html(get_option('dalen_search_form_title', 'Find An Allergist')); ?></h1>
+                <div class="faa-search-intro__text">
                     <?php
                     $intro_text = get_option('dalen_search_form_intro', '');
                     if (!empty($intro_text)) {
@@ -86,16 +86,16 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
                 </div>
             </div>
             <!-- Form submission is handled via JavaScript -->
-            <form action="javascript:void(0);" id="fa-search-form" class="fa-search-form">
+            <form action="javascript:void(0);" id="faa-search-form" class="faa-search-form">
                 <input type="hidden" name="Find" value="Physician" />
 
-                <div class="fa-form-field">
-                    <label for="phy_name" class="fa-form-field__label"><?php _e('Physician\'s Name', 'dalen-find-allergist'); ?></label>
+                <div class="faa-form-field">
+                    <label for="phy_name" class="faa-form-field__label"><?php _e('Physician\'s Name', 'dalen-find-allergist'); ?></label>
                     <input type="text" id="phy_name" name="phy_name" placeholder="<?php _e('Search by Name', 'dalen-find-allergist'); ?>" value="" />
                 </div>
 
-                <div class="fa-form-field">
-                    <label for="phy_prac_pop" class="fa-form-field__label"><?php _e('Practice Population', 'dalen-find-allergist'); ?></label>
+                <div class="faa-form-field">
+                    <label for="phy_prac_pop" class="faa-form-field__label"><?php _e('Practice Population', 'dalen-find-allergist'); ?></label>
                     <select id="phy_prac_pop" name="phy_prac_pop">
                         <option value=""><?php _e('All Ages', 'dalen-find-allergist'); ?></option>
                         <option value="Adults"><?php _e('Adults', 'dalen-find-allergist'); ?></option>
@@ -103,13 +103,13 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
                     </select>
                 </div>
 
-                <div class="fa-form-field">
-                    <label for="phy_city" class="fa-form-field__label"><?php _e('City', 'dalen-find-allergist'); ?></label>
+                <div class="faa-form-field">
+                    <label for="phy_city" class="faa-form-field__label"><?php _e('City', 'dalen-find-allergist'); ?></label>
                     <input type="text" id="phy_city" name="phy_city" value="" placeholder="<?php _e('Search by City', 'dalen-find-allergist'); ?>" />
                 </div>
 
-                <div class="fa-form-field">
-                    <label for="phy_province" class="fa-form-field__label"><?php _e('Province', 'dalen-find-allergist'); ?></label>
+                <div class="faa-form-field">
+                    <label for="phy_province" class="faa-form-field__label"><?php _e('Province', 'dalen-find-allergist'); ?></label>
                     <select id="phy_province" name="phy_province">
                         <option value="">Search by Province</option>
                         <option value="AB"><?php _e('Alberta', 'dalen-find-allergist'); ?></option>
@@ -128,8 +128,8 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
                     </select>
                 </div>
 
-                <div class="fa-form-field">
-                    <label for="phy_postal" class="fa-form-field__label"><?php _e('Postal Code', 'dalen-find-allergist'); ?></label>
+                <div class="faa-form-field">
+                    <label for="phy_postal" class="faa-form-field__label"><?php _e('Postal Code', 'dalen-find-allergist'); ?></label>
                     <input type="text" id="phy_postal" name="phy_postal" value="" maxlength="7" placeholder="<?php _e('Search by Postal Code', 'dalen-find-allergist'); ?>" pattern="^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$"
                         aria-describedby="postal-error" autocomplete="postal-code" />
                     <div id="postal-error" class="field-error" style="display: none;" role="alert" aria-live="polite">
@@ -137,8 +137,8 @@ class Find_Allergist_Form_Shortcode extends Find_Allergist_Shortcode_Base
                     </div>
                 </div>
 
-                <div class="fa-form-field">
-                    <label for="phy_kms" class="fa-form-field__label"><?php _e('Within the Range of', 'dalen-find-allergist'); ?></label>
+                <div class="faa-form-field">
+                    <label for="phy_kms" class="faa-form-field__label"><?php _e('Within the Range of', 'dalen-find-allergist'); ?></label>
                     <select id="phy_kms" name="phy_kms" class="short-box" disabled aria-describedby="range-help-text">
                         <option value="10">10km</option>
                         <option value="20">20km</option>

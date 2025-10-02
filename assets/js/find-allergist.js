@@ -44,8 +44,8 @@ document.addEventListener('DOMContentLoaded', function () {
 function initializeApp() {
   // Cache DOM elements to avoid repeated queries
   AppState.elements = {
-    formSection: document.getElementById('fa-search'),
-    form: document.getElementById('fa-search-form'),
+    formSection: document.getElementById('faa-search'),
+    form: document.getElementById('faa-search-form'),
     searchBtn: document.getElementById('btn-search'),
     clearBtn: document.getElementById('btn-clear'),
     results: document.getElementById('results'),
@@ -469,14 +469,14 @@ function getOrganizationsWithMarkers(results) {
 function generateResultsNav(totalResults, startIndex, endIndex, page, totalPages) {
   const resultParts = [];
 
-  resultParts.push(`<div class="fa-res-head__item fa-res-start-over"><a href="#" id="fa-res-head__start-over-link">Back to Search</a></div>`);
-  resultParts.push(`<div class="fa-res-head__item fa-res-pagination-info">`, `<p>Found ${totalResults} result${totalResults === 1 ? '' : 's'}${totalResults > RESULTS_PER_PAGE ? ` - showing ${startIndex + 1} to ${endIndex}` : ''}</p></div>`);
+  resultParts.push(`<div class="faa-res-head__item faa-res-start-over"><a href="#" id="faa-res-head__start-over-link">Back to Search</a></div>`);
+  resultParts.push(`<div class="faa-res-head__item faa-res-pagination-info">`, `<p>Found ${totalResults} result${totalResults === 1 ? '' : 's'}${totalResults > RESULTS_PER_PAGE ? ` - showing ${startIndex + 1} to ${endIndex}` : ''}</p></div>`);
 
   // Add pagination controls if there are multiple pages
   if (totalPages > 1) {
     const prevPage = page > 1 ? page - 1 : null;
     const nextPage = page < totalPages ? page + 1 : null;
-    resultParts.push(`<div class="fa-res-head__item fa-res-pagination">`);
+    resultParts.push(`<div class="faa-res-head__item faa-res-pagination">`);
     resultParts.push(generatePaginationHTML(page, totalPages, prevPage, nextPage));
     resultParts.push(`</div>`);
   }
@@ -498,7 +498,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
   if (!Array.isArray(AppState.allSearchResults) || AppState.allSearchResults.length === 0) {
     if (isNewSearch) {
       // For new searches, set up the complete structure even with no results
-      const fullResultParts = ['<div id="fa-res-map" class="fa-res-map"></div>', '<div id="fa-res-content"><p>No matches found.</p></div>'];
+      const fullResultParts = ['<div id="faa-res-map" class="faa-res-map"></div>', '<div id="faa-res-content"><p>No matches found.</p></div>'];
       setResultsHTML(fullResultParts.join(''));
     } else {
       // For pagination, just update the content area
@@ -520,7 +520,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
   // For new searches, ensure we have a map container
   if (isNewSearch) {
     // Create the complete layout with map container
-    const fullResultParts = ['<div id="fa-res-map" class="fa-res-map"></div>', '<div id="fa-res-content" class="fa-res-content"></div>'];
+    const fullResultParts = ['<div id="faa-res-map" class="faa-res-map"></div>', '<div id="faa-res-content" class="faa-res-content"></div>'];
     setResultsHTML(fullResultParts.join(''));
   }
 
@@ -528,11 +528,11 @@ function renderPaginatedResults(page, isNewSearch = false) {
   const resultParts = [];
 
   // Add header at the top
-  resultParts.push(`<div class="fa-res-head">`);
+  resultParts.push(`<div class="faa-res-head">`);
   resultParts.push(generateResultsNav(totalResults, startIndex, endIndex, page, totalPages));
   resultParts.push(`</div>`);
 
-  resultParts.push(`<div class="fa-res-items">`);
+  resultParts.push(`<div class="faa-res-items">`);
 
   for (const item of currentPageResults) {
     const city = item.acf?.city || '';
@@ -550,14 +550,14 @@ function renderPaginatedResults(page, isNewSearch = false) {
     const organizationsHTML = generateOrganizationsHTML(item.acf?.organizations_details, physicianInfo, orgIdsWithMarkers);
 
     if (organizationsHTML) {
-      resultParts.push(`<div class="fa-res-item">${organizationsHTML}</div>`);
+      resultParts.push(`<div class="faa-res-item">${organizationsHTML}</div>`);
     }
   }
 
   resultParts.push('</div>');
 
   // Add header at the bottom
-  resultParts.push(`<div class="fa-res-footer">`);
+  resultParts.push(`<div class="faa-res-footer">`);
   resultParts.push(generateResultsNav(totalResults, startIndex, endIndex, page, totalPages));
   resultParts.push(`</div>`);
 
@@ -574,7 +574,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
  * @param {Array} results - Array of search results containing organizations
  */
 function initializeMap(results) {
-  const mapContainer = document.getElementById('fa-res-map');
+  const mapContainer = document.getElementById('faa-res-map');
   if (!mapContainer || !window.google) {
     return;
   }
@@ -743,8 +743,8 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 
   // Physician header
   parts.push(`
-		<div class="fa-res-physician-info">
-			<h3 class="fa-res-physician-name">
+		<div class="faa-res-physician-info">
+			<h3 class="faa-res-physician-name">
 			  ${escapeHTML(physicianInfo.title)}
 				${physicianInfo.credentials ? `, ${escapeHTML(physicianInfo.credentials)}` : ''}
 			</h3>
@@ -752,7 +752,7 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 	`);
 
   // Organizations container
-  parts.push(`<div class="fa-res-orgs">`);
+  parts.push(`<div class="faa-res-orgs">`);
 
   for (const org of organizations) {
     // Generate the same org ID used in map initialization
@@ -780,76 +780,76 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
     // Check if this organization will have a marker on the map
     const hasMapMarker = orgIdsWithMarkers.has(orgId);
 
-    parts.push(`<div class="fa-res-org" id="${orgId}">`);
+    parts.push(`<div class="faa-res-org" id="${orgId}">`);
 
     // Org Summary section
-    parts.push(`<div class="fa-res-org__summary">`);
-    parts.push(`<h4 class="fa-res-org-title">${escapeHTML(orgName)}</h4>`);
+    parts.push(`<div class="faa-res-org__summary">`);
+    parts.push(`<h4 class="faa-res-org-title">${escapeHTML(orgName)}</h4>`);
 
-    parts.push(`<p class="fa-res-org-address">`);
+    parts.push(`<p class="faa-res-org-address">`);
 
     if (address) {
-      parts.push(`<span class="fa-res-org-address_street"> ${escapeHTML(address)}</span>`);
+      parts.push(`<span class="faa-res-org-address_street"> ${escapeHTML(address)}</span>`);
     }
 
     if (city || state) {
       const cityStateParts = [city, state].filter(Boolean);
-      parts.push(`<span class="fa-res-org-address_city-state">, ${escapeHTML(cityStateParts.join(', '))}</span>`);
+      parts.push(`<span class="faa-res-org-address_city-state">, ${escapeHTML(cityStateParts.join(', '))}</span>`);
     }
 
     if (postalCode) {
-      parts.push(`<span class="fa-res-org-address_postal">, ${escapeHTML(postalCode)}</span>`);
+      parts.push(`<span class="faa-res-org-address_postal">, ${escapeHTML(postalCode)}</span>`);
     }
 
     parts.push(`</p>`);
 
     if (phone) {
-      parts.push(`<p class="fa-res-org-phone"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}</p>`);
+      parts.push(`<p class="faa-res-org-phone"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}</p>`);
     } else {
-      parts.push(`<p class="fa-res-org-phone fa-res-org-phone--no-phone">Not available</p>`);
+      parts.push(`<p class="faa-res-org-phone faa-res-org-phone--no-phone">Not available</p>`);
     }
 
-    parts.push(`<button class="fa-res-org-view-more">View More</button>`);
+    parts.push(`<button class="faa-res-org-view-more">View More</button>`);
 
     parts.push(`</div>`); // Close org summary
 
     // Org Body section
-    parts.push(`<div class="fa-res-org__body fa-res-org__body--hidden">`);
+    parts.push(`<div class="faa-res-org__body faa-res-org__body--hidden">`);
 
     // Org Body section  Row 1
-    parts.push(`<div class="fa-res-org__body-grid-cell">`);
+    parts.push(`<div class="faa-res-org__body-grid-cell">`);
     if (practiceSetting) {
-      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label">Practice Setting(s):</span> ${escapeHTML(practiceSetting)}</div>`);
+      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label">Practice Setting(s):</span> ${escapeHTML(practiceSetting)}</div>`);
     }
     if (practicesOIT) {
-      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label">Practices OIT:</span> ${escapeHTML(practicesOIT)}</div>`);
+      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label">Practices OIT:</span> ${escapeHTML(practicesOIT)}</div>`);
     }
     if (practicePopulation) {
-      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label">Practices Population:</span> ${escapeHTML(practicePopulation)}</div>`);
+      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label">Practices Population:</span> ${escapeHTML(practicePopulation)}</div>`);
     }
     parts.push(`</div>`);
-    parts.push(`<div class="fa-res-org__body-grid-cell">`);
+    parts.push(`<div class="faa-res-org__body-grid-cell">`);
     if (specialAreasOfInterest) {
-      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Special Areas of Interest:</span> ${escapeHTML(specialAreasOfInterest)}</div>`);
+      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label faa-res-org__body-grid-item-label--lb">Special Areas of Interest:</span> ${escapeHTML(specialAreasOfInterest)}</div>`);
     }
     parts.push(`</div>`);
 
     // Org Body section Row 2
-    parts.push(`<div class="fa-res-org__body-grid-cell fa-res-org__body-grid-cell--spacer">`);
+    parts.push(`<div class="faa-res-org__body-grid-cell faa-res-org__body-grid-cell--spacer">`);
     if (consultationServices && consultationServices.length > 0) {
-      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Consultation Services:</span> ${escapeHTML(consultationServices.join(', '))}</div>`);
+      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label faa-res-org__body-grid-item-label--lb">Consultation Services:</span> ${escapeHTML(consultationServices.join(', '))}</div>`);
     }
     if (siteForClinicalTrials) {
-      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
+      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label faa-res-org__body-grid-item-label--lb">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
     }
     parts.push(`</div>`);
-    parts.push(`<div class="fa-res-org__body-grid-cell fa-res-org__body-grid-cell--spacer">`);
+    parts.push(`<div class="faa-res-org__body-grid-cell faa-res-org__body-grid-cell--spacer">`);
     if (treatmentServicesOffered && treatmentServicesOffered.length > 0) {
-      const treatmentServicesList = treatmentServicesOffered.map((service) => `<li class="fa-res-org__body-grid-item_list-item">${escapeHTML(service)}</li>`).join('');
-      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Treatment Services Offered:</span> <ul class="fa-res-org__body-grid-item_list">${treatmentServicesList}</ul></div>`);
+      const treatmentServicesList = treatmentServicesOffered.map((service) => `<li class="faa-res-org__body-grid-item_list-item">${escapeHTML(service)}</li>`).join('');
+      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label faa-res-org__body-grid-item-label--lb">Treatment Services Offered:</span> <ul class="faa-res-org__body-grid-item_list">${treatmentServicesList}</ul></div>`);
     }
     if (treatmentServicesOfferedOther) {
-      parts.push(`<div class="fa-res-org__body-grid-item"><span class="fa-res-org__body-grid-item-label fa-res-org__body-grid-item-label--lb">Other areas of special interest unique to your practice:</span> ${escapeHTML(treatmentServicesOfferedOther)}</div>`);
+      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label faa-res-org__body-grid-item-label--lb">Other areas of special interest unique to your practice:</span> ${escapeHTML(treatmentServicesOfferedOther)}</div>`);
     }
     parts.push(`</div>`);
 
@@ -862,13 +862,13 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 
   // Don't know where to include this yet
   // if (distance !== undefined) {
-  //   parts.push(`<span class="fa-res-org-list-item"><strong>Distance:</strong> ${distance} km</span>`);
+  //   parts.push(`<span class="faa-res-org-list-item"><strong>Distance:</strong> ${distance} km</span>`);
   // }
 
   // Don't know where to include this yet
   // Add "Show on map" link if this organization has a marker
   // if (hasMapMarker) {
-  //   parts.push(`<li class="fa-res-org-list-item fa-res-org-list-item--map-link"><a href="#" class="show-on-map-link" data-org-id="${orgId}">📍 Show on map</a></li>`);
+  //   parts.push(`<li class="faa-res-org-list-item faa-res-org-list-item--map-link"><a href="#" class="show-on-map-link" data-org-id="${orgId}">📍 Show on map</a></li>`);
   // }
 }
 
@@ -924,7 +924,7 @@ function isValidPostalCode(postalCode) {
  * Basic helper to set results container HTML
  */
 function setResultsHTML(html) {
-  const container = document.getElementById('fa-res-section');
+  const container = document.getElementById('faa-res-section');
   if (container) container.innerHTML = html;
 }
 
@@ -932,7 +932,7 @@ function setResultsHTML(html) {
  * Helper to set search results content HTML (for pagination updates)
  */
 function setSearchResultsContentHTML(html) {
-  const container = document.getElementById('fa-res-content');
+  const container = document.getElementById('faa-res-content');
   if (container) {
     container.innerHTML = html;
   } else {
@@ -950,17 +950,17 @@ function setSearchResultsContentHTML(html) {
  * @returns {string} HTML string for pagination
  */
 function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
-  const paginationParts = ['<div class="fa-res-pagination-container">'];
+  const paginationParts = ['<div class="faa-res-pagination-container">'];
 
   // Previous page button
   if (prevPage) {
-    paginationParts.push(`<button type="button" class="fa-res-pagination-btn" data-page="${prevPage}">← Prev</button>`);
+    paginationParts.push(`<button type="button" class="faa-res-pagination-btn" data-page="${prevPage}">← Prev</button>`);
   } else {
-    paginationParts.push(`<button type="button" class="fa-res-pagination-btn disabled" disabled>← Prev</button>`);
+    paginationParts.push(`<button type="button" class="faa-res-pagination-btn disabled" disabled>← Prev</button>`);
   }
 
   // Page numbers
-  paginationParts.push('<span class="fa-res-pagination-numbers">');
+  paginationParts.push('<span class="faa-res-pagination-numbers">');
 
   // Show page numbers with ellipsis for large page counts
   const maxVisible = 5;
@@ -974,7 +974,7 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
 
   // Show first page if not in range
   if (startPage > 1) {
-    paginationParts.push(`<button type="button" class="fa-res-pagination-btn page-number" data-page="1">1</button>`);
+    paginationParts.push(`<button type="button" class="faa-res-pagination-btn page-number" data-page="1">1</button>`);
     if (startPage > 2) {
       paginationParts.push('<span class="pagination-ellipsis">...</span>');
     }
@@ -983,27 +983,27 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
   // Show page numbers in range
   for (let i = startPage; i <= endPage; i++) {
     if (i === currentPage) {
-      paginationParts.push(`<button type="button" class="fa-res-pagination-btn page-number current" disabled>${i}</button>`);
+      paginationParts.push(`<button type="button" class="faa-res-pagination-btn page-number current" disabled>${i}</button>`);
     } else {
-      paginationParts.push(`<button type="button" class="fa-res-pagination-btn page-number" data-page="${i}">${i}</button>`);
+      paginationParts.push(`<button type="button" class="faa-res-pagination-btn page-number" data-page="${i}">${i}</button>`);
     }
   }
 
   // Show last page if not in range
   if (endPage < totalPages) {
     if (endPage < totalPages - 1) {
-      paginationParts.push('<span class="fa-res-pagination-ellipsis">...</span>');
+      paginationParts.push('<span class="faa-res-pagination-ellipsis">...</span>');
     }
-    paginationParts.push(`<button type="button" class="fa-res-pagination-btn page-number" data-page="${totalPages}">${totalPages}</button>`);
+    paginationParts.push(`<button type="button" class="faa-res-pagination-btn page-number" data-page="${totalPages}">${totalPages}</button>`);
   }
 
   paginationParts.push('</span>');
 
   // Next page button
   if (nextPage) {
-    paginationParts.push(`<button type="button" class="fa-res-pagination-btn" data-page="${nextPage}">Next →</button>`);
+    paginationParts.push(`<button type="button" class="faa-res-pagination-btn" data-page="${nextPage}">Next →</button>`);
   } else {
-    paginationParts.push(`<button type="button" class="fa-res-pagination-btn disabled" disabled>Next →</button>`);
+    paginationParts.push(`<button type="button" class="faa-res-pagination-btn disabled" disabled>Next →</button>`);
   }
 
   paginationParts.push('</div>');
@@ -1029,7 +1029,7 @@ function showMarkerOnMap(orgId) {
   google.maps.event.trigger(marker, 'click');
 
   // Scroll to the map for better user experience
-  const mapContainer = document.getElementById('fa-res-map');
+  const mapContainer = document.getElementById('faa-res-map');
   if (mapContainer) {
     mapContainer.scrollIntoView({
       behavior: 'smooth',
@@ -1043,7 +1043,7 @@ function showMarkerOnMap(orgId) {
  */
 function handleDocumentClick(event) {
   // Handle pagination button clicks
-  if (event.target.classList.contains('fa-res-pagination-btn') && !event.target.disabled) {
+  if (event.target.classList.contains('faa-res-pagination-btn') && !event.target.disabled) {
     const page = parseInt(event.target.dataset.page);
     if (page && AppState.currentSearchData) {
       // Scroll to top of results
@@ -1070,13 +1070,13 @@ function handleDocumentClick(event) {
   }
 
   // Handle "Back to Search" link clicks
-  if (event.target.id === 'fa-res-head__start-over-link') {
+  if (event.target.id === 'faa-res-head__start-over-link') {
     event.preventDefault();
     handleStartOver();
   }
 
   // Handle "View More" button clicks
-  if (event.target.classList.contains('fa-res-org-view-more')) {
+  if (event.target.classList.contains('faa-res-org-view-more')) {
     event.preventDefault();
     toggleOrgDetails(event.target);
   }
@@ -1124,27 +1124,27 @@ function handleStartOver() {
  */
 function toggleOrgDetails(button) {
   // Find the parent organization container
-  const orgContainer = button.closest('.fa-res-org');
+  const orgContainer = button.closest('.faa-res-org');
   if (!orgContainer) {
     return;
   }
 
   // Find the organization body element
-  const orgBody = orgContainer.querySelector('.fa-res-org__body');
+  const orgBody = orgContainer.querySelector('.faa-res-org__body');
   if (!orgBody) {
     return;
   }
 
   // Toggle the hidden class
-  const isCurrentlyHidden = orgBody.classList.contains('fa-res-org__body--hidden');
+  const isCurrentlyHidden = orgBody.classList.contains('faa-res-org__body--hidden');
 
   if (isCurrentlyHidden) {
     // Show the content
-    orgBody.classList.remove('fa-res-org__body--hidden');
+    orgBody.classList.remove('faa-res-org__body--hidden');
     button.textContent = 'View Less';
   } else {
     // Hide the content
-    orgBody.classList.add('fa-res-org__body--hidden');
+    orgBody.classList.add('faa-res-org__body--hidden');
     button.textContent = 'View More';
   }
 }

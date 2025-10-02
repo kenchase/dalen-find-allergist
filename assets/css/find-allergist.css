@@ -52,7 +52,7 @@
 
 /*** Search Form ***/
 
-.fa-search-wrap {
+.faa-search-wrap {
   --color-opacity: 0.75;
   background-color: rgb(var(--blue-500) / var(--color-opacity));
   border-radius: var(--rounded-lg);
@@ -61,14 +61,14 @@
   padding: var(--spacing-20);
 }
 
-.fa-search-intro {
+.faa-search-intro {
   text-align: center;
   margin-bottom: var(--spacing-8);
   font-size: var(--text-lg);
   color: var(--white);
 }
 
-.fa-search-intro__title {
+.faa-search-intro__title {
   color: rgb(var(--blue-700));
   font-size: var(--text-5xl);
   font-weight: 500;
@@ -76,20 +76,20 @@
   padding: 0;
 }
 
-.fa-search-intro__text {
+.faa-search-intro__text {
   font-size: var(--text-3xl);
   margin: 0 auto;
   max-width: 600px;
 }
 
-.fa-search-form {
+.faa-search-form {
   display: grid;
   grid-template-columns: 1fr; /* Add this for 2 columns on mobile */
   gap: var(--spacing-4);
 }
 
-.fa-search-form input,
-.fa-search-form select {
+.faa-search-form input,
+.faa-search-form select {
   width: 100%;
   padding: var(--spacing-2) var(--spacing-4);
   border: 1px solid var(--gray-300);
@@ -98,26 +98,26 @@
   transition: var(--transition-all);
 }
 
-.fa-search-form ::placeholder {
+.faa-search-form ::placeholder {
   color: rgb(var(--blue-500) / var(--color-opacity));
   font-weight: 600;
 }
 
-.fa-search-form .fa-form-field__label {
+.faa-search-form .faa-form-field__label {
   display: block;
   font-weight: 600;
   margin-bottom: 0;
   color: var(--white);
 }
 
-.fa-search-form .form-actions {
+.faa-search-form .form-actions {
   display: flex;
   gap: var(--spacing-2);
   flex-direction: column;
   margin-top: var(--spacing-2);
 }
 
-.fa-search-form .form-actions_btn {
+.faa-search-form .form-actions_btn {
   --color-opacity: 0.75;
   width: 100%;
   background-color: rgb(var(--blue-700) / var(--color-opacity));
@@ -130,22 +130,22 @@
   transition: var(--transition-bg);
 }
 
-.fa-search-form .form-actions_btn-primary {
+.faa-search-form .form-actions_btn-primary {
   --color-opacity: 0.75;
   background-color: rgb(var(--blue-700) / var(--color-opacity));
 }
 
-.fa-search-form .form-actions_btn-secondary {
+.faa-search-form .form-actions_btn-secondary {
   background-color: transparent;
 }
 
 /* Responsive layout for larger screens */
 
 @media (min-width: 768px) {
-  .fa-search-form {
+  .faa-search-form {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .fa-search-form .form-actions {
+  .faa-search-form .form-actions {
     grid-column: 2 / 3;
   }
 }
@@ -154,15 +154,15 @@
 
 /* Search Results - Map */
 
-.fa-res-map {
+.faa-res-map {
   width: 100%;
   height: 400px;
 }
 
 /* Search Results - Header */
 
-.fa-res-head,
-.fa-res-footer {
+.faa-res-head,
+.faa-res-footer {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-4);
@@ -174,23 +174,23 @@
   }
 }
 
-.fa-res-start-over {
+.faa-res-start-over {
 }
 
-.fa-res-pagination-info {
+.faa-res-pagination-info {
   text-align: center;
 }
 
 /* Pagination  */
 
-.fa-res-pagination-container {
+.faa-res-pagination-container {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: var(--spacing-2);
 }
 
-.fa-res-pagination-btn {
+.faa-res-pagination-btn {
   background-color: rgb(var(--blue-500) / var(--color-opacity));
   color: var(--white);
   border: none;
@@ -201,7 +201,7 @@
   transition: var(--transition-bg);
 }
 
-.fa-respagination-btn.current {
+.faa-respagination-btn.current {
   background-color: rgb(var(--blue-700) / var(--color-opacity));
 }
 
@@ -211,30 +211,30 @@
   cursor: not-allowed;
 }
 
-.fa-res-pagination-ellipsis {
+.faa-res-pagination-ellipsis {
   padding: var(--spacing-2) var(--spacing-1);
   color: var(--gray-500);
 }
 
-.fa-res-pagination-numbers {
+.faa-res-pagination-numbers {
   display: flex;
   gap: var(--spacing-2);
 }
 
 /* Search Results - Content */
 
-.fa-res-content {
+.faa-res-content {
   max-width: 1080px;
   margin: 0 auto;
   padding: 0 var(--spacing-4);
 }
 
-.fa-res-items {
+.faa-res-items {
   display: grid;
   gap: var(--spacing-4);
 }
 
-.fa-res-item {
+.faa-res-item {
   margin-bottom: var(--spacing-2);
   padding: var(--spacing-6);
   border: 1px solid var(--gray-300);
@@ -242,17 +242,17 @@
   background-color: var(--neutral-50);
 }
 
-.fa-res-orgs {
+.faa-res-orgs {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
 }
-.fa-res-org {
+.faa-res-org {
   font-size: var(--text-base);
   color: var(--gray-800);
 }
 
-.fa-res-org__summary {
+.faa-res-org__summary {
   display: grid;
   gap: var(--spacing-4);
   grid-template-columns: 1fr;
@@ -261,7 +261,7 @@
   }
 }
 
-.fa-res-org__body {
+.faa-res-org__body {
   display: grid;
   gap: var(--spacing-4);
   grid-template-columns: 1fr;
@@ -271,7 +271,7 @@
   }
 }
 
-.fa-res-org__body--hidden {
+.faa-res-org__body--hidden {
   visibility: hidden;
   height: 0;
   margin: 0;
@@ -280,27 +280,27 @@
 }
 
 /* Add spacing between items in a grid cell that need it */
-.fa-res-org__body-grid-cell--spacer div {
+.faa-res-org__body-grid-cell--spacer div {
   margin-top: var(--spacing-4);
 }
 
-.fa-res-org__body-grid-item {
+.faa-res-org__body-grid-item {
   margin: 0;
   padding: 0;
   line-height: 1.25em;
 }
 
-.fa-res-org__body-grid-item-label {
+.faa-res-org__body-grid-item-label {
   font-weight: bold;
 }
 
 /* Add a line break for labels that need it */
 
-.fa-res-org__body-grid-item-label--lb {
+.faa-res-org__body-grid-item-label--lb {
   display: block;
 }
 
-.fa-res-org-title {
+.faa-res-org-title {
   font-size: var(--text-base);
   font-weight: normal;
   margin: 0;
@@ -308,18 +308,18 @@
   line-height: 1.1em;
 }
 
-.fa-res-org-address {
+.faa-res-org-address {
   margin: 0;
   padding: 0;
   line-height: 1em;
 }
 
-.fa-res-org-phone {
+.faa-res-org-phone {
   margin: 0;
   padding: 0;
 }
 
-.fa-res-org-view-more {
+.faa-res-org-view-more {
   background: none;
   border: none;
   padding: 0;
@@ -331,22 +331,22 @@
   line-height: 1.1em;
 }
 
-.fa-res-org-list-item--map-link {
+.faa-res-org-list-item--map-link {
   margin-top: var(--spacing-4);
 }
 
-.fa-res-physician-info {
+.faa-res-physician-info {
   margin-bottom: var(--spacing-3);
 }
 
-.fa-res-physician-name {
+.faa-res-physician-name {
   font-size: var(--text-2xl);
   font-weight: bold;
 }
 
 /* Distance Display */
 
-.fa-res-distance {
+.faa-res-distance {
   font-size: var(--text-base);
   color: var(--red-600);
   margin-top: var(--spacing-1);
@@ -357,18 +357,18 @@
   display: inline-block;
 }
 
-.fa-res-org-info {
+.faa-res-org-info {
   border-top: 1px solid var(--gray-200);
   padding-top: var(--spacing-2);
 }
 
 /* View on Map Link */
 
-.fa-res-view-map {
+.faa-res-view-map {
   margin-top: var(--spacing-2);
 }
 
-.fa-res-map-link {
+.faa-res-map-link {
   display: inline-block;
   padding: var(--spacing-1) var(--spacing-2);
   background-color: var(--blue-500);
@@ -379,7 +379,7 @@
   transition: var(--transition-bg);
 }
 
-.fa-res-map-link:hover {
+.faa-res-map-link:hover {
   background-color: var(--blue-700);
   text-decoration: none;
   color: var(--white) !important;
