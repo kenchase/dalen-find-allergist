@@ -386,26 +386,27 @@
 }
 
 /* Map Info Window Styles */
-.map-info-window h4 {
+
+.faa-map-info-window {
+  font-size: var(--text-sm);
+  line-height: 1.2em;
+  max-width: 300px;
+  padding: var(--spacing-2) var(--spacing-2) var(--spacing-8) var(--spacing-2);
+}
+
+.faa-map-info-window__title {
   margin: 0 0 var(--spacing-2) 0;
-  color: tgb(var(--blue-500));
-  font-size: var(--text-lg);
+  padding: 0;
+  font-size: var(--text-xl);
   font-weight: bold;
+  line-height: 1.2em;
 }
 
-.map-info-window p {
-  margin: 0;
+.faa-map-info-window__text {
+  margin: 0 0 var(--spacing-1) 0;
+  padding: 0;
   font-size: var(--text-base);
-  line-height: 1.1em;
-}
-
-.map-info-window strong {
-  color: var(--gray-700);
-}
-
-.map-info-window em {
-  color: var(--gray-500);
-  font-style: italic;
+  line-height: 1.2em;
 }
 
 /* Postal code validation styles */

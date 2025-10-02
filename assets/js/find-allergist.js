@@ -56,6 +56,8 @@ function initializeApp() {
   };
 
   // Find the first parent element with class "et_pb_section"
+  // This is used to hide/show the entire search form section when displaying results
+  // It assumes the form is inside a ".et_pb_section" (Divi theme) such a section
   if (AppState.elements.formSection) {
     AppState.elements.parentSection = AppState.elements.formSection.closest('.et_pb_section');
   }
@@ -668,18 +670,18 @@ function initializeMap(results) {
  * @returns {string} HTML content
  */
 function createInfoWindowContent(location) {
-  const parts = [`<div class="map-info-window">`, `<h4>${escapeHTML(location.title)}</h4>`];
-
-  if (location.address) {
-    parts.push(`<p><strong>Address:</strong> ${escapeHTML(location.address)}</p>`);
-  }
-
-  if (location.cityState) {
-    parts.push(`<p><strong>Location:</strong> ${escapeHTML(location.cityState)}</p>`);
-  }
+  const parts = [`<div class="faa-map-info-window">`];
 
   if (location.physicianName) {
-    parts.push(`<p><strong>Physician:</strong> ${escapeHTML(location.physicianName)}${location.physicianCredentials ? `, ${escapeHTML(location.physicianCredentials)}` : ''}</p>`);
+    parts.push(`<p class="faa-map-info-window__title">${escapeHTML(location.physicianName)}${location.physicianCredentials ? `, ${escapeHTML(location.physicianCredentials)}` : ''}</p>`);
+  }
+
+  if (location.title) {
+    parts.push(`<p class="faa-map-info-window__text">${escapeHTML(location.title)}</p>`);
+  }
+
+  if (location.address && location.cityState) {
+    parts.push(`<p class="faa-map-info-window__text">${escapeHTML(location.address)}, ${escapeHTML(location.cityState)}</p>`);
   }
 
   parts.push(`</div>`);
