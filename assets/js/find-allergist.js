@@ -1079,12 +1079,15 @@ function handleDocumentClick(event) {
       // Prevent default behavior
       event.preventDefault();
 
-      // Scroll to top of results
-      const resultsContainer = document.getElementById('results');
-      if (resultsContainer) {
-        resultsContainer.scrollIntoView({
+      // Scroll to top of results content with 20px offset
+      const resultsContentContainer = document.getElementById('faa-res-content');
+      if (resultsContentContainer) {
+        const elementTop = resultsContentContainer.getBoundingClientRect().top + window.pageYOffset;
+        const offsetTop = elementTop - 20; // 20px offset from top
+
+        window.scrollTo({
+          top: offsetTop,
           behavior: 'smooth',
-          block: 'start',
         });
       }
 
