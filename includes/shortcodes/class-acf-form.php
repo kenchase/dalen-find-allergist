@@ -46,6 +46,23 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
             return '';
         } else {
             // The user is logged in, and their ID is available.
+
+            // Check if user has a role that begins with "wa_"
+            $current_user = wp_get_current_user();
+            $user_roles = $current_user->roles;
+            $has_wa_role = false;
+
+            foreach ($user_roles as $role) {
+                if (strpos($role, 'wa_') === 0) {
+                    $has_wa_role = true;
+                    break;
+                }
+            }
+
+            if (!$has_wa_role) {
+                return '';
+            }
+
             // Get the first post ID associated with the user
 
             // Get current user
