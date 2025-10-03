@@ -992,7 +992,7 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
   paginationParts.push('<span class="faa-res-pagination-numbers">');
 
   // Show page numbers with ellipsis for large page counts
-  const maxVisible = 5;
+  const maxVisible = 2;
   let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
   let endPage = Math.min(totalPages, startPage + maxVisible - 1);
 
@@ -1071,10 +1071,14 @@ function showMarkerOnMap(orgId) {
  * Handle pagination button clicks and show on map links
  */
 function handleDocumentClick(event) {
-  // Handle pagination button clicks
-  if (event.target.classList.contains('faa-res-pagination-btn') && !event.target.disabled) {
-    const page = parseInt(event.target.dataset.page);
+  // Handle pagination button clicks - improved targeting and disabled state checking
+  const paginationBtn = event.target.closest('.faa-res-pagination-btn');
+  if (paginationBtn && !paginationBtn.disabled && !paginationBtn.classList.contains('disabled')) {
+    const page = parseInt(paginationBtn.dataset.page);
     if (page && AppState.currentSearchData) {
+      // Prevent default behavior
+      event.preventDefault();
+
       // Scroll to top of results
       const resultsContainer = document.getElementById('results');
       if (resultsContainer) {
@@ -1087,6 +1091,7 @@ function handleDocumentClick(event) {
       // Perform search for the selected page (client-side navigation)
       handleSearchSubmit(page);
     }
+    return;
   }
 
   // Handle "Show on map" link clicks
@@ -1244,7 +1249,6 @@ function toggleRangeField() {
     const container = rangeSelect.closest('.form-group, .field-container') || rangeSelect.parentElement;
     if (container) {
       container.classList.remove('disabled');
-      container.style.opacity = '1';
       container.style.pointerEvents = 'auto';
     }
 
@@ -1261,7 +1265,6 @@ function toggleRangeField() {
     const container = rangeSelect.closest('.form-group, .field-container') || rangeSelect.parentElement;
     if (container) {
       container.classList.add('disabled');
-      container.style.opacity = '0.5';
       container.style.pointerEvents = 'none';
     }
 
