@@ -163,7 +163,7 @@ function dalen_normalize_city_name($city_name)
 /**
  * Check if an organization matches the search criteria
  */
-function dalen_organization_matches_search($org, $city = null, $province = null, $postal = null)
+function dalen_organization_matches_search($org, $city = null, $province = null, $postal = null, $prac_pop = null)
 {
     $gmap = $org['institution_gmap'] ?? [];
 
@@ -191,6 +191,29 @@ function dalen_organization_matches_search($org, $city = null, $province = null,
             stripos($stored_postal, substr($search_postal, 0, 3)) === false
         ) {
             return false;
+        }
+    }
+
+    // Check practice population
+    if ($prac_pop) {
+        $practice_population = $org['institution_practice_population'] ?? '';
+
+        // Handle empty or null values
+        if (empty($practice_population)) {
+            return false;
+        }
+
+        // ACF select field can return string (single select) or array (multi-select)
+        if (is_array($practice_population)) {
+            // Multi-select: check if the search value is in the array
+            if (!in_array($prac_pop, $practice_population, true)) {
+                return false;
+            }
+        } else {
+            // Single select: exact match comparison
+            if ((string)$practice_population !== $prac_pop) {
+                return false;
+            }
         }
     }
 
@@ -261,31 +284,42 @@ function dalen_physician_search(WP_REST_Request $req)
     // Filter by practice population if provided
     if (!empty($prac_pop)) {
         $physicians = array_filter($physicians, function ($physician) use ($prac_pop) {
-            $practice_population = get_field('practice_population', $physician->ID);
+            $organizations = get_field('organizations_details', $physician->ID) ?: [];
 
-            // Handle empty or null values
-            if (empty($practice_population)) {
-                return false;
+            // Check if any organization has matching practice population
+            foreach ($organizations as $org) {
+                $practice_population = $org['institution_practice_population'] ?? '';
+
+                // Handle empty or null values
+                if (empty($practice_population)) {
+                    continue;
+                }
+
+                // ACF select field can return string (single select) or array (multi-select)
+                if (is_array($practice_population)) {
+                    // Multi-select: check if the search value is in the array
+                    if (in_array($prac_pop, $practice_population, true)) {
+                        return true;
+                    }
+                } else {
+                    // Single select: exact match comparison
+                    if ((string)$practice_population === $prac_pop) {
+                        return true;
+                    }
+                }
             }
 
-            // ACF select field can return string (single select) or array (multi-select)
-            if (is_array($practice_population)) {
-                // Multi-select: check if the search value is in the array
-                return in_array($prac_pop, $practice_population, true);
-            } else {
-                // Single select: exact match comparison
-                return (string)$practice_population === $prac_pop;
-            }
+            return false;
         });
     }
 
     // Filter by location criteria (only if city or province specified)
     if (!empty($city) || !empty($province)) {
-        $physicians = array_filter($physicians, function ($physician) use ($city, $province) {
+        $physicians = array_filter($physicians, function ($physician) use ($city, $province, $prac_pop) {
             $organizations = get_field('organizations_details', $physician->ID) ?: [];
 
             foreach ($organizations as $org) {
-                if (dalen_organization_matches_search($org, $city, $province, null)) {
+                if (dalen_organization_matches_search($org, $city, $province, null, $prac_pop)) {
                     return true;
                 }
             }
@@ -312,7 +346,7 @@ function dalen_physician_search(WP_REST_Request $req)
     }
 
     // Build response
-    $results = array_map(function ($physician) use ($city, $province, $postal, $origin_coords, $kms) {
+    $results = array_map(function ($physician) use ($city, $province, $postal, $origin_coords, $kms, $prac_pop) {
         $organizations = get_field('organizations_details', $physician->ID) ?: [];
 
         // Debug: Log organization count for this physician
@@ -328,7 +362,13 @@ function dalen_physician_search(WP_REST_Request $req)
 
             // Only apply location filtering if city or province is specified
             if (!empty($city) || !empty($province)) {
-                $location_match = dalen_organization_matches_search($org, $city, $province, null);
+                $location_match = dalen_organization_matches_search($org, $city, $province, null, null);
+            }
+
+            // Check practice population for each organization
+            $practice_population_match = true;
+            if (!empty($prac_pop)) {
+                $practice_population_match = dalen_organization_matches_search($org, null, null, null, $prac_pop);
             }
 
             // Check distance if needed
@@ -366,7 +406,7 @@ function dalen_physician_search(WP_REST_Request $req)
             }
 
             // Include organization if it matches all criteria
-            if ($location_match && $distance_match) {
+            if ($location_match && $practice_population_match && $distance_match) {
                 if ($distance_km !== null && $distance_km !== false) {
                     $org['distance_km'] = round($distance_km, 1);
                 }
@@ -382,7 +422,6 @@ function dalen_physician_search(WP_REST_Request $req)
             'link'  => get_permalink($physician),
             'acf'   => [
                 'credentials' => get_post_meta($physician->ID, 'physician_credentials', true),
-                'practice_population' => get_field('practice_population', $physician->ID),
                 'organizations_details' => array_values($filtered_orgs),
             ],
         ];
