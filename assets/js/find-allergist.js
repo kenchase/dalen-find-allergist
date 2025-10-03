@@ -469,7 +469,7 @@ function getOrganizationsWithMarkers(results) {
 function generateResultsNav(totalResults, startIndex, endIndex, page, totalPages) {
   const resultParts = [];
 
-  resultParts.push(`<div class="faa-res-head__item faa-res-start-over"><a href="#" id="faa-res-head__start-over-link">Back to Search</a></div>`);
+  resultParts.push(`<div class="faa-res-head__item faa-res-head__start-over"><a href="#" id="faa-res-head__start-over-link" class="faa-res-head__start-over-link">Back to Search</a></div>`);
   resultParts.push(`<div class="faa-res-head__item faa-res-pagination-info">`, `<p>Found ${totalResults} result${totalResults === 1 ? '' : 's'}${totalResults > RESULTS_PER_PAGE ? ` - showing ${startIndex + 1} to ${endIndex}` : ''}</p></div>`);
 
   // Add pagination controls if there are multiple pages
@@ -842,7 +842,7 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
       parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label faa-res-org__grid-item-label--lb">Consultation Services:</span> <ul class="faa-res-org__grid-item-cell-list">${consultationServicesList}</ul></div>`);
     }
     if (siteForClinicalTrials) {
-      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label faa-res-org__grid-item-label--lb">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
+      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
     }
     parts.push(`</div>`);
     parts.push(`<div class="faa-res-org__grid-item">`);
@@ -956,9 +956,9 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
 
   // Previous page button
   if (prevPage) {
-    paginationParts.push(`<button type="button" class="faa-res-pagination-btn" data-page="${prevPage}">← Prev</button>`);
+    paginationParts.push(`<button type="button" class="faa-res-pagination-btn" data-page="${prevPage}" aria-label="Previous Page"><span class="dashicons dashicons-arrow-left-alt2"></span></button>`);
   } else {
-    paginationParts.push(`<button type="button" class="faa-res-pagination-btn disabled" disabled>← Prev</button>`);
+    paginationParts.push(`<button type="button" class="faa-res-pagination-btn disabled" aria-label="Previous Page" disabled><span class="dashicons dashicons-arrow-left-alt2"></span></button>`);
   }
 
   // Page numbers
@@ -1003,9 +1003,9 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
 
   // Next page button
   if (nextPage) {
-    paginationParts.push(`<button type="button" class="faa-res-pagination-btn" data-page="${nextPage}">Next →</button>`);
+    paginationParts.push(`<button type="button" class="faa-res-pagination-btn" data-page="${nextPage}" aria-label="Next Page"><span class="dashicons dashicons-arrow-right-alt2"></span></button>`);
   } else {
-    paginationParts.push(`<button type="button" class="faa-res-pagination-btn disabled" disabled>Next →</button>`);
+    paginationParts.push(`<button type="button" class="faa-res-pagination-btn disabled" disabled><span class="dashicons dashicons-arrow-right-alt2"></span></button>`);
   }
 
   paginationParts.push('</div>');

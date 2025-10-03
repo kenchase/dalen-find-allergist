@@ -177,6 +177,19 @@
   }
 }
 
+.faa-res-head__start-over-link {
+  color: rgb(var(--blue-500) / var(--color-opacity));
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  &::before {
+    font-family: 'dashicons';
+    content: '\f341';
+    font-size: inherit;
+    margin-right: var(--spacing-1);
+  }
+}
+
 .faa-res-pagination-info {
   text-align: center;
 }
@@ -205,7 +218,7 @@
   background-color: rgb(var(--blue-700) / var(--color-opacity));
 }
 
-.pagination-btn.disabled {
+.faa-res-pagination-btn.disabled {
   --color-opacity: 0.5;
   background-color: rgb(var(--blue-500) / var(--color-opacity));
   cursor: not-allowed;
@@ -251,6 +264,10 @@
 .faa-res-org {
   font-size: var(--text-base);
   color: var(--gray-800);
+  @media (width <= 992px) {
+    display: grid;
+    gap: var(--spacing-4);
+  }
   @media (width > 992px) {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
@@ -283,12 +300,20 @@
 }
 
 .faa-res-org__body {
+  border-bottom: 1px solid var(--gray-300);
+  margin-bottom: var(--spacing-4);
+
+  @media (width <= 992px) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    padding-bottom: var(--spacing-4);
+  }
+
   @media (width > 992px) {
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: subgrid;
-    margin-bottom: var(--spacing-4);
-    border-bottom: 1px solid var(--gray-300);
 
     .faa-res-org__grid-item {
       margin-bottom: var(--spacing-4);
@@ -347,7 +372,7 @@
 .faa-res-org__text {
   margin: 0;
   padding: 0;
-  line-height: 1em;
+  line-height: 1.1em;
 }
 
 .faa-res-org__btn {
@@ -355,16 +380,22 @@
   align-items: flex-start;
   background: none;
   border: none;
+  font-size: var(--text-base);
   padding: 0;
   margin: 0;
   line-height: 1em;
-  color: inherit;
+  color: rgb(var(--blue-500) / var(--color-opacity));
   cursor: pointer;
   text-align: right;
   &::after {
     font-family: 'dashicons';
     content: '\f347';
     font-size: inherit;
+    margin-left: var(--spacing-1);
+  }
+  @media (width <= 992px) {
+    margin-top: var(--spacing-2);
+    justify-self: end;
   }
 }
 
