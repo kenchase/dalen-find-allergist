@@ -744,10 +744,10 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
   // Physician header
   parts.push(`
 		<div class="faa-res-physician-info">
-			<h3 class="faa-res-physician-name">
+			<h2 class="faa-res-physician-name">
 			  ${escapeHTML(physicianInfo.title)}
 				${physicianInfo.credentials ? `, ${escapeHTML(physicianInfo.credentials)}` : ''}
-			</h3>
+			</h2>
 		</div>
 	`);
 
@@ -784,17 +784,18 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 
     // Org Summary section
     parts.push(`<div class="faa-res-org__summary">`);
-    parts.push(`<h4 class="faa-res-org-title">${escapeHTML(orgName)}</h4>`);
 
-    parts.push(`<p class="faa-res-org-address">`);
+    parts.push(`<h3 class="faa-res-org__grid-item faa-res-org__title">${escapeHTML(orgName)}</h3>`);
+
+    parts.push(`<p class="faa-res-org__grid-item faa-res-org__text faa-res-org__address">`);
 
     if (address) {
-      parts.push(`<span class="faa-res-org-address_street"> ${escapeHTML(address)}</span>`);
+      parts.push(`<span class="faa-res-org__grid-item faa-res-org__address-street"> ${escapeHTML(address)}</span>`);
     }
 
     if (city || state) {
       const cityStateParts = [city, state].filter(Boolean);
-      parts.push(`<span class="faa-res-org-address_city-state">, ${escapeHTML(cityStateParts.join(', '))}</span>`);
+      parts.push(`<span class="faa-res-org__grid-item faa-res-org__address-city-state">, ${escapeHTML(cityStateParts.join(', '))}</span>`);
     }
 
     if (postalCode) {
@@ -804,12 +805,12 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
     parts.push(`</p>`);
 
     if (phone) {
-      parts.push(`<p class="faa-res-org-phone"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}</p>`);
+      parts.push(`<p class="faa-res-org__grid-item faa-res-org__text faa-res-org__phone"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}</p>`);
     } else {
-      parts.push(`<p class="faa-res-org-phone faa-res-org-phone--no-phone">Not available</p>`);
+      parts.push(`<p class="faa-res-org__grid-item faa-res-org__text faa-res-org__phone faa-res-org__phone--no-phone">Not available</p>`);
     }
 
-    parts.push(`<button class="faa-res-org-view-more">View More</button>`);
+    parts.push(`<button class="faa-res-org__grid-item faa-res-org__btn faa-res-org-view-more">More Info</button>`);
 
     parts.push(`</div>`); // Close org summary
 
@@ -817,39 +818,40 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
     parts.push(`<div class="faa-res-org__body faa-res-org__body--hidden">`);
 
     // Org Body section  Row 1
-    parts.push(`<div class="faa-res-org__body-grid-cell">`);
+    parts.push(`<div class="faa-res-org__grid-item">`);
     if (practiceSetting) {
-      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label">Practice Setting(s):</span> ${escapeHTML(practiceSetting)}</div>`);
+      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Practice Setting(s):</span> ${escapeHTML(practiceSetting)}</div>`);
     }
     if (practicesOIT) {
-      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label">Practices OIT:</span> ${escapeHTML(practicesOIT)}</div>`);
+      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Practices OIT:</span> ${escapeHTML(practicesOIT)}</div>`);
     }
     if (practicePopulation) {
-      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label">Practices Population:</span> ${escapeHTML(practicePopulation)}</div>`);
+      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Practices Population:</span> ${escapeHTML(practicePopulation)}</div>`);
     }
     parts.push(`</div>`);
-    parts.push(`<div class="faa-res-org__body-grid-cell">`);
+    parts.push(`<div class="faa-res-org__grid-item">`);
     if (specialAreasOfInterest) {
-      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label faa-res-org__body-grid-item-label--lb">Special Areas of Interest:</span> ${escapeHTML(specialAreasOfInterest)}</div>`);
+      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label faa-res-org__grid-item-label--lb">Special Areas of Interest:</span> ${escapeHTML(specialAreasOfInterest)}</div>`);
     }
     parts.push(`</div>`);
 
     // Org Body section Row 2
-    parts.push(`<div class="faa-res-org__body-grid-cell faa-res-org__body-grid-cell--spacer">`);
+    parts.push(`<div class="faa-res-org__grid-item">`);
     if (consultationServices && consultationServices.length > 0) {
-      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label faa-res-org__body-grid-item-label--lb">Consultation Services:</span> ${escapeHTML(consultationServices.join(', '))}</div>`);
+      const consultationServicesList = consultationServices.map((service) => `<li class="faa-res-org__grid-item-cell_list-item">${escapeHTML(service)}</li>`).join('');
+      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label faa-res-org__grid-item-label--lb">Consultation Services:</span> <ul class="faa-res-org__grid-item-cell-list">${consultationServicesList}</ul></div>`);
     }
     if (siteForClinicalTrials) {
-      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label faa-res-org__body-grid-item-label--lb">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
+      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label faa-res-org__grid-item-label--lb">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
     }
     parts.push(`</div>`);
-    parts.push(`<div class="faa-res-org__body-grid-cell faa-res-org__body-grid-cell--spacer">`);
+    parts.push(`<div class="faa-res-org__grid-item">`);
     if (treatmentServicesOffered && treatmentServicesOffered.length > 0) {
-      const treatmentServicesList = treatmentServicesOffered.map((service) => `<li class="faa-res-org__body-grid-item_list-item">${escapeHTML(service)}</li>`).join('');
-      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label faa-res-org__body-grid-item-label--lb">Treatment Services Offered:</span> <ul class="faa-res-org__body-grid-item_list">${treatmentServicesList}</ul></div>`);
+      const treatmentServicesList = treatmentServicesOffered.map((service) => `<li class="faa-res-org__grid-item-cell_list-item">${escapeHTML(service)}</li>`).join('');
+      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label faa-res-org__grid-item-label--lb">Treatment Services Offered:</span> <ul class="faa-res-org__grid-item-cell-list">${treatmentServicesList}</ul></div>`);
     }
     if (treatmentServicesOfferedOther) {
-      parts.push(`<div class="faa-res-org__body-grid-item"><span class="faa-res-org__body-grid-item-label faa-res-org__body-grid-item-label--lb">Other areas of special interest unique to your practice:</span> ${escapeHTML(treatmentServicesOfferedOther)}</div>`);
+      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label faa-res-org__grid-item-label--lb">Other areas of special interest unique to your practice:</span> ${escapeHTML(treatmentServicesOfferedOther)}</div>`);
     }
     parts.push(`</div>`);
 
@@ -1141,11 +1143,13 @@ function toggleOrgDetails(button) {
   if (isCurrentlyHidden) {
     // Show the content
     orgBody.classList.remove('faa-res-org__body--hidden');
-    button.textContent = 'View Less';
+    button.textContent = 'Less Info';
+    button.classList.add('faa-res-org__btn--expanded');
   } else {
     // Hide the content
     orgBody.classList.add('faa-res-org__body--hidden');
-    button.textContent = 'View More';
+    button.textContent = 'More Info';
+    button.classList.remove('faa-res-org__btn--expanded');
   }
 }
 
