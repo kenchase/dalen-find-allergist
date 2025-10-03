@@ -144,6 +144,15 @@ function clearForm() {
   // Clear results
   setResultsHTML('');
 
+  // Remove "No results found" message from intro text container
+  const introTextContainer = document.querySelector('.faa-search-intro__text');
+  if (introTextContainer) {
+    const existingMessage = introTextContainer.querySelector('.faa-search-intro__no-resuts');
+    if (existingMessage) {
+      existingMessage.remove();
+    }
+  }
+
   // Reset validation states
   clearPostalValidation();
 
@@ -490,21 +499,41 @@ function generateResultsNav(totalResults, startIndex, endIndex, page, totalPages
  * @param {boolean} isNewSearch - Whether this is a new search (requires map initialization)
  */
 function renderPaginatedResults(page, isNewSearch = false) {
-  // Hide parent section when showing results
-  if (isNewSearch) {
+  // Don't hide parent section when no results are found
+  if (isNewSearch && Array.isArray(AppState.allSearchResults) && AppState.allSearchResults.length > 0) {
     hideParentSection();
   }
 
   if (!Array.isArray(AppState.allSearchResults) || AppState.allSearchResults.length === 0) {
     if (isNewSearch) {
-      // For new searches, set up the complete structure even with no results
-      const fullResultParts = ['<div id="faa-res-map" class="faa-res-map"></div>', '<div id="faa-res-content"><p>No matches found.</p></div>'];
-      setResultsHTML(fullResultParts.join(''));
+      // Append "No results found." to the faa-search-intro__text container
+      const introTextContainer = document.querySelector('.faa-search-intro__text');
+      if (introTextContainer) {
+        // Remove any existing "No results found" message
+        const existingMessage = introTextContainer.querySelector('.faa-search-intro__no-resuts');
+        if (existingMessage) {
+          existingMessage.remove();
+        }
+
+        // Create and append the "No results found" message
+        const noResultsMessage = document.createElement('p');
+        noResultsMessage.className = 'faa-search-intro__no-resuts';
+        noResultsMessage.textContent = 'No results found.';
+        introTextContainer.appendChild(noResultsMessage);
+      }
+
+      // Clear any existing results display
+      setResultsHTML('');
     } else {
       // For pagination, just update the content area
       setSearchResultsContentHTML('<p>No matches found.</p>');
     }
     return;
+  }
+
+  // Results found - hide parent section and proceed with normal display
+  if (isNewSearch) {
+    hideParentSection();
   }
 
   // Calculate pagination
@@ -1101,6 +1130,15 @@ function handleStartOver() {
 
   // Clear results
   setResultsHTML('');
+
+  // Remove "No results found" message from intro text container
+  const introTextContainer = document.querySelector('.faa-search-intro__text');
+  if (introTextContainer) {
+    const existingMessage = introTextContainer.querySelector('.faa-search-intro__no-resuts');
+    if (existingMessage) {
+      existingMessage.remove();
+    }
+  }
 
   // Show parent section (search form)
   showParentSection();

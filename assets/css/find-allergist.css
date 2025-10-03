@@ -82,6 +82,12 @@
   max-width: 600px;
 }
 
+.faa-search-intro__no-resuts {
+  font-size: var(--text-3xl);
+  color: var(--red-600);
+  font-weight: 600;
+}
+
 .faa-search-form {
   display: grid;
   grid-template-columns: 1fr; /* Add this for 2 columns on mobile */
