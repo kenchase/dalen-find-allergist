@@ -873,6 +873,9 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
     if (siteForClinicalTrials) {
       parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
     }
+    if (distance !== undefined && distance !== null && !isNaN(distance)) {
+      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Distance:</span> ${escapeHTML(distance)} km</div>`);
+    }
     parts.push(`</div>`);
     parts.push(`<div class="faa-res-org__grid-item">`);
     if (treatmentServicesOffered && treatmentServicesOffered.length > 0) {
@@ -890,11 +893,6 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 
   parts.push(`</div>`); // Close orgs
   return parts.join('');
-
-  // Don't know where to include this yet
-  // if (distance !== undefined) {
-  //   parts.push(`<span class="faa-res-org-list-item"><strong>Distance:</strong> ${distance} km</span>`);
-  // }
 
   // Don't know where to include this yet
   // Add "Show on map" link if this organization has a marker
