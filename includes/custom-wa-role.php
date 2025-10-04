@@ -10,9 +10,9 @@
 
 // if the user has a wa_ role, filter the posts they see in the admin to only those they authored
 // This ensures they only see their own allergist profile post if they somehow access the admin area 
-// fa_redirect_wa_users_from_admin() should prevent this normally
+// faa_redirect_wa_users_from_admin() should prevent this normally
 
-function fa_filter_posts_for_wa_users($query)
+function faa_filter_posts_for_wa_users($query)
 {
     if (is_admin() && !wp_doing_ajax() && $query->is_main_query()) {
         $user = wp_get_current_user();
@@ -26,13 +26,13 @@ function fa_filter_posts_for_wa_users($query)
         }
     }
 }
-add_action('pre_get_posts', 'fa_filter_posts_for_wa_users');
+add_action('pre_get_posts', 'faa_filter_posts_for_wa_users');
 
 
 // Prevent wa users from editing posts they do not own
 // This is a safety net in case they somehow access posts they do not own
 
-function fa_restrict_wa_users_to_own_posts($allcaps, $caps, $args, $user)
+function faa_restrict_wa_users_to_own_posts($allcaps, $caps, $args, $user)
 {
     // Check if user has a role starting with "wa_"
     $has_wa_role = false;
@@ -67,12 +67,12 @@ function fa_restrict_wa_users_to_own_posts($allcaps, $caps, $args, $user)
 
     return $allcaps;
 }
-add_filter('user_has_cap', 'fa_restrict_wa_users_to_own_posts', 10, 4);
+add_filter('user_has_cap', 'faa_restrict_wa_users_to_own_posts', 10, 4);
 
 
 // Redirect for users with the Wild Apricot 'wa_' role to a front-end page where they can edit their profile.
 
-function fa_redirect_wa_users_from_admin()
+function faa_redirect_wa_users_from_admin()
 {
     // Check if we're in admin area and not doing an AJAX request
     if (is_admin() && ! wp_doing_ajax()) {
@@ -91,12 +91,12 @@ function fa_redirect_wa_users_from_admin()
         }
     }
 }
-add_action('admin_init', 'fa_redirect_wa_users_from_admin');
+add_action('admin_init', 'faa_redirect_wa_users_from_admin');
 
 
 // Hide the admin bar for users with Wild Apricot 'wa_' role
 
-function fa_hide_admin_bar_for_allergist_users()
+function faa_hide_admin_bar_for_allergist_users()
 {
     $user = wp_get_current_user();
 
@@ -108,4 +108,4 @@ function fa_hide_admin_bar_for_allergist_users()
         }
     }
 }
-add_action('after_setup_theme', 'fa_hide_admin_bar_for_allergist_users');
+add_action('after_setup_theme', 'faa_hide_admin_bar_for_allergist_users');
