@@ -248,7 +248,7 @@ class Dalen_Find_Allergist_Admin
             '<input type="text" id="edit_profile_page_slug" name="dalen_find_allergist_options[edit_profile_page_slug]" value="%s" class="regular-text" />',
             esc_attr($value)
         );
-        echo '<p class="description">' . esc_html__('Enter the slug for the "Find an Allergist - Edit Profile" page.', 'dalen-find-allergist') . '</p>';
+        echo '<p class="description">' . esc_html__('Enter the slug for the "Find an Allergist - Edit Profile" page. This is where Wild Apricot users will be redirected to if they try to access the WP back-end while logged in', 'dalen-find-allergist') . '</p>';
     }
 
     /**

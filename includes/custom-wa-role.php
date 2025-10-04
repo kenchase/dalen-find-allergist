@@ -94,7 +94,6 @@ function fa_redirect_wa_users_from_admin()
 add_action('admin_init', 'fa_redirect_wa_users_from_admin');
 
 
-
 // Hide the admin bar for users with Wild Apricot 'wa_' role
 
 function fa_hide_admin_bar_for_allergist_users()

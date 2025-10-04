@@ -46,7 +46,7 @@ if (!defined('ABSPATH')) {
                         id="dalen_search_form_title"
                         value="<?php echo esc_attr(get_option('dalen_search_form_title', 'Find an Allergist Near You')); ?>"
                         class="regular-text" />
-                    <p class="description"><?php esc_html_e('Enter the title to display above the search form.', 'dalen-find-allergist'); ?></p>
+                    <p class="description"><?php esc_html_e('Enter the title to display above the Find an Allergist search form.', 'dalen-find-allergist'); ?></p>
                 </div>
 
                 <div class="dalen-form-setting-item">
@@ -64,7 +64,7 @@ if (!defined('ABSPATH')) {
                         )
                     ));
                     ?>
-                    <p class="description"><?php esc_html_e('Enter introductory text to display above the search form.', 'dalen-find-allergist'); ?></p>
+                    <p class="description"><?php esc_html_e('Enter introductory text to display above the Find an Allergist search form.', 'dalen-find-allergist'); ?></p>
                 </div>
             </div>
         </div>
