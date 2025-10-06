@@ -89,7 +89,7 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
         // Set default attributes
         $atts = shortcode_atts([
             'post_id'   => $post_id,
-            'post_title'    => false,
+            'post_title'    => true,
             'post_content'  => false,
             'submit_value'  => __('Update Profile', 'dalen-find-allergist'),
         ], $atts, 'acf-allergist-form');
