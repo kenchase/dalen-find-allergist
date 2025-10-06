@@ -123,14 +123,19 @@ function faa_attempt_physician_post_creation($user_id)
  */
 function faa_get_physician_post_title($user)
 {
-    // Try display name first (if it's not just the username)
-    if (!empty($user->display_name) && $user->display_name !== $user->user_login) {
-        return $user->display_name;
+    // Try first + last name first (priority format: "First Last")
+    if (!empty($user->first_name) || !empty($user->last_name)) {
+        $first = !empty($user->first_name) ? trim($user->first_name) : '';
+        $last = !empty($user->last_name) ? trim($user->last_name) : '';
+        $full_name = trim($first . ' ' . $last);
+        if (!empty($full_name)) {
+            return $full_name;
+        }
     }
 
-    // Try first + last name
-    if (!empty($user->first_name) || !empty($user->last_name)) {
-        return trim($user->first_name . ' ' . $user->last_name);
+    // Try display name (if it's not just the username)
+    if (!empty($user->display_name) && $user->display_name !== $user->user_login) {
+        return $user->display_name;
     }
 
     // Fallback: clean up the username for display
@@ -215,4 +220,115 @@ function faa_send_urgent_admin_notification($user_id, $error_message)
 
     // Set transient to prevent spam
     set_transient('faa_urgent_notification_' . $user_id, true, HOUR_IN_SECONDS);
+}
+
+/**
+ * MANUAL TRIGGER: Admin function to create missing physician posts
+ * Add ?faa_create_missing_posts=1 to admin URL to trigger (admin only)
+ */
+add_action('admin_init', 'faa_manual_create_missing_posts');
+function faa_manual_create_missing_posts()
+{
+    if (!isset($_GET['faa_create_missing_posts']) || !current_user_can('manage_options')) {
+        return;
+    }
+
+    error_log("=== FAA: Manual trigger for missing physician posts ===");
+
+    // Get all Wild Apricot users
+    $wa_users = get_users(array(
+        'search' => 'wa_*',
+        'search_columns' => array('user_login'),
+    ));
+
+    $created = 0;
+    $already_exists = 0;
+    $errors = 0;
+
+    foreach ($wa_users as $user) {
+        error_log("FAA: Checking user {$user->ID} ({$user->user_login})");
+
+        // Check if post exists
+        $posts = get_posts(array(
+            'post_type' => 'physicians',
+            'author' => $user->ID,
+            'posts_per_page' => 1,
+            'post_status' => 'any',
+            'fields' => 'ids'
+        ));
+
+        if (empty($posts)) {
+            error_log("FAA: No post found, creating for user {$user->ID}");
+            $result = faa_attempt_physician_post_creation($user->ID);
+            if (is_wp_error($result)) {
+                $errors++;
+                error_log("FAA: Error creating post: " . $result->get_error_message());
+            } else {
+                $created++;
+                error_log("FAA: Created post $result for user {$user->ID}");
+            }
+        } else {
+            $already_exists++;
+            error_log("FAA: Post already exists: {$posts[0]}");
+        }
+    }
+
+    $message = "Physician Post Creation Results: Created: $created, Already Exists: $already_exists, Errors: $errors";
+    error_log("FAA: $message");
+
+    wp_die($message . '<br><br><a href="' . admin_url() . '">Back to Dashboard</a>');
+}
+
+/**
+ * Admin notice if post creation has errors
+ */
+add_action('admin_notices', 'faa_physician_post_creation_admin_notice');
+function faa_physician_post_creation_admin_notice()
+{
+    $user_id = get_current_user_id();
+    $error = get_user_meta($user_id, 'faa_physician_post_creation_error', true);
+
+    if ($error && current_user_can('edit_posts')) {
+        echo '<div class="notice notice-error"><p><strong>Physician Post Creation Error:</strong> ' . esc_html($error) . '</p></div>';
+    }
+}
+            'posts_per_page' => 1,
+            'post_status' => 'any',
+            'fields' => 'ids'
+        ));
+
+        if (empty($posts)) {
+            error_log("FAA: No post found, creating for user {$user->ID}");
+            $result = faa_attempt_physician_post_creation($user->ID);
+            if (is_wp_error($result)) {
+                $errors++;
+                error_log("FAA: Error creating post: " . $result->get_error_message());
+            } else {
+                $created++;
+                error_log("FAA: Created post $result for user {$user->ID}");
+            }
+        } else {
+            $already_exists++;
+            error_log("FAA: Post already exists: {$posts[0]}");
+        }
+    }
+
+    $message = "Physician Post Creation Results: Created: $created, Already Exists: $already_exists, Errors: $errors";
+    error_log("FAA: $message");
+
+    wp_die($message . '<br><br><a href="' . admin_url() . '">Back to Dashboard</a>');
+}
+
+/**
+ * Admin notice if post creation has errors
+ */
+add_action('admin_notices', 'faa_physician_post_creation_admin_notice');
+function faa_physician_post_creation_admin_notice()
+{
+    $user_id = get_current_user_id();
+    $error = get_user_meta($user_id, 'faa_physician_post_creation_error', true);
+
+    if ($error && current_user_can('edit_posts')) {
+        echo '<div class="notice notice-error"><p><strong>Physician Post Creation Error:</strong> ' . esc_html($error) . '</p></div>';
+    }
 }
