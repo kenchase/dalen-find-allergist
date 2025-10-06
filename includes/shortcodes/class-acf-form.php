@@ -72,7 +72,9 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
                 'author'        => $user_ID,
                 'post_type'     => 'physicians',
                 'numberposts'   => 1,
-                'post_status'   => ['publish', 'draft', 'pending']
+                'post_status'   => ['publish', 'draft', 'pending'],
+                'orderby'       => 'date',
+                'order'         => 'DESC'
             ]);
             if (!empty($user_posts)) {
                 $post_id = $user_posts[0]->ID;
