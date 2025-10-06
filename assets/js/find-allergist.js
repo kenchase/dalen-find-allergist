@@ -774,8 +774,7 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
   parts.push(`
 		<div class="faa-res-physician-info">
 			<h2 class="faa-res-physician-name">
-			  ${escapeHTML(physicianInfo.title)}
-				${physicianInfo.credentials ? `, ${escapeHTML(physicianInfo.credentials)}` : ''}
+			  ${escapeHTML(physicianInfo.title)}${physicianInfo.credentials ? `, ${escapeHTML(physicianInfo.credentials)}` : ''}
 			</h2>
 		</div>
 	`);
