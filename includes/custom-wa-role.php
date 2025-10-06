@@ -34,7 +34,7 @@ add_action('pre_get_posts', 'faa_filter_posts_for_wa_users');
 
 function faa_restrict_wa_users_to_own_posts($allcaps, $caps, $args, $user)
 {
-    // Check if user has a role starting with "wa_"
+    // Only process for wa_ users
     $has_wa_role = false;
     foreach ((array) $user->roles as $role) {
         if (strpos($role, 'wa_') === 0) {
@@ -43,26 +43,18 @@ function faa_restrict_wa_users_to_own_posts($allcaps, $caps, $args, $user)
         }
     }
 
-    if (!$has_wa_role) {
+    if (!$has_wa_role || !isset($args[2])) {
         return $allcaps;
     }
 
-    // If checking a specific post capability
-    if (isset($args[2])) {
-        $post_id = $args[2];
-        $post = get_post($post_id);
+    $post_id = $args[2];
+    $post = get_post($post_id);
 
-        // If the post exists and doesn't belong to this user, deny access
-        if ($post && $post->post_author != $user->ID) {
-            // Remove all edit/delete capabilities for posts they don't own
-            $allcaps['edit_post'] = false;
-            $allcaps['delete_post'] = false;
-            $allcaps['edit_posts'] = false;
-            $allcaps['delete_posts'] = false;
-            $allcaps['publish_posts'] = false;
-            $allcaps['edit_published_posts'] = false;
-            $allcaps['delete_published_posts'] = false;
-        }
+    // Only deny if post exists AND belongs to someone else
+    if ($post && intval($post->post_author) !== intval($user->ID)) {
+        // Block all post-editing capabilities
+        $allcaps['edit_post'] = false;
+        $allcaps['delete_post'] = false;
     }
 
     return $allcaps;

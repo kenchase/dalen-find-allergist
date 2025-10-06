@@ -94,7 +94,13 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
 
 
         // Call ACF form functions if the current user can edit the post
-        if (current_user_can('edit_post', $post_id)) {
+        // Check both capability AND post authorship as a fallback
+        $post_author = get_post_field('post_author', $post_id);
+        $can_edit_post = current_user_can('edit_post', $post_id);
+        $is_post_author = ($user_ID == $post_author);
+
+        // Allow if user can edit the post OR is the post author
+        if ($can_edit_post || $is_post_author) {
             acf_form_head();
             echo '<h1>' . esc_html($current_user->first_name . ' ' . $current_user->last_name) . __(' - Find an Allergist profile', 'dalen-find-allergist') . '</h1>';
             acf_form($atts);
