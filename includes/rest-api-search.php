@@ -15,7 +15,7 @@ add_action('rest_api_init', function () {
     register_rest_route(FAA_API_NAMESPACE, '/' . FAA_API_ENDPOINT, [
         'methods'  => 'GET',
         'callback' => 'faa_physician_search',
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true', // Public endpoint - no authentication required for physician search
         'args' => [
             'name'         => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'city'         => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
@@ -28,15 +28,26 @@ add_action('rest_api_init', function () {
 });
 
 /**
- * Sanitize postal code for search
+ * Sanitize and validate postal code for search
+ * Canadian postal code format: A1A 1A1 (letter-digit-letter digit-letter-digit)
  */
 function faa_sanitize_postal($value)
 {
-    return strtoupper(preg_replace('/\s+/', '', (string)$value));
+    // Remove spaces and convert to uppercase
+    $postal = strtoupper(preg_replace('/\s+/', '', (string)$value));
+
+    // Validate Canadian postal code format (A1A1A1)
+    // Allow partial postal codes (first 3 characters) for broader searches
+    if (!empty($postal) && !preg_match('/^[A-Z]\d[A-Z](\d[A-Z]\d)?$/', $postal)) {
+        return ''; // Return empty string for invalid format
+    }
+
+    return $postal;
 }
 
 /**
  * Simple geocoding for Canadian postal codes
+ * Results are cached for 1 week to reduce API calls
  */
 function faa_geocode_postal($postal_code)
 {
@@ -44,9 +55,19 @@ function faa_geocode_postal($postal_code)
         return null;
     }
 
+    // Check cache first
+    $cache_key = 'faa_geocode_' . md5(strtoupper($postal_code));
+    $cached_coords = get_transient($cache_key);
+
+    if (false !== $cached_coords) {
+        return $cached_coords;
+    }
+
     $api_key = faa_get_google_maps_api_key();
     if (empty($api_key)) {
-        error_log('FAA: Google Maps API key not configured for geocoding');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FAA: Google Maps API key not configured for geocoding');
+        }
         return null;
     }
 
@@ -62,39 +83,52 @@ function faa_geocode_postal($postal_code)
     $url = "https://maps.googleapis.com/maps/api/geocode/json?address={$address}&key={$api_key}";
 
     $response = wp_remote_get($url, [
-        'timeout' => 10,
+        'timeout' => 5, // Reduced timeout for better user experience
         'headers' => [
             'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . home_url()
         ]
     ]);
 
     if (is_wp_error($response)) {
-        error_log('FAA: Geocoding API request failed: ' . $response->get_error_message());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FAA: Geocoding API request failed: ' . $response->get_error_message());
+        }
         return null;
     }
 
     $data = json_decode(wp_remote_retrieve_body($response), true);
 
     if (!$data) {
-        error_log('FAA: Invalid JSON response from geocoding API');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FAA: Invalid JSON response from geocoding API');
+        }
         return null;
     }
 
     if ($data['status'] !== 'OK') {
-        error_log('FAA: Geocoding API error: ' . $data['status'] . ' for postal code: ' . $postal_code);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FAA: Geocoding API error: ' . $data['status'] . ' for postal code: ' . $postal_code);
+        }
         return null;
     }
 
     if (empty($data['results'])) {
-        error_log('FAA: No geocoding results for postal code: ' . $postal_code);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FAA: No geocoding results for postal code: ' . $postal_code);
+        }
         return null;
     }
 
     $location = $data['results'][0]['geometry']['location'];
-    return [
+    $coords = [
         'lat' => (float) $location['lat'],
         'lng' => (float) $location['lng']
     ];
+
+    // Cache the result for 1 week
+    set_transient($cache_key, $coords, WEEK_IN_SECONDS);
+
+    return $coords;
 }
 
 /**
@@ -268,7 +302,9 @@ function faa_physician_search(WP_REST_Request $req)
     $physicians = get_posts($query_args);
 
     // Debug: Log initial physician count
-    error_log('FAA:  Initial physicians found: ' . count($physicians));
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('FAA:  Initial physicians found: ' . count($physicians));
+    }
 
     // Filter by name if provided
     if (!empty($name)) {
@@ -327,21 +363,29 @@ function faa_physician_search(WP_REST_Request $req)
             return false;
         });
 
-        error_log('FAA:  After location filtering: ' . count($physicians) . ' physicians');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FAA:  After location filtering: ' . count($physicians) . ' physicians');
+        }
     }
 
     // Geocode postal code for distance calculations if needed
     $origin_coords = null;
     if (!empty($postal) && $kms > 0) {
-        error_log('FAA:  Attempting to geocode postal: ' . $postal);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FAA:  Attempting to geocode postal: ' . $postal);
+        }
         $origin_coords = faa_geocode_postal($postal);
 
         // If geocoding fails, we can't do distance filtering
         if (!$origin_coords) {
-            error_log('FAA:  Geocoding failed for postal: ' . $postal);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('FAA:  Geocoding failed for postal: ' . $postal);
+            }
             return new WP_Error('geocoding_failed', 'Unable to geocode the provided postal code for distance calculation.', ['status' => 400]);
         } else {
-            error_log('FAA:  Geocoded coordinates: ' . json_encode($origin_coords));
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('FAA:  Geocoded coordinates: ' . json_encode($origin_coords));
+            }
         }
     }
 
@@ -350,7 +394,9 @@ function faa_physician_search(WP_REST_Request $req)
         $organizations = get_field('organizations_details', $physician->ID) ?: [];
 
         // Debug: Log organization count for this physician
-        error_log('FAA:  Physician ID ' . $physician->ID . ' has ' . count($organizations) . ' organizations');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FAA:  Physician ID ' . $physician->ID . ' has ' . count($organizations) . ' organizations');
+        }
 
         // Filter organizations based on search criteria
         $filtered_orgs = [];
@@ -389,19 +435,25 @@ function faa_physician_search(WP_REST_Request $req)
                     // Check if distance calculation was successful and within range
                     if ($distance_km !== false && $distance_km <= $kms) {
                         $distance_match = true;
-                        error_log('FAA:  Organization matches distance (' . round($distance_km, 1) . 'km <= ' . $kms . 'km)');
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                            error_log('FAA:  Organization matches distance (' . round($distance_km, 1) . 'km <= ' . $kms . 'km)');
+                        }
                     } else {
                         $distance_match = false;
-                        if ($distance_km !== false) {
-                            error_log('FAA:  Organization outside distance (' . round($distance_km, 1) . 'km > ' . $kms . 'km)');
-                        } else {
-                            error_log('FAA:  Distance calculation failed for organization');
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                            if ($distance_km !== false) {
+                                error_log('FAA:  Organization outside distance (' . round($distance_km, 1) . 'km > ' . $kms . 'km)');
+                            } else {
+                                error_log('FAA:  Distance calculation failed for organization');
+                            }
                         }
                     }
                 } else {
                     // No coordinates available, can't calculate distance
                     $distance_match = false;
-                    error_log('FAA:  Organization missing coordinates');
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log('FAA:  Organization missing coordinates');
+                    }
                 }
             }
 
@@ -414,7 +466,9 @@ function faa_physician_search(WP_REST_Request $req)
             }
         }
 
-        error_log('FAA:  Physician ID ' . $physician->ID . ' has ' . count($filtered_orgs) . ' matching organizations');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FAA:  Physician ID ' . $physician->ID . ' has ' . count($filtered_orgs) . ' matching organizations');
+        }
 
         return [
             'id'    => $physician->ID,
@@ -432,7 +486,9 @@ function faa_physician_search(WP_REST_Request $req)
         return !empty($result['acf']['organizations_details']);
     });
 
-    error_log('FAA:  Final result count: ' . count($results));
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('FAA:  Final result count: ' . count($results));
+    }
 
     return rest_ensure_response([
         'total_results' => count($results),
