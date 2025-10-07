@@ -3,432 +3,432 @@
  */
 
 /* General Admin Styles */
-.dalen-admin-header {
-    background: #fff;
-    border: 1px solid #ccd0d4;
-    border-radius: 3px;
-    padding: 20px;
-    margin: 20px 0;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+.faa-admin-header {
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 3px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
-.dalen-admin-header h2 {
-    margin: 0 0 10px 0;
-    color: #23282d;
-    font-size: 24px;
+.faa-admin-header h2 {
+  margin: 0 0 10px 0;
+  color: #23282d;
+  font-size: 24px;
 }
 
-.dalen-admin-header p {
-    margin: 0;
-    color: #666;
-    font-size: 14px;
+.faa-admin-header p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
 }
 
 /* Grid Layouts */
-.dalen-admin-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin: 20px 0;
+.faa-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
 }
 
 /* Cards */
-.dalen-card {
-    background: #fff;
-    border: 1px solid #ccd0d4;
-    border-radius: 3px;
-    padding: 20px;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
-    transition: box-shadow 0.3s ease;
+.faa-card {
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 3px;
+  padding: 20px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease;
 }
 
-.dalen-card:hover {
-    box-shadow: 0 2px 5px rgba(0,0,0,.1);
+.faa-card:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.dalen-card h3 {
-    margin: 0 0 15px 0;
-    color: #23282d;
-    font-size: 16px;
-    font-weight: 600;
+.faa-card h3 {
+  margin: 0 0 15px 0;
+  color: #23282d;
+  font-size: 16px;
+  font-weight: 600;
 }
 
-.dalen-stat-number {
-    font-size: 36px;
-    font-weight: bold;
-    color: #0073aa;
-    line-height: 1;
-    margin: 10px 0;
+.faa-stat-number {
+  font-size: 36px;
+  font-weight: bold;
+  color: #0073aa;
+  line-height: 1;
+  margin: 10px 0;
 }
 
-.dalen-card p {
-    margin: 0;
-    color: #666;
-    font-size: 13px;
+.faa-card p {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
 }
 
 /* Stat Cards */
-.dalen-stat-card {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+.faa-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
-.dalen-stat-icon {
-    width: 60px;
-    height: 60px;
-    background: #0073aa;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+.faa-stat-icon {
+  width: 60px;
+  height: 60px;
+  background: #0073aa;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.dalen-stat-icon .dashicons {
-    color: #fff;
-    font-size: 24px;
+.faa-stat-icon .dashicons {
+  color: #fff;
+  font-size: 24px;
 }
 
-.dalen-stat-info h3 {
-    margin: 0 0 5px 0;
-    font-size: 14px;
-    color: #666;
-    font-weight: normal;
+.faa-stat-info h3 {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  color: #666;
+  font-weight: normal;
 }
 
-.dalen-stat-card .dalen-stat-number {
-    font-size: 28px;
-    margin: 0;
+.faa-stat-card .faa-stat-number {
+  font-size: 28px;
+  margin: 0;
 }
 
 /* Quick Actions */
-.dalen-quick-actions {
-    background: #fff;
-    border: 1px solid #ccd0d4;
-    border-radius: 3px;
-    padding: 20px;
-    margin: 20px 0;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+.faa-quick-actions {
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 3px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
-.dalen-quick-actions h3 {
-    margin: 0 0 15px 0;
-    color: #23282d;
+.faa-quick-actions h3 {
+  margin: 0 0 15px 0;
+  color: #23282d;
 }
 
-.dalen-action-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+.faa-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.dalen-action-buttons .button {
-    display: flex;
-    align-items: center;
-    gap: 5px;
+.faa-action-buttons .button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
-.dalen-action-buttons .dashicons {
-    font-size: 16px;
+.faa-action-buttons .dashicons {
+  font-size: 16px;
 }
 
 /* Recent Activity */
-.dalen-recent-activity {
-    background: #fff;
-    border: 1px solid #ccd0d4;
-    border-radius: 3px;
-    padding: 20px;
-    margin: 20px 0;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+.faa-recent-activity {
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 3px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
-.dalen-recent-activity h3 {
-    margin: 0 0 15px 0;
-    color: #23282d;
+.faa-recent-activity h3 {
+  margin: 0 0 15px 0;
+  color: #23282d;
 }
 
 /* System Information */
-.dalen-system-info {
-    background: #fff;
-    border: 1px solid #ccd0d4;
-    border-radius: 3px;
-    padding: 20px;
-    margin: 20px 0;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+.faa-system-info {
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 3px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
-.dalen-system-info h3 {
-    margin: 0 0 15px 0;
-    color: #23282d;
+.faa-system-info h3 {
+  margin: 0 0 15px 0;
+  color: #23282d;
 }
 
-.dalen-info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+.faa-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
 }
 
-.dalen-info-item {
-    padding: 10px;
-    background: #f9f9f9;
-    border-radius: 3px;
+.faa-info-item {
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 3px;
 }
 
-.dalen-status-good {
-    color: #46b450;
-    font-weight: 600;
+.faa-status-good {
+  color: #46b450;
+  font-weight: 600;
 }
 
-.dalen-status-warning {
-    color: #ffb900;
-    font-weight: 600;
+.faa-status-warning {
+  color: #ffb900;
+  font-weight: 600;
 }
 
-.dalen-status-error {
-    color: #dc3232;
-    font-weight: 600;
+.faa-status-error {
+  color: #dc3232;
+  font-weight: 600;
 }
 
 /* Tables */
-.dalen-table-container {
-    background: #fff;
-    border: 1px solid #ccd0d4;
-    border-radius: 3px;
-    padding: 20px;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+.faa-table-container {
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 3px;
+  padding: 20px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
-.dalen-table-container h3 {
-    margin: 0 0 15px 0;
-    color: #23282d;
+.faa-table-container h3 {
+  margin: 0 0 15px 0;
+  color: #23282d;
 }
 
 /* Settings Help */
-.dalen-settings-help {
-    background: #fff;
-    border: 1px solid #ccd0d4;
-    border-radius: 3px;
-    padding: 20px;
-    margin: 20px 0;
-    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+.faa-settings-help {
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 3px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
-.dalen-settings-help h3 {
-    margin: 0 0 15px 0;
-    color: #23282d;
+.faa-settings-help h3 {
+  margin: 0 0 15px 0;
+  color: #23282d;
 }
 
-.dalen-help-sections {
-    display: grid;
-    gap: 20px;
+.faa-help-sections {
+  display: grid;
+  gap: 20px;
 }
 
-.dalen-help-item {
-    padding: 15px;
-    background: #f9f9f9;
-    border-radius: 3px;
-    border-left: 4px solid #0073aa;
+.faa-help-item {
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 3px;
+  border-left: 4px solid #0073aa;
 }
 
-.dalen-help-item h4 {
-    margin: 0 0 10px 0;
-    color: #23282d;
+.faa-help-item h4 {
+  margin: 0 0 10px 0;
+  color: #23282d;
 }
 
-.dalen-help-item p {
-    margin: 0 0 10px 0;
-    color: #666;
+.faa-help-item p {
+  margin: 0 0 10px 0;
+  color: #666;
 }
 
-.dalen-help-item p:last-child {
-    margin-bottom: 0;
+.faa-help-item p:last-child {
+  margin-bottom: 0;
 }
 
 /* Reset Section */
-.dalen-settings-reset {
-    background: #fff;
-    border: 1px solid #dc3232;
-    border-radius: 3px;
-    padding: 20px;
-    margin: 20px 0;
+.faa-settings-reset {
+  background: #fff;
+  border: 1px solid #dc3232;
+  border-radius: 3px;
+  padding: 20px;
+  margin: 20px 0;
 }
 
-.dalen-settings-reset h3 {
-    margin: 0 0 10px 0;
-    color: #dc3232;
+.faa-settings-reset h3 {
+  margin: 0 0 10px 0;
+  color: #dc3232;
 }
 
 /* Steps */
-.dalen-steps {
-    display: grid;
-    gap: 20px;
+.faa-steps {
+  display: grid;
+  gap: 20px;
 }
 
-.dalen-step {
-    display: flex;
-    align-items: flex-start;
-    gap: 15px;
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 3px;
-    border-left: 4px solid #0073aa;
+.faa-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 3px;
+  border-left: 4px solid #0073aa;
 }
 
-.dalen-step-number {
-    width: 40px;
-    height: 40px;
-    background: #0073aa;
-    color: #fff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 18px;
-    flex-shrink: 0;
+.faa-step-number {
+  width: 40px;
+  height: 40px;
+  background: #0073aa;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  flex-shrink: 0;
 }
 
-.dalen-step-content h4 {
-    margin: 0 0 10px 0;
-    color: #23282d;
+.faa-step-content h4 {
+  margin: 0 0 10px 0;
+  color: #23282d;
 }
 
-.dalen-step-content p {
-    margin: 0;
-    color: #666;
+.faa-step-content p {
+  margin: 0;
+  color: #666;
 }
 
 /* FAQ */
-.dalen-faq-item {
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    margin-bottom: 10px;
-    overflow: hidden;
+.faa-faq-item {
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  margin-bottom: 10px;
+  overflow: hidden;
 }
 
-.dalen-faq-question {
-    background: #f9f9f9;
-    padding: 15px 20px;
-    margin: 0;
-    cursor: pointer;
-    border-bottom: 1px solid #ddd;
-    position: relative;
+.faa-faq-question {
+  background: #f9f9f9;
+  padding: 15px 20px;
+  margin: 0;
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+  position: relative;
 }
 
-.dalen-faq-question:hover {
-    background: #f1f1f1;
+.faa-faq-question:hover {
+  background: #f1f1f1;
 }
 
-.dalen-faq-question::after {
-    content: '+';
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 20px;
-    font-weight: bold;
+.faa-faq-question::after {
+  content: '+';
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  font-weight: bold;
 }
 
-.dalen-faq-question.active::after {
-    content: '−';
+.faa-faq-question.active::after {
+  content: '−';
 }
 
-.dalen-faq-answer {
-    padding: 20px;
-    display: none;
-    background: #fff;
+.faa-faq-answer {
+  padding: 20px;
+  display: none;
+  background: #fff;
 }
 
-.dalen-faq-answer p,
-.dalen-faq-answer ul,
-.dalen-faq-answer ol {
-    margin-bottom: 15px;
+.faa-faq-answer p,
+.faa-faq-answer ul,
+.faa-faq-answer ol {
+  margin-bottom: 15px;
 }
 
-.dalen-faq-answer p:last-child,
-.dalen-faq-answer ul:last-child,
-.dalen-faq-answer ol:last-child {
-    margin-bottom: 0;
+.faa-faq-answer p:last-child,
+.faa-faq-answer ul:last-child,
+.faa-faq-answer ol:last-child {
+  margin-bottom: 0;
 }
 
 /* Shortcode Reference */
-.dalen-shortcode-item {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 3px;
-    border-left: 4px solid #0073aa;
-    margin-bottom: 20px;
+.faa-shortcode-item {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 3px;
+  border-left: 4px solid #0073aa;
+  margin-bottom: 20px;
 }
 
-.dalen-shortcode-item h4 {
-    margin: 0 0 10px 0;
-    color: #23282d;
+.faa-shortcode-item h4 {
+  margin: 0 0 10px 0;
+  color: #23282d;
 }
 
-.dalen-shortcode-item code {
-    background: #23282d;
-    color: #fff;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-family: 'Courier New', monospace;
+.faa-shortcode-item code {
+  background: #23282d;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
 }
 
 /* Support Info */
-.dalen-support-info {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
+.faa-support-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
 }
 
-.dalen-support-item {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 3px;
-    border-left: 4px solid #0073aa;
+.faa-support-item {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 3px;
+  border-left: 4px solid #0073aa;
 }
 
-.dalen-support-item h4 {
-    margin: 0 0 15px 0;
-    color: #23282d;
+.faa-support-item h4 {
+  margin: 0 0 15px 0;
+  color: #23282d;
 }
 
 /* Troubleshooting */
-.dalen-trouble-item {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 3px;
-    border-left: 4px solid #ffb900;
-    margin-bottom: 20px;
+.faa-trouble-item {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 3px;
+  border-left: 4px solid #ffb900;
+  margin-bottom: 20px;
 }
 
-.dalen-trouble-item h4 {
-    margin: 0 0 10px 0;
-    color: #23282d;
+.faa-trouble-item h4 {
+  margin: 0 0 10px 0;
+  color: #23282d;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .dalen-admin-grid {
-        grid-template-columns: 1fr;
-    }
+  .faa-admin-grid {
+    grid-template-columns: 1fr;
+  }
 
-    .dalen-action-buttons {
-        flex-direction: column;
-    }
+  .faa-action-buttons {
+    flex-direction: column;
+  }
 
-    .dalen-action-buttons .button {
-        width: 100%;
-        justify-content: center;
-    }
+  .faa-action-buttons .button {
+    width: 100%;
+    justify-content: center;
+  }
 
-    .dalen-stat-card {
-        flex-direction: column;
-        text-align: center;
-    }
+  .faa-stat-card {
+    flex-direction: column;
+    text-align: center;
+  }
 
-    .dalen-step {
-        flex-direction: column;
-        text-align: center;
-    }
+  .faa-step {
+    flex-direction: column;
+    text-align: center;
+  }
 }

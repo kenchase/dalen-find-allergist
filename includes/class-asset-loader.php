@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Asset loader utility for Dalen Find Allergist
+ * Asset loader utility for Find an Allergist
  * Automatically loads minified assets in production
  */
 
@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Dalen_Asset_Loader
+class FAA_Asset_Loader
 {
 
     /**
@@ -117,7 +117,7 @@ class Dalen_Asset_Loader
         }
 
         // Fallback to plugin version
-        return defined('DALEN_FIND_ALLERGIST_VERSION') ? DALEN_FIND_ALLERGIST_VERSION : '1.0.0';
+        return defined('FAA_VERSION') ? FAA_VERSION : '1.0.0';
     }
 }
 
@@ -128,13 +128,13 @@ class Dalen_Asset_Loader
  * @param string $base_url   Base URL for assets
  * @return string            Full URL to the asset
  */
-function dalen_get_asset_url($asset_path, $base_url = null)
+function faa_get_asset_url($asset_path, $base_url = null)
 {
     if ($base_url === null) {
         $base_url = plugin_dir_url(__FILE__) . '../assets/';
     }
 
-    return Dalen_Asset_Loader::get_asset_url($asset_path, $base_url);
+    return FAA_Asset_Loader::get_asset_url($asset_path, $base_url);
 }
 
 /**
@@ -143,7 +143,7 @@ function dalen_get_asset_url($asset_path, $base_url = null)
  * @param string $asset_path Relative path to the asset
  * @return string            Version string
  */
-function dalen_get_asset_version($asset_path)
+function faa_get_asset_version($asset_path)
 {
     $plugin_base_path = plugin_dir_path(dirname(__FILE__));
 
@@ -152,15 +152,15 @@ function dalen_get_asset_version($asset_path)
 
     if ($use_minified) {
         // Try minified version first
-        $minified_path = Dalen_Asset_Loader::get_minified_path($asset_path);
+        $minified_path = FAA_Asset_Loader::get_minified_path($asset_path);
         $minified_file_path = $plugin_base_path . 'assets/' . $minified_path;
 
         if (file_exists($minified_file_path)) {
-            return Dalen_Asset_Loader::get_asset_version($minified_file_path);
+            return FAA_Asset_Loader::get_asset_version($minified_file_path);
         }
     }
 
     // Fallback to original file
     $file_path = $plugin_base_path . 'assets/' . $asset_path;
-    return Dalen_Asset_Loader::get_asset_version($file_path);
+    return FAA_Asset_Loader::get_asset_version($file_path);
 }

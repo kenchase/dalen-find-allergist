@@ -3,7 +3,7 @@
 /**
  * Plugin Constants
  * 
- * @package Dalen_Find_Allergist
+ * @package FAA
  * @since 1.0.0
  */
 
@@ -13,47 +13,47 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin Information
-if (!defined('DALEN_FIND_ALLERGIST_VERSION')) {
-    define('DALEN_FIND_ALLERGIST_VERSION', '0.99');
+if (!defined('FAA_VERSION')) {
+    define('FAA_VERSION', '1.00');
 }
 
-if (!defined('DALEN_FIND_ALLERGIST_PLUGIN_FILE')) {
-    define('DALEN_FIND_ALLERGIST_PLUGIN_FILE', dirname(__DIR__) . '/dalen-find-allergist.php');
+if (!defined('FAA_PLUGIN_FILE')) {
+    define('FAA_PLUGIN_FILE', dirname(__DIR__) . '/faa.php');
 }
 
-if (!defined('DALEN_FIND_ALLERGIST_PLUGIN_PATH')) {
-    define('DALEN_FIND_ALLERGIST_PLUGIN_PATH', dirname(__DIR__) . '/');
+if (!defined('FAA_PLUGIN_PATH')) {
+    define('FAA_PLUGIN_PATH', dirname(__DIR__) . '/');
 }
 
-if (!defined('DALEN_FIND_ALLERGIST_PLUGIN_URL')) {
-    define('DALEN_FIND_ALLERGIST_PLUGIN_URL', plugin_dir_url(DALEN_FIND_ALLERGIST_PLUGIN_FILE));
+if (!defined('FAA_PLUGIN_URL')) {
+    define('FAA_PLUGIN_URL', plugin_dir_url(FAA_PLUGIN_FILE));
 }
 
 // Database Options
-if (!defined('DALEN_FIND_ALLERGIST_OPTIONS')) {
-    define('DALEN_FIND_ALLERGIST_OPTIONS', 'dalen_find_allergist_options');
+if (!defined('FAA_OPTIONS')) {
+    define('FAA_OPTIONS', 'faa_options');
 }
 
 // Post Type
-if (!defined('DALEN_ALLERGIST_POST_TYPE')) {
-    define('DALEN_ALLERGIST_POST_TYPE', 'physicians');
+if (!defined('FAA_POST_TYPE')) {
+    define('FAA_POST_TYPE', 'physicians');
 }
 
 // API Settings
-if (!defined('DALEN_API_NAMESPACE')) {
-    define('DALEN_API_NAMESPACE', 'dalen/v1');
+if (!defined('FAA_API_NAMESPACE')) {
+    define('FAA_API_NAMESPACE', 'faa/v1');
 }
 
-if (!defined('DALEN_API_ENDPOINT')) {
-    define('DALEN_API_ENDPOINT', 'physicians/search');
+if (!defined('FAA_API_ENDPOINT')) {
+    define('FAA_API_ENDPOINT', 'physicians/search');
 }
 
 // Capability Settings
-if (!defined('DALEN_ALLERGIST_CAPABILITY_TYPE')) {
-    define('DALEN_ALLERGIST_CAPABILITY_TYPE', 'physicians');
+if (!defined('FAA_CAPABILITY_TYPE')) {
+    define('FAA_CAPABILITY_TYPE', 'physicians');
 }
 
 // Text Domain
-if (!defined('DALEN_FIND_ALLERGIST_TEXT_DOMAIN')) {
-    define('DALEN_FIND_ALLERGIST_TEXT_DOMAIN', 'dalen-find-allergist');
+if (!defined('FAA_TEXT_DOMAIN')) {
+    define('FAA_TEXT_DOMAIN', 'faa');
 }

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Shortcodes Loader for Dalen Find Allergist Plugin
+ * Shortcodes Loader for Find an Allergist Plugin
  *
- * @package Dalen_Find_Allergist
+ * @package FAA
  */
 
 // Prevent direct access
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 /**
  * Initialize all shortcodes
  */
-function dalen_find_allergist_init_shortcodes()
+function faa_init_shortcodes()
 {
     // Load base class
     require_once plugin_dir_path(__FILE__) . 'shortcodes/class-shortcode-base.php';
@@ -25,10 +25,10 @@ function dalen_find_allergist_init_shortcodes()
     require_once plugin_dir_path(__FILE__) . 'shortcodes/class-acf-form.php';
 
     // Initialize shortcode instances
-    new Find_Allergist_Form_Shortcode();
-    new Find_Allergist_Results_Shortcode();
-    new Find_Allergist_ACF_Form_Shortcode();
+    new FAA_Form_Shortcode();
+    new FAA_Results_Shortcode();
+    new FAA_ACF_Form_Shortcode();
 }
 
 // Initialize shortcodes
-add_action('init', 'dalen_find_allergist_init_shortcodes');
+add_action('init', 'faa_init_shortcodes');

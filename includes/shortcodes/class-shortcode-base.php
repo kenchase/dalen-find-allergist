@@ -3,7 +3,7 @@
 /**
  * Base class for all Find Allergist shortcodes
  *
- * @package Dalen_Find_Allergist
+ * @package FAA
  */
 
 // Prevent direct access
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-abstract class Find_Allergist_Shortcode_Base
+abstract class FAA_Shortcode_Base
 {
 
     /**
@@ -84,9 +84,9 @@ abstract class Find_Allergist_Shortcode_Base
         $asset_base_url = $this->plugin_url . '../assets/';
         wp_enqueue_style(
             'find-allergist-css',
-            dalen_get_asset_url('css/find-allergist.css', $asset_base_url),
+            faa_get_asset_url('css/find-allergist.css', $asset_base_url),
             array(),
-            dalen_get_asset_version('css/find-allergist.css')
+            faa_get_asset_version('css/find-allergist.css')
         );
     }
 

@@ -3,7 +3,7 @@
 /**
  * Find Allergist Results Shortcode Class
  *
- * @package Dalen_Find_Allergist
+ * @package FAA
  */
 
 // Prevent direct access
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Find_Allergist_Results_Shortcode extends Find_Allergist_Shortcode_Base
+class FAA_Results_Shortcode extends FAA_Shortcode_Base
 {
 
     /**

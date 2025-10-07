@@ -3,7 +3,7 @@
 /**
  * ACF Form Shortcode Class
  *
- * @package Dalen_Find_Allergist
+ * @package FAA
  */
 
 // Prevent direct access
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
+class FAA_ACF_Form_Shortcode extends FAA_Shortcode_Base
 {
 
     /**
@@ -32,7 +32,7 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
     {
         // Check if ACF is available and acf_form function exists
         if (!function_exists('acf_form')) {
-            return '<div class="acf-form-error">' . __('Error: Advanced Custom Fields plugin is not active or acf_form() function is not available.', 'dalen-find-allergist') . '</div>';
+            return '<div class="acf-form-error">' . __('Error: Advanced Custom Fields plugin is not active or acf_form() function is not available.', 'faa') . '</div>';
         }
 
         // Summary:
@@ -79,7 +79,7 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
             if (!empty($user_posts)) {
                 $post_id = $user_posts[0]->ID;
             } else {
-                return '<div class="acf-form-error">' . __('No profile found for the current user.', 'dalen-find-allergist') . '</div>';
+                return '<div class="acf-form-error">' . __('No profile found for the current user.', 'faa') . '</div>';
             }
         }
 
@@ -91,7 +91,7 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
             'post_id'   => $post_id,
             'post_title'    => true,
             'post_content'  => false,
-            'submit_value'  => __('Update Profile', 'dalen-find-allergist'),
+            'submit_value'  => __('Update Profile', 'faa'),
         ], $atts, 'acf-allergist-form');
 
 
@@ -104,10 +104,10 @@ class Find_Allergist_ACF_Form_Shortcode extends Find_Allergist_Shortcode_Base
         // Allow if user can edit the post OR is the post author
         if ($can_edit_post || $is_post_author) {
             acf_form_head();
-            echo '<h1>' . esc_html($current_user->first_name . ' ' . $current_user->last_name) . __(' - Find an Allergist profile', 'dalen-find-allergist') . '</h1>';
+            echo '<h1>' . esc_html($current_user->first_name . ' ' . $current_user->last_name) . __(' - Find an Allergist profile', 'faa') . '</h1>';
             acf_form($atts);
         } else {
-            echo '<div class="acf-form-error">' . __('You do not have permission to edit this profile.', 'dalen-find-allergist') . '</div>';
+            echo '<div class="acf-form-error">' . __('You do not have permission to edit this profile.', 'faa') . '</div>';
         }
 
         return $this->get_output_buffer();

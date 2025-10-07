@@ -10,7 +10,7 @@
  * The naming was kept for backward compatibility as content already exists 
  * in the database with this structure.
  *
- * @package Dalen_Find_Allergist
+ * @package FAA
  * @since 1.0.0
  */
 

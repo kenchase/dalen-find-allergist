@@ -4,7 +4,7 @@
  * Lock down WordPress Admin for Wild Apricot 'wa_' Role Users. 
  * Make sure they can only edit their own posts and prevent access to admin area.
  *
- * @package Dalen_Find_Allergist
+ * @package FAA
  * 
  */
 

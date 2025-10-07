@@ -1,9 +1,9 @@
 <?php
 
 /**
- * REST API Search Endpoints for Dalen Find Allergist Plugin
+ * REST API Search Endpoints for Find an Allergist Plugin
  * 
- * @package Dalen_Find_Allergist
+ * @package FAA
  */
 
 // Prevent direct access
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 add_action('rest_api_init', function () {
-    register_rest_route('dalen/v1', '/physicians/search', [
+    register_rest_route('faa/v1', '/physicians/search', [
         'methods'  => 'GET',
         'callback' => 'faa_physician_search',
         'permission_callback' => '__return_true',
@@ -46,7 +46,7 @@ function faa_geocode_postal($postal_code)
 
     $api_key = faa_get_google_maps_api_key();
     if (empty($api_key)) {
-        error_log('Dalen Find Allergist: Google Maps API key not configured for geocoding');
+        error_log('FAA: Google Maps API key not configured for geocoding');
         return null;
     }
 
@@ -69,24 +69,24 @@ function faa_geocode_postal($postal_code)
     ]);
 
     if (is_wp_error($response)) {
-        error_log('Dalen Find Allergist: Geocoding API request failed: ' . $response->get_error_message());
+        error_log('FAA: Geocoding API request failed: ' . $response->get_error_message());
         return null;
     }
 
     $data = json_decode(wp_remote_retrieve_body($response), true);
 
     if (!$data) {
-        error_log('Dalen Find Allergist: Invalid JSON response from geocoding API');
+        error_log('FAA: Invalid JSON response from geocoding API');
         return null;
     }
 
     if ($data['status'] !== 'OK') {
-        error_log('Dalen Find Allergist: Geocoding API error: ' . $data['status'] . ' for postal code: ' . $postal_code);
+        error_log('FAA: Geocoding API error: ' . $data['status'] . ' for postal code: ' . $postal_code);
         return null;
     }
 
     if (empty($data['results'])) {
-        error_log('Dalen Find Allergist: No geocoding results for postal code: ' . $postal_code);
+        error_log('FAA: No geocoding results for postal code: ' . $postal_code);
         return null;
     }
 
@@ -268,7 +268,7 @@ function faa_physician_search(WP_REST_Request $req)
     $physicians = get_posts($query_args);
 
     // Debug: Log initial physician count
-    error_log('Dalen Search Debug: Initial physicians found: ' . count($physicians));
+    error_log('FAA:  Initial physicians found: ' . count($physicians));
 
     // Filter by name if provided
     if (!empty($name)) {
@@ -327,21 +327,21 @@ function faa_physician_search(WP_REST_Request $req)
             return false;
         });
 
-        error_log('Dalen Search Debug: After location filtering: ' . count($physicians) . ' physicians');
+        error_log('FAA:  After location filtering: ' . count($physicians) . ' physicians');
     }
 
     // Geocode postal code for distance calculations if needed
     $origin_coords = null;
     if (!empty($postal) && $kms > 0) {
-        error_log('Dalen Search Debug: Attempting to geocode postal: ' . $postal);
+        error_log('FAA:  Attempting to geocode postal: ' . $postal);
         $origin_coords = faa_geocode_postal($postal);
 
         // If geocoding fails, we can't do distance filtering
         if (!$origin_coords) {
-            error_log('Dalen Search Debug: Geocoding failed for postal: ' . $postal);
+            error_log('FAA:  Geocoding failed for postal: ' . $postal);
             return new WP_Error('geocoding_failed', 'Unable to geocode the provided postal code for distance calculation.', ['status' => 400]);
         } else {
-            error_log('Dalen Search Debug: Geocoded coordinates: ' . json_encode($origin_coords));
+            error_log('FAA:  Geocoded coordinates: ' . json_encode($origin_coords));
         }
     }
 
@@ -350,7 +350,7 @@ function faa_physician_search(WP_REST_Request $req)
         $organizations = get_field('organizations_details', $physician->ID) ?: [];
 
         // Debug: Log organization count for this physician
-        error_log('Dalen Search Debug: Physician ID ' . $physician->ID . ' has ' . count($organizations) . ' organizations');
+        error_log('FAA:  Physician ID ' . $physician->ID . ' has ' . count($organizations) . ' organizations');
 
         // Filter organizations based on search criteria
         $filtered_orgs = [];
@@ -389,19 +389,19 @@ function faa_physician_search(WP_REST_Request $req)
                     // Check if distance calculation was successful and within range
                     if ($distance_km !== false && $distance_km <= $kms) {
                         $distance_match = true;
-                        error_log('Dalen Search Debug: Organization matches distance (' . round($distance_km, 1) . 'km <= ' . $kms . 'km)');
+                        error_log('FAA:  Organization matches distance (' . round($distance_km, 1) . 'km <= ' . $kms . 'km)');
                     } else {
                         $distance_match = false;
                         if ($distance_km !== false) {
-                            error_log('Dalen Search Debug: Organization outside distance (' . round($distance_km, 1) . 'km > ' . $kms . 'km)');
+                            error_log('FAA:  Organization outside distance (' . round($distance_km, 1) . 'km > ' . $kms . 'km)');
                         } else {
-                            error_log('Dalen Search Debug: Distance calculation failed for organization');
+                            error_log('FAA:  Distance calculation failed for organization');
                         }
                     }
                 } else {
                     // No coordinates available, can't calculate distance
                     $distance_match = false;
-                    error_log('Dalen Search Debug: Organization missing coordinates');
+                    error_log('FAA:  Organization missing coordinates');
                 }
             }
 
@@ -414,7 +414,7 @@ function faa_physician_search(WP_REST_Request $req)
             }
         }
 
-        error_log('Dalen Search Debug: Physician ID ' . $physician->ID . ' has ' . count($filtered_orgs) . ' matching organizations');
+        error_log('FAA:  Physician ID ' . $physician->ID . ' has ' . count($filtered_orgs) . ' matching organizations');
 
         return [
             'id'    => $physician->ID,
@@ -432,7 +432,7 @@ function faa_physician_search(WP_REST_Request $req)
         return !empty($result['acf']['organizations_details']);
     });
 
-    error_log('Dalen Search Debug: Final result count: ' . count($results));
+    error_log('FAA:  Final result count: ' . count($results));
 
     return rest_ensure_response([
         'total_results' => count($results),

@@ -1,15 +1,15 @@
 /**
- * Find Allergist Results JavaScript
+ * Find an Allergist Results JavaScript
  *
  * Handles search form submission, pagination, and map functionality
  * for the Dalen Find Allergist plugin.
  *
- * @package Dalen_Find_Allergist
+ * @package FAA
  * @since 1.0.0
  */
 
 // Constants
-const ENDPOINT = '/wp-json/dalen/v1/physicians/search';
+const ENDPOINT = '/wp-json/faa/v1/physicians/search';
 const RESULTS_PER_PAGE = 20;
 
 // Validation constants

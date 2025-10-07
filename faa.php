@@ -1,19 +1,19 @@
 <?php
 
 /**
- * Plugin Name:     Dalen Find Allergist
+ * Plugin Name:     Find an Allergist
  * Plugin URI:      https://www.dalendesign.com/
  * Description:     CSACI Find an Allergist plugin for Dalen Design.
  * Author:          Dalen Design
  * Author URI:      https://www.dalendesign.com/
- * Text Domain:     dalen-find-allergist
+ * Text Domain:     faa
  * Domain Path:     /languages
- * Version:         0.99
+ * Version:         1.00
  * Requires at least: 5.0
  * Tested up to:    6.4
  * Requires PHP:    7.4
  *
- * @package         Dalen_Find_Allergist
+ * @package         FAA
  */
 
 // Prevent direct access
@@ -31,7 +31,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/constants.php';
  */
 function faa_get_google_maps_api_key()
 {
-    $options = get_option(DALEN_FIND_ALLERGIST_OPTIONS);
+    $options = get_option(FAA_OPTIONS);
     return isset($options['google_maps_api_key']) ? $options['google_maps_api_key'] : '';
 }
 
@@ -52,10 +52,10 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-asset-loader.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-plugin.php';
 
 // Initialize the plugin
-function dalen_find_allergist_init()
+function faa_init()
 {
-    return Dalen_Find_Allergist_Plugin::get_instance(__FILE__);
+    return FAA_Plugin::get_instance(__FILE__);
 }
 
 // Initialize plugin on plugins_loaded hook
-add_action('plugins_loaded', 'dalen_find_allergist_init', 10);
+add_action('plugins_loaded', 'faa_init', 10);

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Main Plugin Class for Dalen Find Allergist
+ * Main Plugin Class for Find an Allergist
  *
- * @package Dalen_Find_Allergist
+ * @package FAA
  * @since 1.0.0
  */
 
@@ -15,19 +15,19 @@ if (!defined('ABSPATH')) {
 /**
  * Main plugin class
  */
-class Dalen_Find_Allergist_Plugin
+class FAA_Plugin
 {
     /**
      * Plugin version
      *
      * @var string
      */
-    const VERSION = '0.99';
+    const VERSION = '1.0.0';
 
     /**
      * Single instance of the plugin
      *
-     * @var Dalen_Find_Allergist_Plugin
+     * @var FAA_Plugin
      */
     private static $instance = null;
 
@@ -56,7 +56,7 @@ class Dalen_Find_Allergist_Plugin
      * Get single instance of the plugin
      *
      * @param string $plugin_file Main plugin file path
-     * @return Dalen_Find_Allergist_Plugin
+     * @return FAA_Plugin
      */
     public static function get_instance($plugin_file = null)
     {
@@ -110,7 +110,7 @@ class Dalen_Find_Allergist_Plugin
         // Admin functionality
         if (is_admin()) {
             require_once $this->plugin_path . 'admin/class-admin.php';
-            new Dalen_Find_Allergist_Admin();
+            new FAA_Admin();
         }
     }
 
@@ -120,7 +120,7 @@ class Dalen_Find_Allergist_Plugin
     public function load_textdomain()
     {
         load_plugin_textdomain(
-            'dalen-find-allergist',
+            'faa',
             false,
             dirname(plugin_basename($this->plugin_file)) . '/languages'
         );
@@ -132,17 +132,17 @@ class Dalen_Find_Allergist_Plugin
     public function check_api_key_admin_notice()
     {
         if (!faa_has_google_maps_api_key() && current_user_can('manage_options')) {
-            $settings_url = admin_url('admin.php?page=dalen-find-allergist-settings');
+            $settings_url = admin_url('admin.php?page=faa-settings');
             printf(
                 '<div class="notice notice-warning is-dismissible">
                     <p><strong>%s:</strong> %s 
                     <a href="%s">%s</a> %s</p>
                 </div>',
-                esc_html__('Find Allergist Plugin', 'dalen-find-allergist'),
-                esc_html__('Google Maps API key is not configured.', 'dalen-find-allergist'),
+                esc_html__('Find Allergist Plugin', 'faa'),
+                esc_html__('Google Maps API key is not configured.', 'faa'),
                 esc_url($settings_url),
-                esc_html__('Please configure it in the plugin settings', 'dalen-find-allergist'),
-                esc_html__('for full functionality.', 'dalen-find-allergist')
+                esc_html__('Please configure it in the plugin settings', 'faa'),
+                esc_html__('for full functionality.', 'faa')
             );
         }
     }
@@ -177,8 +177,8 @@ class Dalen_Find_Allergist_Plugin
             'google_maps_api_key' => ''
         ];
 
-        if (!get_option('dalen_find_allergist_options')) {
-            add_option('dalen_find_allergist_options', $default_options);
+        if (!get_option('faa_options')) {
+            add_option('faa_options', $default_options);
         }
     }
 
