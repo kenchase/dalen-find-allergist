@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class FAA_Form_Shortcode extends FAA_Shortcode_Base
+class FAA_Search_Form_Shortcode extends FAA_Shortcode_Base
 {
 
     /**
@@ -19,7 +19,7 @@ class FAA_Form_Shortcode extends FAA_Shortcode_Base
      */
     protected function init()
     {
-        add_shortcode('find_allergists_form', [$this, 'render']);
+        add_shortcode('faa-search-form', [$this, 'render']);
     }
 
     /**
@@ -28,7 +28,7 @@ class FAA_Form_Shortcode extends FAA_Shortcode_Base
      * @param array $atts Shortcode attributes
      * @return string
      */
-    public function render($atts = [])
+    public function render(array $atts = []): string
     {
         $this->enqueue_assets();
         $this->start_output_buffer();
@@ -111,7 +111,7 @@ class FAA_Form_Shortcode extends FAA_Shortcode_Base
                 <div class="faa-form-field">
                     <label for="phy_province" class="faa-form-field__label"><?php _e('Province', 'faa'); ?></label>
                     <select id="phy_province" name="phy_province">
-                        <option value="">Search by Province</option>
+                        <option value=""><?php _e('Search by Province', 'faa'); ?></option>
                         <option value="AB"><?php _e('Alberta', 'faa'); ?></option>
                         <option value="BC"><?php _e('British Columbia', 'faa'); ?></option>
                         <option value="MB"><?php _e('Manitoba', 'faa'); ?></option>

@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class FAA_ACF_Form_Shortcode extends FAA_Shortcode_Base
+class FAA_Profile_Editor_Shortcode extends FAA_Shortcode_Base
 {
 
     /**
@@ -19,7 +19,7 @@ class FAA_ACF_Form_Shortcode extends FAA_Shortcode_Base
      */
     protected function init()
     {
-        add_shortcode('acf-allergist-form', [$this, 'render']);
+        add_shortcode('faa-profile-editor', [$this, 'render']);
     }
 
     /**
@@ -28,7 +28,7 @@ class FAA_ACF_Form_Shortcode extends FAA_Shortcode_Base
      * @param array $atts Shortcode attributes
      * @return string
      */
-    public function render($atts = [])
+    public function render(array $atts = []): string
     {
         // Check if ACF is available and acf_form function exists
         if (!function_exists('acf_form')) {
@@ -41,7 +41,7 @@ class FAA_ACF_Form_Shortcode extends FAA_Shortcode_Base
 
         // Get current user ID
         $user_ID = get_current_user_id();
-        if ($user_ID == 0) {
+        if ($user_ID === 0) {
             // The user is not logged in.
             return '';
         } else {
@@ -64,10 +64,6 @@ class FAA_ACF_Form_Shortcode extends FAA_Shortcode_Base
             }
 
             // Get the first post ID associated with the user
-
-            // Get current user
-            $current_user = wp_get_current_user();
-
             $user_posts = get_posts([
                 'author'        => $user_ID,
                 'post_type'     => 'physicians',
@@ -79,8 +75,13 @@ class FAA_ACF_Form_Shortcode extends FAA_Shortcode_Base
             if (!empty($user_posts)) {
                 $post_id = $user_posts[0]->ID;
             } else {
-                return '<div class="acf-form-error">' . __('No profile found for the current user.', 'faa') . '</div>';
+                $post_id = null;
             }
+        }
+
+        // If no post found, return error message
+        if ($post_id === null) {
+            return '<div class="acf-form-error">' . __('No profile found for the current user.', 'faa') . '</div>';
         }
 
         // Start output buffering
@@ -92,22 +93,29 @@ class FAA_ACF_Form_Shortcode extends FAA_Shortcode_Base
             'post_title'    => true,
             'post_content'  => false,
             'submit_value'  => __('Update Profile', 'faa'),
-        ], $atts, 'acf-allergist-form');
+        ], $atts, 'faa-profile-editor');
 
 
         // Call ACF form functions if the current user can edit the post
         // Check both capability AND post authorship as a fallback
         $post_author = get_post_field('post_author', $post_id);
         $can_edit_post = current_user_can('edit_post', $post_id);
-        $is_post_author = ($user_ID == $post_author);
+        $is_post_author = ($user_ID === (int) $post_author);
 
         // Allow if user can edit the post OR is the post author
-        if ($can_edit_post || $is_post_author) {
+        // Apply filter to allow customization of permission check
+        $can_edit = apply_filters('faa_profile_editor_can_edit', ($can_edit_post || $is_post_author), $user_ID, $post_id);
+
+        if ($can_edit) {
             acf_form_head();
-            echo '<h1>' . esc_html($current_user->first_name . ' ' . $current_user->last_name) . __(' - Find an Allergist profile', 'faa') . '</h1>';
+            $user_full_name = trim($current_user->first_name . ' ' . $current_user->last_name);
+            if (empty($user_full_name)) {
+                $user_full_name = $current_user->display_name;
+            }
+            echo '<h1>' . esc_html($user_full_name) . esc_html__(' - Find an Allergist profile', 'faa') . '</h1>';
             acf_form($atts);
         } else {
-            echo '<div class="acf-form-error">' . __('You do not have permission to edit this profile.', 'faa') . '</div>';
+            echo '<div class="acf-form-error">' . esc_html__('You do not have permission to edit this profile.', 'faa') . '</div>';
         }
 
         return $this->get_output_buffer();

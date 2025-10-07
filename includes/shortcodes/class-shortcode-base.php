@@ -4,6 +4,7 @@
  * Base class for all Find Allergist shortcodes
  *
  * @package FAA
+ * @since 1.0.0
  */
 
 // Prevent direct access
@@ -41,14 +42,14 @@ abstract class FAA_Shortcode_Base
      * @param array $atts Shortcode attributes
      * @return string
      */
-    abstract public function render($atts = []);
+    abstract public function render(array $atts = []): string;
 
     /**
      * Get Google Maps API key from admin settings
      *
      * @return string
      */
-    protected function get_google_maps_api_key()
+    protected function get_google_maps_api_key(): string
     {
         return faa_get_google_maps_api_key();
     }
@@ -56,13 +57,17 @@ abstract class FAA_Shortcode_Base
     /**
      * Enqueue Google Maps API
      *
+     * Note: API key is visible in URL per Google's standard implementation.
+     * Ensure API key restrictions are configured in Google Cloud Console.
+     *
      * @return bool True if enqueued, false otherwise
      */
-    protected function enqueue_google_maps_api()
+    protected function enqueue_google_maps_api(): bool
     {
         $api_key = $this->get_google_maps_api_key();
 
         if (!empty($api_key)) {
+            // Version is null to use Google's cache headers
             wp_enqueue_script(
                 'google-maps-api',
                 'https://maps.google.com/maps/api/js?key=' . esc_attr($api_key),
@@ -79,9 +84,9 @@ abstract class FAA_Shortcode_Base
     /**
      * Enqueue the main CSS file
      */
-    protected function enqueue_main_css()
+    protected function enqueue_main_css(): void
     {
-        $asset_base_url = $this->plugin_url . '../assets/';
+        $asset_base_url = trailingslashit(dirname($this->plugin_url)) . 'assets/';
         wp_enqueue_style(
             'find-allergist-css',
             faa_get_asset_url('css/find-allergist.css', $asset_base_url),
@@ -93,7 +98,7 @@ abstract class FAA_Shortcode_Base
     /**
      * Start output buffering
      */
-    protected function start_output_buffer()
+    protected function start_output_buffer(): void
     {
         ob_start();
     }
@@ -103,9 +108,12 @@ abstract class FAA_Shortcode_Base
      *
      * @return string
      */
-    protected function get_output_buffer()
+    protected function get_output_buffer(): string
     {
-        return ob_get_clean();
+        if (ob_get_level() > 0) {
+            return ob_get_clean();
+        }
+        return '';
     }
 
     /**
@@ -114,7 +122,7 @@ abstract class FAA_Shortcode_Base
      * @param string $text
      * @return string
      */
-    protected function esc_html($text)
+    protected function esc_html(string $text): string
     {
         return esc_html($text);
     }
@@ -125,7 +133,7 @@ abstract class FAA_Shortcode_Base
      * @param string $url
      * @return string
      */
-    protected function esc_url($url)
+    protected function esc_url(string $url): string
     {
         return esc_url($url);
     }
@@ -136,7 +144,7 @@ abstract class FAA_Shortcode_Base
      * @param string $attr
      * @return string
      */
-    protected function esc_attr($attr)
+    protected function esc_attr(string $attr): string
     {
         return esc_attr($attr);
     }
@@ -147,7 +155,7 @@ abstract class FAA_Shortcode_Base
      * @param string $js
      * @return string
      */
-    protected function esc_js($js)
+    protected function esc_js(string $js): string
     {
         return esc_js($js);
     }

@@ -20,14 +20,14 @@ function faa_init_shortcodes()
     require_once plugin_dir_path(__FILE__) . 'shortcodes/class-shortcode-base.php';
 
     // Load individual shortcode classes
-    require_once plugin_dir_path(__FILE__) . 'shortcodes/class-find-allergist-form.php';
-    require_once plugin_dir_path(__FILE__) . 'shortcodes/class-find-allergist-results.php';
-    require_once plugin_dir_path(__FILE__) . 'shortcodes/class-acf-form.php';
+    require_once plugin_dir_path(__FILE__) . 'shortcodes/class-shortcode-faa-search-form.php';
+    require_once plugin_dir_path(__FILE__) . 'shortcodes/class-shortcode-faa-results.php';
+    require_once plugin_dir_path(__FILE__) . 'shortcodes/class-shortcode-faa-profile-editor.php';
 
     // Initialize shortcode instances
-    new FAA_Form_Shortcode();
-    new FAA_Results_Shortcode();
-    new FAA_ACF_Form_Shortcode();
+    new FAA_Search_Form_Shortcode();
+    new FAA_Search_Results_Shortcode();
+    new FAA_Profile_Editor_Shortcode();
 }
 
 // Initialize shortcodes
