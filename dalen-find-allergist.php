@@ -29,7 +29,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/constants.php';
  * 
  * @return string The API key or empty string if not set
  */
-function dalen_get_google_maps_api_key()
+function faa_get_google_maps_api_key()
 {
     $options = get_option(DALEN_FIND_ALLERGIST_OPTIONS);
     return isset($options['google_maps_api_key']) ? $options['google_maps_api_key'] : '';
@@ -40,9 +40,9 @@ function dalen_get_google_maps_api_key()
  * 
  * @return bool True if API key is set, false otherwise
  */
-function dalen_has_google_maps_api_key()
+function faa_has_google_maps_api_key()
 {
-    return !empty(dalen_get_google_maps_api_key());
+    return !empty(faa_get_google_maps_api_key());
 }
 
 // Load the asset loader utility

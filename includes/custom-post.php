@@ -24,7 +24,7 @@ if (!defined('ABSPATH')) {
  * 
  * @since 1.0.0
  */
-function csaci_custom_allergist_post()
+function faa_custom_allergist_post()
 {
     $post_type_args = array(
         'labels' => array(
@@ -58,4 +58,4 @@ function csaci_custom_allergist_post()
     );
     register_post_type('physicians', $post_type_args);
 }
-add_action('init', 'csaci_custom_allergist_post');
+add_action('init', 'faa_custom_allergist_post');

@@ -50,7 +50,7 @@ abstract class Find_Allergist_Shortcode_Base
      */
     protected function get_google_maps_api_key()
     {
-        return dalen_get_google_maps_api_key();
+        return faa_get_google_maps_api_key();
     }
 
     /**

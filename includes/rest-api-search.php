@@ -14,13 +14,13 @@ if (!defined('ABSPATH')) {
 add_action('rest_api_init', function () {
     register_rest_route('dalen/v1', '/physicians/search', [
         'methods'  => 'GET',
-        'callback' => 'dalen_physician_search',
+        'callback' => 'faa_physician_search',
         'permission_callback' => '__return_true',
         'args' => [
             'name'         => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'city'         => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
             'province'     => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
-            'postal'       => ['required' => false, 'sanitize_callback' => 'dalen_sanitize_postal'],
+            'postal'       => ['required' => false, 'sanitize_callback' => 'faa_sanitize_postal'],
             'kms'          => ['required' => false, 'sanitize_callback' => 'absint'],
             'prac_pop'     => ['required' => false, 'sanitize_callback' => 'sanitize_text_field'],
         ],
@@ -30,7 +30,7 @@ add_action('rest_api_init', function () {
 /**
  * Sanitize postal code for search
  */
-function dalen_sanitize_postal($value)
+function faa_sanitize_postal($value)
 {
     return strtoupper(preg_replace('/\s+/', '', (string)$value));
 }
@@ -38,13 +38,13 @@ function dalen_sanitize_postal($value)
 /**
  * Simple geocoding for Canadian postal codes
  */
-function dalen_geocode_postal($postal_code)
+function faa_geocode_postal($postal_code)
 {
     if (empty($postal_code)) {
         return null;
     }
 
-    $api_key = dalen_get_google_maps_api_key();
+    $api_key = faa_get_google_maps_api_key();
     if (empty($api_key)) {
         error_log('Dalen Find Allergist: Google Maps API key not configured for geocoding');
         return null;
@@ -100,7 +100,7 @@ function dalen_geocode_postal($postal_code)
 /**
  * Calculate distance between two points using Haversine formula
  */
-function dalen_haversine_distance($lat1, $lng1, $lat2, $lng2)
+function faa_haversine_distance($lat1, $lng1, $lat2, $lng2)
 {
     // Validate coordinates
     if (!is_numeric($lat1) || !is_numeric($lng1) || !is_numeric($lat2) || !is_numeric($lng2)) {
@@ -142,7 +142,7 @@ function dalen_haversine_distance($lat1, $lng1, $lat2, $lng2)
 /**
  * Normalize city name for comparison (case insensitive, remove accents, trim spaces)
  */
-function dalen_normalize_city_name($city_name)
+function faa_normalize_city_name($city_name)
 {
     if (empty($city_name)) {
         return '';
@@ -163,14 +163,14 @@ function dalen_normalize_city_name($city_name)
 /**
  * Check if an organization matches the search criteria
  */
-function dalen_organization_matches_search($org, $city = null, $province = null, $postal = null, $prac_pop = null)
+function faa_organization_matches_search($org, $city = null, $province = null, $postal = null, $prac_pop = null)
 {
     $gmap = $org['institution_gmap'] ?? [];
 
     // Check city
     if ($city && !empty($gmap['city'])) {
-        $normalized_search_city = dalen_normalize_city_name($city);
-        $normalized_stored_city = dalen_normalize_city_name($gmap['city']);
+        $normalized_search_city = faa_normalize_city_name($city);
+        $normalized_stored_city = faa_normalize_city_name($gmap['city']);
 
         if ($normalized_search_city !== $normalized_stored_city) {
             return false;
@@ -223,7 +223,7 @@ function dalen_organization_matches_search($org, $city = null, $province = null,
 /**
  * REST API endpoint handler for physician search
  */
-function dalen_physician_search(WP_REST_Request $req)
+function faa_physician_search(WP_REST_Request $req)
 {
     // Sanitize inputs
     $name = trim($req->get_param('name') ?? '');
@@ -319,7 +319,7 @@ function dalen_physician_search(WP_REST_Request $req)
             $organizations = get_field('organizations_details', $physician->ID) ?: [];
 
             foreach ($organizations as $org) {
-                if (dalen_organization_matches_search($org, $city, $province, null, $prac_pop)) {
+                if (faa_organization_matches_search($org, $city, $province, null, $prac_pop)) {
                     return true;
                 }
             }
@@ -334,7 +334,7 @@ function dalen_physician_search(WP_REST_Request $req)
     $origin_coords = null;
     if (!empty($postal) && $kms > 0) {
         error_log('Dalen Search Debug: Attempting to geocode postal: ' . $postal);
-        $origin_coords = dalen_geocode_postal($postal);
+        $origin_coords = faa_geocode_postal($postal);
 
         // If geocoding fails, we can't do distance filtering
         if (!$origin_coords) {
@@ -362,13 +362,13 @@ function dalen_physician_search(WP_REST_Request $req)
 
             // Only apply location filtering if city or province is specified
             if (!empty($city) || !empty($province)) {
-                $location_match = dalen_organization_matches_search($org, $city, $province, null, null);
+                $location_match = faa_organization_matches_search($org, $city, $province, null, null);
             }
 
             // Check practice population for each organization
             $practice_population_match = true;
             if (!empty($prac_pop)) {
-                $practice_population_match = dalen_organization_matches_search($org, null, null, null, $prac_pop);
+                $practice_population_match = faa_organization_matches_search($org, null, null, null, $prac_pop);
             }
 
             // Check distance if needed
@@ -379,7 +379,7 @@ function dalen_physician_search(WP_REST_Request $req)
                 $gmap = $org['institution_gmap'] ?? [];
 
                 if (!empty($gmap['lat']) && !empty($gmap['lng'])) {
-                    $distance_km = dalen_haversine_distance(
+                    $distance_km = faa_haversine_distance(
                         $origin_coords['lat'],
                         $origin_coords['lng'],
                         (float)$gmap['lat'],

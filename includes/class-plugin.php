@@ -131,7 +131,7 @@ class Dalen_Find_Allergist_Plugin
      */
     public function check_api_key_admin_notice()
     {
-        if (!dalen_has_google_maps_api_key() && current_user_can('manage_options')) {
+        if (!faa_has_google_maps_api_key() && current_user_can('manage_options')) {
             $settings_url = admin_url('admin.php?page=dalen-find-allergist-settings');
             printf(
                 '<div class="notice notice-warning is-dismissible">
@@ -155,7 +155,7 @@ class Dalen_Find_Allergist_Plugin
      */
     public function configure_acf_google_map_api($api)
     {
-        $api_key = dalen_get_google_maps_api_key();
+        $api_key = faa_get_google_maps_api_key();
 
         if (!empty($api_key)) {
             $api['key'] = $api_key;
