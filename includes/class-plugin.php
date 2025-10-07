@@ -155,6 +155,11 @@ class FAA_Plugin
      */
     public function configure_acf_google_map_api($api)
     {
+        // Only configure if ACF is active
+        if (!function_exists('acf')) {
+            return $api;
+        }
+
         $api_key = faa_get_google_maps_api_key();
 
         if (!empty($api_key)) {
@@ -169,6 +174,12 @@ class FAA_Plugin
      */
     public function activate()
     {
+        // Register custom post types before flushing rewrite rules
+        // This ensures the post type rewrites are properly registered
+        if (function_exists('faa_custom_allergist_post')) {
+            faa_custom_allergist_post();
+        }
+
         // Flush rewrite rules to ensure custom post types work
         flush_rewrite_rules();
 

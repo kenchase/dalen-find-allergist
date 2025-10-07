@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 
 // Plugin Information
 if (!defined('FAA_VERSION')) {
-    define('FAA_VERSION', '1.00');
+    define('FAA_VERSION', '1.0.0');
 }
 
 if (!defined('FAA_PLUGIN_FILE')) {

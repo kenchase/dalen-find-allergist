@@ -8,7 +8,7 @@
  * Author URI:      https://www.dalendesign.com/
  * Text Domain:     faa
  * Domain Path:     /languages
- * Version:         1.00
+ * Version:         1.0.0
  * Requires at least: 5.0
  * Tested up to:    6.4
  * Requires PHP:    7.4
