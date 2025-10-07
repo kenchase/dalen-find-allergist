@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Admin functionality for Dalen Find Allergist plugin
+ * Admin functionality for the Find an Allergist plugin
  *
  * @package Dalen_Find_Allergist
  */
@@ -34,7 +34,7 @@ class Dalen_Find_Allergist_Admin
             'Find Allergist', // Page title
             'Find Allergist', // Menu title
             'manage_options', // Capability
-            'dalen-find-allergist', // Menu slug
+            'faa', // Menu slug
             array($this, 'admin_page_main'), // Callback function
             'dashicons-location-alt', // Icon
             25 // Position
@@ -42,22 +42,12 @@ class Dalen_Find_Allergist_Admin
 
         // Settings submenu
         add_submenu_page(
-            'dalen-find-allergist', // Parent slug
+            'faa', // Parent slug
             'Find Allergist Settings', // Page title
             'Settings', // Menu title
             'manage_options', // Capability
-            'dalen-find-allergist-settings', // Menu slug
+            'faa-settings', // Menu slug
             array($this, 'admin_page_settings') // Callback function
-        );
-
-        // Help submenu
-        add_submenu_page(
-            'dalen-find-allergist', // Parent slug
-            'Find Allergist Help', // Page title
-            'Help', // Menu title
-            'manage_options', // Capability
-            'dalen-find-allergist-help', // Menu slug
-            array($this, 'admin_page_help') // Callback function
         );
     }
 
@@ -101,7 +91,7 @@ class Dalen_Find_Allergist_Admin
             'dalen_find_allergist_general',
             'General Settings',
             array($this, 'settings_section_general_callback'),
-            'dalen-find-allergist-settings'
+            'faa-settings'
         );
 
         // Google Maps API Key
@@ -109,7 +99,7 @@ class Dalen_Find_Allergist_Admin
             'google_maps_api_key',
             'Google Maps API Key',
             array($this, 'google_maps_api_key_callback'),
-            'dalen-find-allergist-settings',
+            'faa-settings',
             'dalen_find_allergist_general'
         );
 
@@ -118,7 +108,7 @@ class Dalen_Find_Allergist_Admin
             'edit_profile_page_slug',
             'Find an Allergist - Edit Profile Page Slug',
             array($this, 'edit_profile_page_slug_callback'),
-            'dalen-find-allergist-settings',
+            'faa-settings',
             'dalen_find_allergist_general'
         );
     }
@@ -129,7 +119,7 @@ class Dalen_Find_Allergist_Admin
     public function enqueue_admin_scripts($hook)
     {
         // Only load on our plugin pages
-        if (strpos($hook, 'dalen-find-allergist') === false) {
+        if (strpos($hook, 'faa') === false) {
             return;
         }
 
@@ -140,14 +130,14 @@ class Dalen_Find_Allergist_Admin
 
         $asset_base_url = plugin_dir_url(__FILE__) . '../assets/';
         wp_enqueue_style(
-            'dalen-find-allergist-admin',
+            'faa-admin',
             dalen_get_asset_url('css/admin.css', $asset_base_url),
             array(),
             dalen_get_asset_version('css/admin.css')
         );
 
         wp_enqueue_script(
-            'dalen-find-allergist-admin',
+            'faa-admin',
             dalen_get_asset_url('js/admin.js', $asset_base_url),
             array('jquery'),
             dalen_get_asset_version('js/admin.js'),
@@ -156,23 +146,23 @@ class Dalen_Find_Allergist_Admin
 
         // Localize script for AJAX
         wp_localize_script(
-            'dalen-find-allergist-admin',
+            'faa-admin',
             'dalenAdmin',
             array(
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('dalen_admin_nonce'),
                 'strings' => array(
-                    'confirmReset' => __('Are you sure you want to reset all settings? This cannot be undone.', 'dalen-find-allergist'),
-                    'resetting' => __('Resetting...', 'dalen-find-allergist'),
-                    'resetSuccess' => __('Settings reset successfully!', 'dalen-find-allergist'),
-                    'resetError' => __('An error occurred while resetting settings.', 'dalen-find-allergist'),
-                    'apiKeyRequired' => __('Please enter an API key first.', 'dalen-find-allergist'),
-                    'testing' => __('Testing...', 'dalen-find-allergist'),
-                    'apiKeyValid' => __('✓ API Key Valid', 'dalen-find-allergist'),
-                    'apiKeyInvalid' => __('✗ API Key Invalid', 'dalen-find-allergist'),
-                    'testFailed' => __('✗ Test Failed', 'dalen-find-allergist'),
-                    'testApiKey' => __('Test API Key', 'dalen-find-allergist'),
-                    'invalidApiKey' => __('Google Maps API key format appears to be invalid.', 'dalen-find-allergist')
+                    'confirmReset' => __('Are you sure you want to reset all settings? This cannot be undone.', 'faa'),
+                    'resetting' => __('Resetting...', 'faa'),
+                    'resetSuccess' => __('Settings reset successfully!', 'faa'),
+                    'resetError' => __('An error occurred while resetting settings.', 'faa'),
+                    'apiKeyRequired' => __('Please enter an API key first.', 'faa'),
+                    'testing' => __('Testing...', 'faa'),
+                    'apiKeyValid' => __('✓ API Key Valid', 'faa'),
+                    'apiKeyInvalid' => __('✗ API Key Invalid', 'faa'),
+                    'testFailed' => __('✗ Test Failed', 'faa'),
+                    'testApiKey' => __('Test API Key', 'faa'),
+                    'invalidApiKey' => __('Google Maps API key format appears to be invalid.', 'faa')
                 )
             )
         );
@@ -195,19 +185,11 @@ class Dalen_Find_Allergist_Admin
     }
 
     /**
-     * Help admin page
-     */
-    public function admin_page_help()
-    {
-        include_once plugin_dir_path(__FILE__) . 'partials/admin-help.php';
-    }
-
-    /**
      * Settings section callbacks
      */
     public function settings_section_general_callback()
     {
-        echo '<p>' . esc_html__('Configure general settings for the Find Allergist plugin.', 'dalen-find-allergist') . '</p>';
+        echo '<p>' . esc_html__('Configure general settings for the Find Allergist plugin.', 'faa') . '</p>';
     }
 
     /**
@@ -234,7 +216,7 @@ class Dalen_Find_Allergist_Admin
             '<input type="text" id="google_maps_api_key" name="dalen_find_allergist_options[google_maps_api_key]" value="%s" class="regular-text" />',
             esc_attr($value)
         );
-        echo '<p class="description">' . esc_html__('Enter your Google Maps API key for map functionality.', 'dalen-find-allergist') . '</p>';
+        echo '<p class="description">' . esc_html__('Enter your Google Maps API key for map functionality.', 'faa') . '</p>';
     }
 
     /**
@@ -248,7 +230,7 @@ class Dalen_Find_Allergist_Admin
             '<input type="text" id="edit_profile_page_slug" name="dalen_find_allergist_options[edit_profile_page_slug]" value="%s" class="regular-text" />',
             esc_attr($value)
         );
-        echo '<p class="description">' . esc_html__('Enter the slug for the "Find an Allergist - Edit Profile" page. This is where Wild Apricot users will be redirected to if they try to access the WP back-end while logged in', 'dalen-find-allergist') . '</p>';
+        echo '<p class="description">' . esc_html__('Enter the slug for the "Find an Allergist - Edit Profile" page. This is where Wild Apricot users will be redirected to if they try to access the WP back-end while logged in', 'faa') . '</p>';
     }
 
     /**
@@ -299,13 +281,13 @@ class Dalen_Find_Allergist_Admin
     {
         // Verify nonce
         if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'dalen_reset_settings')) {
-            wp_send_json_error(__('Security check failed.', 'dalen-find-allergist'));
+            wp_send_json_error(__('Security check failed.', 'faa'));
             return;
         }
 
         // Check user capabilities
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(__('You do not have permission to perform this action.', 'dalen-find-allergist'));
+            wp_send_json_error(__('You do not have permission to perform this action.', 'faa'));
             return;
         }
 
@@ -314,9 +296,9 @@ class Dalen_Find_Allergist_Admin
         $updated = update_option('dalen_find_allergist_options', $default_settings);
 
         if ($updated) {
-            wp_send_json_success(__('Settings reset to defaults successfully.', 'dalen-find-allergist'));
+            wp_send_json_success(__('Settings reset to defaults successfully.', 'faa'));
         } else {
-            wp_send_json_error(__('Failed to reset settings. Please try again.', 'dalen-find-allergist'));
+            wp_send_json_error(__('Failed to reset settings. Please try again.', 'faa'));
         }
     }
 }
