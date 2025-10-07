@@ -74,6 +74,11 @@ function faa_ensure_physician_post_on_login($user_login, $user)
  */
 function faa_attempt_physician_post_creation($user_id)
 {
+    // Validate FAA_POST_TYPE constant exists
+    if (!defined('FAA_POST_TYPE')) {
+        return new WP_Error('missing_constant', 'FAA_POST_TYPE constant is not defined');
+    }
+
     $user = get_userdata($user_id);
 
     if (!$user) {
@@ -123,6 +128,11 @@ function faa_attempt_physician_post_creation($user_id)
  */
 function faa_get_physician_post_title($user)
 {
+    // Validate input
+    if (!$user || !is_a($user, 'WP_User')) {
+        return 'Unknown Physician';
+    }
+
     // Try first + last name first (priority format: "First Last")
     if (!empty($user->first_name) || !empty($user->last_name)) {
         $first = !empty($user->first_name) ? trim($user->first_name) : '';
@@ -154,6 +164,11 @@ function faa_get_or_create_physician_post($user_id = null)
 
     if (!$user_id) {
         return new WP_Error('no_user', 'User not logged in');
+    }
+
+    // Validate FAA_POST_TYPE constant exists
+    if (!defined('FAA_POST_TYPE')) {
+        return new WP_Error('missing_constant', 'FAA_POST_TYPE constant is not defined');
     }
 
     // Try to get post from user meta first (performance optimization)
@@ -196,7 +211,14 @@ function faa_get_or_create_physician_post($user_id = null)
 function faa_send_urgent_admin_notification($user_id, $error_message)
 {
     $user = get_userdata($user_id);
+    if (!$user) {
+        return;
+    }
+
     $admin_email = get_option('admin_email');
+    if (!$admin_email) {
+        return;
+    }
 
     // Don't spam - only send if we haven't sent in last hour
     $last_sent = get_transient('faa_urgent_notification_' . $user_id);
@@ -229,13 +251,20 @@ function faa_send_urgent_admin_notification($user_id, $error_message)
 add_action('admin_init', 'faa_manual_create_missing_posts');
 function faa_manual_create_missing_posts()
 {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified below
     if (!isset($_GET['faa_create_missing_posts']) || !current_user_can('manage_options')) {
         return;
     }
 
     // Verify nonce for security
-    if (!isset($_GET['faa_nonce']) || !wp_verify_nonce($_GET['faa_nonce'], 'faa_create_missing_posts')) {
-        wp_die('Security check failed');
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce being verified here
+    if (!isset($_GET['faa_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['faa_nonce'])), 'faa_create_missing_posts')) {
+        wp_die(esc_html__('Security check failed', 'find-allergist'));
+    }
+
+    // Validate FAA_POST_TYPE constant exists
+    if (!defined('FAA_POST_TYPE')) {
+        wp_die(esc_html__('FAA_POST_TYPE constant is not defined', 'find-allergist'));
     }
 
     error_log("=== FAA: Manual trigger for missing physician posts ===");
@@ -281,10 +310,18 @@ function faa_manual_create_missing_posts()
         }
     }
 
-    $message = "Physician Post Creation Results: Created: $created, Already Exists: $already_exists, Errors: $errors";
+    $message = sprintf(
+        'Physician Post Creation Results: Created: %d, Already Exists: %d, Errors: %d',
+        $created,
+        $already_exists,
+        $errors
+    );
     error_log("FAA: $message");
 
-    wp_die($message . '<br><br><a href="' . admin_url() . '">Back to Dashboard</a>');
+    wp_die(
+        wp_kses_post($message . '<br><br><a href="' . esc_url(admin_url()) . '">Back to Dashboard</a>'),
+        esc_html__('Physician Post Creation Complete', 'find-allergist')
+    );
 }
 
 /**
@@ -297,7 +334,11 @@ function faa_physician_post_creation_admin_notice()
     $error = get_user_meta($user_id, 'faa_physician_post_creation_error', true);
 
     if ($error && current_user_can('edit_posts')) {
-        echo '<div class="notice notice-error"><p><strong>Physician Post Creation Error:</strong> ' . esc_html($error) . '</p></div>';
+        printf(
+            '<div class="notice notice-error"><p><strong>%s</strong> %s</p></div>',
+            esc_html__('Physician Post Creation Error:', 'find-allergist'),
+            esc_html($error)
+        );
     }
 }
 
