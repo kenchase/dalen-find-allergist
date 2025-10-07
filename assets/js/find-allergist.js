@@ -2,7 +2,7 @@
  * Find an Allergist Results JavaScript
  *
  * Handles search form submission, pagination, and map functionality
- * for the Dalen Find Allergist plugin.
+ * for the Find an Allergist plugin.
  *
  * @package FAA
  * @since 1.0.0

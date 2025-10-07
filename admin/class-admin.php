@@ -339,7 +339,7 @@ class FAA_Admin
     public function ajax_reset_settings()
     {
         // Verify nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'faa_reset_settings')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'faa_admin_nonce')) {
             wp_send_json_error(__('Security check failed.', 'faa'));
             return;
         }
