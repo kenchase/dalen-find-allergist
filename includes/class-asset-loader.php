@@ -3,6 +3,16 @@
 /**
  * Asset loader utility for Find an Allergist
  * Automatically loads minified assets in production
+ * 
+ * This class provides secure asset loading with:
+ * - Automatic minified asset selection in production mode
+ * - Path traversal attack prevention
+ * - Input validation and sanitization
+ * - Graceful fallback to non-minified assets
+ * - Cache busting via file modification time
+ * 
+ * @package FindAnAllergist
+ * @since 1.0.0
  */
 
 if (!defined('ABSPATH')) {
@@ -21,6 +31,12 @@ class FAA_Asset_Loader
      */
     public static function get_asset_url($asset_path, $base_url)
     {
+        // Validate and sanitize asset path to prevent path traversal
+        $asset_path = self::sanitize_asset_path($asset_path);
+        if (empty($asset_path)) {
+            return $base_url;
+        }
+
         $use_minified = self::should_use_minified();
 
         if ($use_minified) {
@@ -51,6 +67,37 @@ class FAA_Asset_Loader
     }
 
     /**
+     * Sanitize asset path to prevent path traversal attacks
+     * 
+     * @param string $path The path to sanitize
+     * @return string      Sanitized path or empty string if invalid
+     */
+    private static function sanitize_asset_path($path)
+    {
+        if (!is_string($path) || empty($path)) {
+            return '';
+        }
+
+        // Remove any null bytes
+        $path = str_replace(chr(0), '', $path);
+
+        // Prevent path traversal
+        if (strpos($path, '..') !== false) {
+            return '';
+        }
+
+        // Remove leading slashes
+        $path = ltrim($path, '/\\');
+
+        // Only allow alphanumeric, dash, underscore, dot, and forward slash
+        if (!preg_match('/^[a-zA-Z0-9\-_\.\/]+$/', $path)) {
+            return '';
+        }
+
+        return $path;
+    }
+
+    /**
      * Convert a regular asset path to its minified equivalent
      * 
      * @param string $path Original asset path
@@ -58,10 +105,19 @@ class FAA_Asset_Loader
      */
     public static function get_minified_path($path)
     {
+        if (empty($path)) {
+            return '';
+        }
+
         $path_info = pathinfo($path);
-        $dir = $path_info['dirname'];
-        $filename = $path_info['filename'];
-        $extension = $path_info['extension'];
+        $dir = isset($path_info['dirname']) ? $path_info['dirname'] : '';
+        $filename = isset($path_info['filename']) ? $path_info['filename'] : '';
+        $extension = isset($path_info['extension']) ? $path_info['extension'] : '';
+
+        // If no extension found, return original path
+        if (empty($extension)) {
+            return $path;
+        }
 
         // Remove leading slash if present
         if ($dir === '.') {
@@ -81,24 +137,30 @@ class FAA_Asset_Loader
      */
     private static function url_to_path($url)
     {
-        $upload_dir = wp_upload_dir();
-        $base_url = $upload_dir['baseurl'];
-        $base_dir = $upload_dir['basedir'];
+        if (!is_string($url) || empty($url)) {
+            return '';
+        }
 
         // Get the plugin base URL (one level up from includes directory)
         $plugin_base_url = plugin_dir_url(dirname(__FILE__));
         $plugin_base_path = plugin_dir_path(dirname(__FILE__));
 
-        // Handle plugin assets
+        // Handle plugin assets (most common case for this plugin)
         if (strpos($url, $plugin_base_url) === 0) {
             $relative_path = str_replace($plugin_base_url, '', $url);
             return $plugin_base_path . $relative_path;
         }
 
-        // Handle other URLs
-        if (strpos($url, $base_url) === 0) {
-            $relative_path = str_replace($base_url, '', $url);
-            return $base_dir . $relative_path;
+        // Fallback: check upload directory (less common for plugin assets)
+        $upload_dir = wp_upload_dir();
+        if (isset($upload_dir['baseurl']) && isset($upload_dir['basedir'])) {
+            $base_url = $upload_dir['baseurl'];
+            $base_dir = $upload_dir['basedir'];
+
+            if (strpos($url, $base_url) === 0) {
+                $relative_path = str_replace($base_url, '', $url);
+                return $base_dir . $relative_path;
+            }
         }
 
         return $url;
@@ -112,8 +174,11 @@ class FAA_Asset_Loader
      */
     public static function get_asset_version($file_path)
     {
-        if (file_exists($file_path)) {
-            return filemtime($file_path);
+        if (!empty($file_path) && file_exists($file_path)) {
+            $mtime = @filemtime($file_path);
+            if ($mtime !== false) {
+                return (string) $mtime;
+            }
         }
 
         // Fallback to plugin version
@@ -130,6 +195,10 @@ class FAA_Asset_Loader
  */
 function faa_get_asset_url($asset_path, $base_url = null)
 {
+    if (!class_exists('FAA_Asset_Loader')) {
+        return '';
+    }
+
     if ($base_url === null) {
         $base_url = plugin_dir_url(__FILE__) . '../assets/';
     }
@@ -145,6 +214,10 @@ function faa_get_asset_url($asset_path, $base_url = null)
  */
 function faa_get_asset_version($asset_path)
 {
+    if (!class_exists('FAA_Asset_Loader')) {
+        return '1.0.0';
+    }
+
     $plugin_base_path = plugin_dir_path(dirname(__FILE__));
 
     // Check if we should use minified version and if it exists
@@ -153,10 +226,12 @@ function faa_get_asset_version($asset_path)
     if ($use_minified) {
         // Try minified version first
         $minified_path = FAA_Asset_Loader::get_minified_path($asset_path);
-        $minified_file_path = $plugin_base_path . 'assets/' . $minified_path;
+        if (!empty($minified_path)) {
+            $minified_file_path = $plugin_base_path . 'assets/' . $minified_path;
 
-        if (file_exists($minified_file_path)) {
-            return FAA_Asset_Loader::get_asset_version($minified_file_path);
+            if (file_exists($minified_file_path)) {
+                return FAA_Asset_Loader::get_asset_version($minified_file_path);
+            }
         }
     }
 
