@@ -58,7 +58,7 @@ class FAA_Admin
     {
         register_setting(
             'faa_settings',
-            'faa_options',
+            FAA_OPTIONS,
             array(
                 'sanitize_callback' => array($this, 'sanitize_settings'),
                 'default' => $this->get_default_settings()
@@ -124,7 +124,7 @@ class FAA_Admin
     public function enqueue_admin_scripts($hook)
     {
         // Only load on our plugin pages
-        if (strpos($hook, 'faa') === false) {
+        if (strpos($hook, FAA_TEXT_DOMAIN) === false) {
             return;
         }
 
@@ -157,17 +157,17 @@ class FAA_Admin
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('faa_admin_nonce'),
                 'strings' => array(
-                    'confirmReset' => __('Are you sure you want to reset all settings? This cannot be undone.', 'faa'),
-                    'resetting' => __('Resetting...', 'faa'),
-                    'resetSuccess' => __('Settings reset successfully!', 'faa'),
-                    'resetError' => __('An error occurred while resetting settings.', 'faa'),
-                    'apiKeyRequired' => __('Please enter an API key first.', 'faa'),
-                    'testing' => __('Testing...', 'faa'),
-                    'apiKeyValid' => __('✓ API Key Valid', 'faa'),
-                    'apiKeyInvalid' => __('✗ API Key Invalid', 'faa'),
-                    'testFailed' => __('✗ Test Failed', 'faa'),
-                    'testApiKey' => __('Test API Key', 'faa'),
-                    'invalidApiKey' => __('Google Maps API key format appears to be invalid.', 'faa')
+                    'confirmReset' => __('Are you sure you want to reset all settings? This cannot be undone.', FAA_TEXT_DOMAIN),
+                    'resetting' => __('Resetting...', FAA_TEXT_DOMAIN),
+                    'resetSuccess' => __('Settings reset successfully!', FAA_TEXT_DOMAIN),
+                    'resetError' => __('An error occurred while resetting settings.', FAA_TEXT_DOMAIN),
+                    'apiKeyRequired' => __('Please enter an API key first.', FAA_TEXT_DOMAIN),
+                    'testing' => __('Testing...', FAA_TEXT_DOMAIN),
+                    'apiKeyValid' => __('✓ API Key Valid', FAA_TEXT_DOMAIN),
+                    'apiKeyInvalid' => __('✗ API Key Invalid', FAA_TEXT_DOMAIN),
+                    'testFailed' => __('✗ Test Failed', FAA_TEXT_DOMAIN),
+                    'testApiKey' => __('Test API Key', FAA_TEXT_DOMAIN),
+                    'invalidApiKey' => __('Google Maps API key format appears to be invalid.', FAA_TEXT_DOMAIN)
                 )
             )
         );
@@ -194,12 +194,12 @@ class FAA_Admin
      */
     public function settings_section_general_callback()
     {
-        echo '<p>' . esc_html__('Configure general settings for the Find an Allergist plugin.', 'faa') . '</p>';
+        echo '<p>' . esc_html__('Configure general settings for the Find an Allergist plugin.', FAA_TEXT_DOMAIN) . '</p>';
     }
 
     public function settings_section_search_form_callback()
     {
-        echo '<p>' . esc_html__('Customize the search form appearance and content.', 'faa') . '</p>';
+        echo '<p>' . esc_html__('Customize the search form appearance and content.', FAA_TEXT_DOMAIN) . '</p>';
     }
 
     /**
@@ -211,7 +211,7 @@ class FAA_Admin
      */
     private function get_option_value($key, $default = '')
     {
-        $options = get_option('faa_options', []);
+        $options = get_option(FAA_OPTIONS, []);
         return isset($options[$key]) ? $options[$key] : $default;
     }
 
@@ -223,12 +223,12 @@ class FAA_Admin
         $value = $this->get_option_value('google_maps_api_key');
 
         printf(
-            '<input type="text" id="google_maps_api_key" name="faa_options[google_maps_api_key]" value="%s" class="regular-text" />',
+            '<input type="text" id="google_maps_api_key" name="' . FAA_OPTIONS . '[google_maps_api_key]" value="%s" class="regular-text" />',
             esc_attr($value)
         );
-        echo '<button type="button" class="button button-secondary" id="faa-test-api-key" style="margin-left: 10px;">' . esc_html__('Test API Key', 'faa') . '</button>';
+        echo '<button type="button" class="button button-secondary" id="faa-test-api-key" style="margin-left: 10px;">' . esc_html__('Test API Key', FAA_TEXT_DOMAIN) . '</button>';
         echo '<span id="faa-api-test-result" style="margin-left: 10px;"></span>';
-        echo '<p class="description">' . esc_html__('Enter your Google Maps API key for map functionality.', 'faa') . '</p>';
+        echo '<p class="description">' . esc_html__('Enter your Google Maps API key for map functionality.', FAA_TEXT_DOMAIN) . '</p>';
     }
 
     /**
@@ -239,10 +239,10 @@ class FAA_Admin
         $value = $this->get_option_value('edit_profile_page_slug');
 
         printf(
-            '<input type="text" id="edit_profile_page_slug" name="faa_options[edit_profile_page_slug]" value="%s" class="regular-text" />',
+            '<input type="text" id="edit_profile_page_slug" name="' . FAA_OPTIONS . '[edit_profile_page_slug]" value="%s" class="regular-text" />',
             esc_attr($value)
         );
-        echo '<p class="description">' . esc_html__('Enter the slug for the "Find an Allergist - Edit Profile" page. This is where Wild Apricot users will be redirected to if they try to access the WP back-end while logged in', 'faa') . '</p>';
+        echo '<p class="description">' . esc_html__('Enter the slug for the "Find an Allergist - Edit Profile" page. This is where Wild Apricot users will be redirected to if they try to access the WP back-end while logged in', FAA_TEXT_DOMAIN) . '</p>';
     }
 
     /**
@@ -253,10 +253,10 @@ class FAA_Admin
         $value = $this->get_option_value('search_form_title', 'Find an Allergist Near You');
 
         printf(
-            '<input type="text" id="search_form_title" name="faa_options[search_form_title]" value="%s" class="regular-text" />',
+            '<input type="text" id="search_form_title" name="' . FAA_OPTIONS . '[search_form_title]" value="%s" class="regular-text" />',
             esc_attr($value)
         );
-        echo '<p class="description">' . esc_html__('Enter the title text for the search form.', 'faa') . '</p>';
+        echo '<p class="description">' . esc_html__('Enter the title text for the search form.', FAA_TEXT_DOMAIN) . '</p>';
     }
 
     /**
@@ -270,14 +270,14 @@ class FAA_Admin
             $value,
             'search_form_intro',
             array(
-                'textarea_name' => 'faa_options[search_form_intro]',
+                'textarea_name' => FAA_OPTIONS . '[search_form_intro]',
                 'textarea_rows' => 5,
                 'media_buttons' => false,
                 'teeny' => true,
                 'quicktags' => true
             )
         );
-        echo '<p class="description">' . esc_html__('Enter introductory text to display above the search form.', 'faa') . '</p>';
+        echo '<p class="description">' . esc_html__('Enter introductory text to display above the search form.', FAA_TEXT_DOMAIN) . '</p>';
     }
 
     /**
@@ -307,7 +307,7 @@ class FAA_Admin
             // Validate API key format
             if (!empty($sanitized['google_maps_api_key']) && !preg_match('/^AIza[0-9A-Za-z-_]{35}$/', $sanitized['google_maps_api_key'])) {
                 add_settings_error(
-                    'faa_options',
+                    FAA_OPTIONS,
                     'invalid_api_key',
                     'Google Maps API key format appears to be invalid.',
                     'error'
@@ -340,24 +340,24 @@ class FAA_Admin
     {
         // Verify nonce
         if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'faa_admin_nonce')) {
-            wp_send_json_error(__('Security check failed.', 'faa'));
+            wp_send_json_error(__('Security check failed.', FAA_TEXT_DOMAIN));
             return;
         }
 
         // Check user capabilities
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(__('You do not have permission to perform this action.', 'faa'));
+            wp_send_json_error(__('You do not have permission to perform this action.', FAA_TEXT_DOMAIN));
             return;
         }
 
         // Reset to default settings
         $default_settings = $this->get_default_settings();
-        $updated = update_option('faa_options', $default_settings);
+        $updated = update_option(FAA_OPTIONS, $default_settings);
 
         if ($updated) {
-            wp_send_json_success(__('Settings reset to defaults successfully.', 'faa'));
+            wp_send_json_success(__('Settings reset to defaults successfully.', FAA_TEXT_DOMAIN));
         } else {
-            wp_send_json_error(__('Failed to reset settings. Please try again.', 'faa'));
+            wp_send_json_error(__('Failed to reset settings. Please try again.', FAA_TEXT_DOMAIN));
         }
     }
 }

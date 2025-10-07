@@ -17,12 +17,11 @@ if (!defined('FAA_VERSION')) {
     define('FAA_VERSION', '1.0.0');
 }
 
-if (!defined('FAA_PLUGIN_FILE')) {
-    define('FAA_PLUGIN_FILE', dirname(__DIR__) . '/faa.php');
-}
+// Note: FAA_PLUGIN_FILE should be defined in the main plugin file (faa.php) before including this file
+// These path constants depend on FAA_PLUGIN_FILE being set first
 
 if (!defined('FAA_PLUGIN_PATH')) {
-    define('FAA_PLUGIN_PATH', dirname(__DIR__) . '/');
+    define('FAA_PLUGIN_PATH', plugin_dir_path(FAA_PLUGIN_FILE));
 }
 
 if (!defined('FAA_PLUGIN_URL')) {

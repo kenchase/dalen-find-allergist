@@ -120,7 +120,7 @@ class FAA_Plugin
     public function load_textdomain()
     {
         load_plugin_textdomain(
-            'faa',
+            FAA_TEXT_DOMAIN,
             false,
             dirname(plugin_basename($this->plugin_file)) . '/languages'
         );
@@ -138,11 +138,11 @@ class FAA_Plugin
                     <p><strong>%s:</strong> %s 
                     <a href="%s">%s</a> %s</p>
                 </div>',
-                esc_html__('Find Allergist Plugin', 'faa'),
-                esc_html__('Google Maps API key is not configured.', 'faa'),
+                esc_html__('Find Allergist Plugin', FAA_TEXT_DOMAIN),
+                esc_html__('Google Maps API key is not configured.', FAA_TEXT_DOMAIN),
                 esc_url($settings_url),
-                esc_html__('Please configure it in the plugin settings', 'faa'),
-                esc_html__('for full functionality.', 'faa')
+                esc_html__('Please configure it in the plugin settings', FAA_TEXT_DOMAIN),
+                esc_html__('for full functionality.', FAA_TEXT_DOMAIN)
             );
         }
     }
@@ -188,8 +188,8 @@ class FAA_Plugin
             'google_maps_api_key' => ''
         ];
 
-        if (!get_option('faa_options')) {
-            add_option('faa_options', $default_options);
+        if (!get_option(FAA_OPTIONS)) {
+            add_option(FAA_OPTIONS, $default_options);
         }
     }
 

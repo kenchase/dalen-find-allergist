@@ -78,8 +78,8 @@ class FAA_Search_Form_Shortcode extends FAA_Shortcode_Base
                     } else {
                         // Fallback to default text if no custom intro is set
                     ?>
-                        <p><?php _e('Welcome to CSACI Find an Allergist. The search options below can be used to locate an allergist/immunologist close to you.', 'faa'); ?></p>
-                        <p><?php _e('Please either enter a name, city and/or postal code to start your search.', 'faa'); ?></p>
+                        <p><?php _e('Welcome to CSACI Find an Allergist. The search options below can be used to locate an allergist/immunologist close to you.', FAA_TEXT_DOMAIN); ?></p>
+                        <p><?php _e('Please either enter a name, city and/or postal code to start your search.', FAA_TEXT_DOMAIN); ?></p>
                     <?php
                     }
                     ?>
@@ -90,55 +90,55 @@ class FAA_Search_Form_Shortcode extends FAA_Shortcode_Base
                 <input type="hidden" name="Find" value="Physician" />
 
                 <div class="faa-form-field">
-                    <label for="phy_name" class="faa-form-field__label"><?php _e('Physician\'s Name', 'faa'); ?></label>
-                    <input type="text" id="phy_name" name="phy_name" placeholder="<?php _e('Search by Name', 'faa'); ?>" value="" />
+                    <label for="phy_name" class="faa-form-field__label"><?php _e('Physician\'s Name', FAA_TEXT_DOMAIN); ?></label>
+                    <input type="text" id="phy_name" name="phy_name" placeholder="<?php _e('Search by Name', FAA_TEXT_DOMAIN); ?>" value="" />
                 </div>
 
                 <div class="faa-form-field">
-                    <label for="phy_prac_pop" class="faa-form-field__label"><?php _e('Practice Population', 'faa'); ?></label>
+                    <label for="phy_prac_pop" class="faa-form-field__label"><?php _e('Practice Population', FAA_TEXT_DOMAIN); ?></label>
                     <select id="phy_prac_pop" name="phy_prac_pop">
-                        <option value=""><?php _e('All Ages', 'faa'); ?></option>
-                        <option value="Adults"><?php _e('Adults', 'faa'); ?></option>
-                        <option value="Pediatric"><?php _e('Pediatric', 'faa'); ?></option>
+                        <option value=""><?php _e('All Ages', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="Adults"><?php _e('Adults', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="Pediatric"><?php _e('Pediatric', FAA_TEXT_DOMAIN); ?></option>
                     </select>
                 </div>
 
                 <div class="faa-form-field">
-                    <label for="phy_city" class="faa-form-field__label"><?php _e('City', 'faa'); ?></label>
-                    <input type="text" id="phy_city" name="phy_city" value="" placeholder="<?php _e('Search by City', 'faa'); ?>" />
+                    <label for="phy_city" class="faa-form-field__label"><?php _e('City', FAA_TEXT_DOMAIN); ?></label>
+                    <input type="text" id="phy_city" name="phy_city" value="" placeholder="<?php _e('Search by City', FAA_TEXT_DOMAIN); ?>" />
                 </div>
 
                 <div class="faa-form-field">
-                    <label for="phy_province" class="faa-form-field__label"><?php _e('Province', 'faa'); ?></label>
+                    <label for="phy_province" class="faa-form-field__label"><?php _e('Province', FAA_TEXT_DOMAIN); ?></label>
                     <select id="phy_province" name="phy_province">
-                        <option value=""><?php _e('Search by Province', 'faa'); ?></option>
-                        <option value="AB"><?php _e('Alberta', 'faa'); ?></option>
-                        <option value="BC"><?php _e('British Columbia', 'faa'); ?></option>
-                        <option value="MB"><?php _e('Manitoba', 'faa'); ?></option>
-                        <option value="NB"><?php _e('New Brunswick', 'faa'); ?></option>
-                        <option value="NL"><?php _e('Newfoundland', 'faa'); ?></option>
-                        <option value="NS"><?php _e('Nova Scotia', 'faa'); ?></option>
-                        <option value="ON"><?php _e('Ontario', 'faa'); ?></option>
-                        <option value="PE"><?php _e('Prince Edward Island', 'faa'); ?></option>
-                        <option value="QC"><?php _e('Quebec', 'faa'); ?></option>
-                        <option value="SK"><?php _e('Saskatchewan', 'faa'); ?></option>
-                        <option value="NT"><?php _e('Northwest Territory', 'faa'); ?></option>
-                        <option value="NU"><?php _e('Nunavut', 'faa'); ?></option>
-                        <option value="YT"><?php _e('Yukon', 'faa'); ?></option>
+                        <option value=""><?php _e('Search by Province', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="AB"><?php _e('Alberta', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="BC"><?php _e('British Columbia', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="MB"><?php _e('Manitoba', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="NB"><?php _e('New Brunswick', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="NL"><?php _e('Newfoundland', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="NS"><?php _e('Nova Scotia', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="ON"><?php _e('Ontario', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="PE"><?php _e('Prince Edward Island', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="QC"><?php _e('Quebec', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="SK"><?php _e('Saskatchewan', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="NT"><?php _e('Northwest Territory', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="NU"><?php _e('Nunavut', FAA_TEXT_DOMAIN); ?></option>
+                        <option value="YT"><?php _e('Yukon', FAA_TEXT_DOMAIN); ?></option>
                     </select>
                 </div>
 
                 <div class="faa-form-field">
-                    <label for="phy_postal" class="faa-form-field__label"><?php _e('Postal Code', 'faa'); ?></label>
-                    <input type="text" id="phy_postal" name="phy_postal" value="" maxlength="7" placeholder="<?php _e('Search by Postal Code', 'faa'); ?>" pattern="^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$"
+                    <label for="phy_postal" class="faa-form-field__label"><?php _e('Postal Code', FAA_TEXT_DOMAIN); ?></label>
+                    <input type="text" id="phy_postal" name="phy_postal" value="" maxlength="7" placeholder="<?php _e('Search by Postal Code', FAA_TEXT_DOMAIN); ?>" pattern="^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$"
                         aria-describedby="postal-error" autocomplete="postal-code" />
                     <div id="postal-error" class="field-error" style="display: none;" role="alert" aria-live="polite">
-                        <?php _e('Please enter a valid Canadian postal code (e.g., K1A 0A6)', 'faa'); ?>
+                        <?php _e('Please enter a valid Canadian postal code (e.g., K1A 0A6)', FAA_TEXT_DOMAIN); ?>
                     </div>
                 </div>
 
                 <div class="faa-form-field">
-                    <label for="phy_kms" class="faa-form-field__label"><?php _e('Within the Range of', 'faa'); ?></label>
+                    <label for="phy_kms" class="faa-form-field__label"><?php _e('Within the Range of', FAA_TEXT_DOMAIN); ?></label>
                     <select id="phy_kms" name="phy_kms" class="short-box" disabled aria-describedby="range-help-text">
                         <option value="10">10km</option>
                         <option value="20">20km</option>
@@ -151,13 +151,13 @@ class FAA_Search_Form_Shortcode extends FAA_Shortcode_Base
                         <option value="500">500km</option>
                     </select>
                     <div id="range-help-text" class="field-help-text" role="status" aria-live="polite">
-                        <?php _e('This field is only available when a valid postal code is provided.', 'faa'); ?>
+                        <?php _e('This field is only available when a valid postal code is provided.', FAA_TEXT_DOMAIN); ?>
                     </div>
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" id="btn-search" class="form-actions_btn form-actions_btn-primary"><?php _e('Search', 'faa'); ?></button>
-                    <button type="button" id="btn-clear" class="form-actions_btn form-actions_btn-secondary"><?php _e('Clear Search', 'faa'); ?></button>
+                    <button type="submit" id="btn-search" class="form-actions_btn form-actions_btn-primary"><?php _e('Search', FAA_TEXT_DOMAIN); ?></button>
+                    <button type="button" id="btn-clear" class="form-actions_btn form-actions_btn-secondary"><?php _e('Clear Search', FAA_TEXT_DOMAIN); ?></button>
                 </div>
             </form>
         </div>

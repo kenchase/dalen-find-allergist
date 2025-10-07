@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 <div class="wrap">
     <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
 
-    <?php settings_errors('faa_options'); ?>
+    <?php settings_errors(FAA_OPTIONS); ?>
 
     <form method="post" action="options.php">
         <?php
@@ -26,15 +26,15 @@ if (!defined('ABSPATH')) {
         do_settings_sections('faa-settings');
 
         // Output save settings button
-        submit_button(__('Save Settings', 'faa'));
+        submit_button(__('Save Settings', FAA_TEXT_DOMAIN));
         ?>
     </form>
 
     <hr style="margin-top: 30px;">
 
-    <h2><?php esc_html_e('Reset Settings', 'faa'); ?></h2>
-    <p><?php esc_html_e('Reset all settings to their default values.', 'faa'); ?></p>
+    <h2><?php esc_html_e('Reset Settings', FAA_TEXT_DOMAIN); ?></h2>
+    <p><?php esc_html_e('Reset all settings to their default values.', FAA_TEXT_DOMAIN); ?></p>
     <button type="button" class="button button-secondary" id="faa-reset-settings">
-        <?php esc_html_e('Reset to Defaults', 'faa'); ?>
+        <?php esc_html_e('Reset to Defaults', FAA_TEXT_DOMAIN); ?>
     </button>
 </div>

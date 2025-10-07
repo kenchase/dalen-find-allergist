@@ -88,9 +88,9 @@ class FAA_Search_Results_Shortcode extends FAA_Shortcode_Base
             class="<?php echo esc_attr($class_string); ?>"
             role="region"
             aria-live="polite"
-            aria-label="<?php esc_attr_e('Search Results', 'faa'); ?>">
+            aria-label="<?php esc_attr_e('Search Results', FAA_TEXT_DOMAIN); ?>">
             <p class="faa-res-section__initial-message">
-                <?php _e('Use the search form to find allergists in your area. Results will appear here.', 'faa'); ?>
+                <?php _e('Use the search form to find allergists in your area. Results will appear here.', FAA_TEXT_DOMAIN); ?>
             </p>
         </div>
 <?php

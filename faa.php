@@ -21,7 +21,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Define plugin constants
+// Define the main plugin file constant first (required by constants.php)
+if (!defined('FAA_PLUGIN_FILE')) {
+    define('FAA_PLUGIN_FILE', __FILE__);
+}
+
+// Load plugin constants
 require_once plugin_dir_path(__FILE__) . 'includes/constants.php';
 
 /**

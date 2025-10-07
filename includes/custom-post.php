@@ -56,6 +56,6 @@ function faa_custom_allergist_post()
         'hierarchical' => false,
         'supports' => array('title', 'author'),
     );
-    register_post_type('physicians', $post_type_args);
+    register_post_type(FAA_POST_TYPE, $post_type_args);
 }
 add_action('init', 'faa_custom_allergist_post');

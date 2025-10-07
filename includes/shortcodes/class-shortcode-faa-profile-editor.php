@@ -32,7 +32,7 @@ class FAA_Profile_Editor_Shortcode extends FAA_Shortcode_Base
     {
         // Check if ACF is available and acf_form function exists
         if (!function_exists('acf_form')) {
-            return '<div class="acf-form-error">' . __('Error: Advanced Custom Fields plugin is not active or acf_form() function is not available.', 'faa') . '</div>';
+            return '<div class="acf-form-error">' . __('Error: Advanced Custom Fields plugin is not active or acf_form() function is not available.', FAA_TEXT_DOMAIN) . '</div>';
         }
 
         // Summary:
@@ -81,7 +81,7 @@ class FAA_Profile_Editor_Shortcode extends FAA_Shortcode_Base
 
         // If no post found, return error message
         if ($post_id === null) {
-            return '<div class="acf-form-error">' . __('No profile found for the current user.', 'faa') . '</div>';
+            return '<div class="acf-form-error">' . __('No profile found for the current user.', FAA_TEXT_DOMAIN) . '</div>';
         }
 
         // Start output buffering
@@ -92,7 +92,7 @@ class FAA_Profile_Editor_Shortcode extends FAA_Shortcode_Base
             'post_id'   => $post_id,
             'post_title'    => true,
             'post_content'  => false,
-            'submit_value'  => __('Update Profile', 'faa'),
+            'submit_value'  => __('Update Profile', FAA_TEXT_DOMAIN),
         ], $atts, 'faa-profile-editor');
 
 
@@ -112,10 +112,10 @@ class FAA_Profile_Editor_Shortcode extends FAA_Shortcode_Base
             if (empty($user_full_name)) {
                 $user_full_name = $current_user->display_name;
             }
-            echo '<h1>' . esc_html($user_full_name) . esc_html__(' - Find an Allergist profile', 'faa') . '</h1>';
+            echo '<h1>' . esc_html($user_full_name) . esc_html__(' - Find an Allergist profile', FAA_TEXT_DOMAIN) . '</h1>';
             acf_form($atts);
         } else {
-            echo '<div class="acf-form-error">' . esc_html__('You do not have permission to edit this profile.', 'faa') . '</div>';
+            echo '<div class="acf-form-error">' . esc_html__('You do not have permission to edit this profile.', FAA_TEXT_DOMAIN) . '</div>';
         }
 
         return $this->get_output_buffer();

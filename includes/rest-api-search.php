@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 add_action('rest_api_init', function () {
-    register_rest_route('faa/v1', '/physicians/search', [
+    register_rest_route(FAA_API_NAMESPACE, '/' . FAA_API_ENDPOINT, [
         'methods'  => 'GET',
         'callback' => 'faa_physician_search',
         'permission_callback' => '__return_true',
@@ -245,7 +245,7 @@ function faa_physician_search(WP_REST_Request $req)
 
     // Get all physicians (excluding those marked as not searchable)
     $query_args = [
-        'post_type'      => 'physicians',
+        'post_type'      => FAA_POST_TYPE,
         'post_status'    => 'publish',
         'posts_per_page' => -1,
         'no_found_rows'  => true,

@@ -48,7 +48,7 @@ function faa_ensure_physician_post_on_login($user_login, $user)
 
     // Check if physician post exists
     $existing_posts = get_posts(array(
-        'post_type'      => 'physicians',
+        'post_type'      => FAA_POST_TYPE,
         'author'         => $user->ID,
         'posts_per_page' => 1,
         'post_status'    => 'any',
@@ -82,7 +82,7 @@ function faa_attempt_physician_post_creation($user_id)
 
     // Double-check that post doesn't already exist
     $existing_posts = get_posts(array(
-        'post_type'      => 'physicians',
+        'post_type'      => FAA_POST_TYPE,
         'author'         => $user_id,
         'posts_per_page' => 1,
         'post_status'    => 'any',
@@ -100,7 +100,7 @@ function faa_attempt_physician_post_creation($user_id)
 
     $post_data = array(
         'post_title'   => $post_title,
-        'post_type'    => 'physicians',
+        'post_type'    => FAA_POST_TYPE,
         'post_status'  => 'publish',
         'post_author'  => $user_id,
         'post_content' => '',
@@ -166,7 +166,7 @@ function faa_get_or_create_physician_post($user_id = null)
 
     // Fallback: Query for post
     $posts = get_posts(array(
-        'post_type'      => 'physicians',
+        'post_type'      => FAA_POST_TYPE,
         'author'         => $user_id,
         'posts_per_page' => 1,
         'post_status'    => 'any',
@@ -213,7 +213,7 @@ function faa_send_urgent_admin_notification($user_id, $error_message)
     $message .= "Error: {$error_message}\n\n";
     $message .= "The user may be unable to access their physician profile.\n\n";
     $message .= "Please manually create a physician post for this user at:\n";
-    $message .= admin_url('post-new.php?post_type=physicians') . "\n\n";
+    $message .= admin_url('post-new.php?post_type=' . FAA_POST_TYPE) . "\n\n";
     $message .= "Timestamp: " . current_time('mysql');
 
     wp_mail($admin_email, $subject, $message);
@@ -258,7 +258,7 @@ function faa_manual_create_missing_posts()
 
         // Check if post exists
         $posts = get_posts(array(
-            'post_type' => 'physicians',
+            'post_type' => FAA_POST_TYPE,
             'author' => $user->ID,
             'posts_per_page' => 1,
             'post_status' => 'any',
