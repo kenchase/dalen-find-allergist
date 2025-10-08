@@ -97,7 +97,7 @@ const FAA_ERROR_TYPES = {
 /**
  * Centralized error handler
  * Logs errors for debugging and shows user-friendly messages
- * 
+ *
  * @param {string} errorType - Type of error from FAA_ERROR_TYPES
  * @param {Object} details - Additional error details for logging
  * @param {string} customMessage - Optional custom message to display to user
@@ -128,7 +128,7 @@ function handleError(errorType, details = {}, customMessage = null) {
 /**
  * Debounce function - delays execution until after specified wait time
  * Prevents excessive function calls during rapid user input
- * 
+ *
  * @param {Function} func - Function to debounce
  * @param {number} wait - Milliseconds to wait before executing
  * @returns {Function} Debounced function
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
 /**
  * Initialize app and cache DOM elements
  * Caches all DOM elements to AppState for efficient access throughout the application
- * 
+ *
  * @returns {void}
  */
 function initializeApp() {
@@ -206,7 +206,7 @@ function initializeApp() {
 /**
  * Create ARIA live region for accessibility announcements
  * Screen readers will announce updates to this region
- * 
+ *
  * @returns {void}
  */
 function createAriaLiveRegion() {
@@ -224,7 +224,7 @@ function createAriaLiveRegion() {
 /**
  * Update ARIA live region with status message
  * Announces to screen readers without visual change
- * 
+ *
  * @param {string} message - Message to announce
  * @returns {void}
  */
@@ -239,7 +239,7 @@ function announceToScreenReader(message) {
  * Bind event handlers to DOM elements
  * Sets up all interactive behaviors: form submission, button clicks, input validation
  * Uses event delegation for dynamically generated content
- * 
+ *
  * @returns {void}
  */
 function bindEventHandlers() {
@@ -296,7 +296,7 @@ function bindEventHandlers() {
 /**
  * Clear the form and reset all application state
  * Resets form fields, clears results, removes validation messages, and shows the search form
- * 
+ *
  * @returns {void}
  */
 function clearForm() {
@@ -334,7 +334,7 @@ function clearForm() {
 /**
  * Initialize the range field state on page load
  * The range field should be disabled until a valid postal code is entered
- * 
+ *
  * @returns {void}
  */
 function initializeRangeFieldState() {
@@ -345,7 +345,7 @@ function initializeRangeFieldState() {
  * Format postal code input as user types
  * Converts to uppercase and adds space after 3rd character (e.g., K1A 0A6)
  * Enforces maximum length of 6 characters (excluding space)
- * 
+ *
  * @returns {void}
  */
 function formatPostalCodeInput() {
@@ -379,7 +379,7 @@ function formatPostalCodeInput() {
  * Validate postal code input and show/hide error messages
  * Checks against Canadian postal code format (A1A 1A1)
  * Updates UI with validation states and error messages
- * 
+ *
  * @returns {boolean} True if valid or empty, false if invalid
  */
 function validatePostalCode() {
@@ -428,7 +428,7 @@ function validatePostalCode() {
 /**
  * Clear postal code validation state
  * Removes all validation classes and hides error messages
- * 
+ *
  * @returns {void}
  */
 function clearPostalValidation() {
@@ -449,7 +449,7 @@ function clearPostalValidation() {
  * Creates and displays a full-screen loading overlay with animated spinner
  * Automatically removes any existing overlay before creating a new one
  * Styles are defined in find-allergist.css
- * 
+ *
  * @returns {void}
  */
 function showLoadingOverlay() {
@@ -472,7 +472,7 @@ function showLoadingOverlay() {
 /**
  * Hide and remove loading overlay
  * Removes the loading overlay element from the DOM if it exists
- * 
+ *
  * @returns {void}
  */
 function hideLoadingOverlay() {
@@ -486,7 +486,7 @@ function hideLoadingOverlay() {
  * Scroll to results container smoothly
  * Uses smooth scrolling behavior to bring the results into view
  * Manages focus for keyboard navigation and screen reader accessibility
- * 
+ *
  * @returns {void}
  */
 function scrollToResults() {
@@ -512,7 +512,7 @@ function scrollToResults() {
  * Handle search form submission - only makes API call for new searches
  * Implements client-side pagination - new searches trigger API calls,
  * pagination uses cached results for better performance
- * 
+ *
  * @param {number} page - Page number to display (default: 1)
  * @returns {Promise<void>}
  */
@@ -561,7 +561,7 @@ async function handleSearchSubmit(page = 1) {
         headers: nonce ? { 'X-WP-Nonce': nonce } : undefined,
         signal: AppState.searchController.signal,
       });
-      
+
       if (!res.ok) {
         const errorType = res.status >= 500 ? FAA_ERROR_TYPES.API_ERROR : FAA_ERROR_TYPES.NETWORK;
         throw new Error(`REST request failed with status ${res.status}`);
@@ -575,9 +575,7 @@ async function handleSearchSubmit(page = 1) {
 
       // Announce results to screen readers
       const resultCount = AppState.allSearchResults.length;
-      const announcement = resultCount === 0 
-        ? 'No results found. Please try adjusting your search criteria.'
-        : `Found ${resultCount} result${resultCount === 1 ? '' : 's'}.`;
+      const announcement = resultCount === 0 ? 'No results found. Please try adjusting your search criteria.' : `Found ${resultCount} result${resultCount === 1 ? '' : 's'}.`;
       announceToScreenReader(announcement);
 
       // Hide overlay and scroll to results
@@ -593,16 +591,14 @@ async function handleSearchSubmit(page = 1) {
       }
 
       // Use centralized error handler
-      const errorType = err.message.includes('fetch') || err.message.includes('network') 
-        ? FAA_ERROR_TYPES.NETWORK 
-        : FAA_ERROR_TYPES.API_ERROR;
-      
-      handleError(errorType, { 
+      const errorType = err.message.includes('fetch') || err.message.includes('network') ? FAA_ERROR_TYPES.NETWORK : FAA_ERROR_TYPES.API_ERROR;
+
+      handleError(errorType, {
         message: err.message,
         endpoint: ENDPOINT,
-        params: Object.fromEntries(params)
+        params: Object.fromEntries(params),
       });
-      
+
       AppState.allSearchResults = [];
 
       // Still scroll to results to show error
@@ -845,10 +841,7 @@ function initializeMap(results) {
       title: location.title,
       icon: {
         url: FAA_CONFIG.map.markerIcon.url,
-        scaledSize: new google.maps.Size(
-          FAA_CONFIG.map.markerIcon.scaledSize.width,
-          FAA_CONFIG.map.markerIcon.scaledSize.height
-        ),
+        scaledSize: new google.maps.Size(FAA_CONFIG.map.markerIcon.scaledSize.width, FAA_CONFIG.map.markerIcon.scaledSize.height),
       },
     });
 
@@ -1019,6 +1012,14 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
       parts.push(`<p class="faa-res-org__grid-item faa-res-org__text faa-res-org__phone faa-res-org__phone--no-phone">Not available</p>`);
     }
 
+    // Distance display in summary section (prominently visible)
+    if (distance !== undefined && distance !== null) {
+      const distanceNum = parseFloat(distance);
+      if (!isNaN(distanceNum)) {
+        parts.push(`<p class="faa-res-org__grid-item faa-res-org__text faa-res-distance"><strong>Distance:</strong> ${distanceNum.toFixed(1)} km</p>`);
+      }
+    }
+
     parts.push(`<button class="faa-res-org__grid-item faa-res-org__btn faa-res-org-view-more">More Info</button>`);
 
     parts.push(`</div>`); // Close org summary
@@ -1053,8 +1054,16 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
     if (siteForClinicalTrials) {
       parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
     }
-    if (distance !== undefined && distance !== null && !isNaN(distance)) {
-      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Distance:</span> ${escapeHTML(distance)} km</div>`);
+    // Distance display - ensure it's displayed even if it's 0
+    if (distance !== undefined && distance !== null) {
+      const distanceNum = parseFloat(distance);
+      if (!isNaN(distanceNum)) {
+        parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Distance:</span> ${distanceNum.toFixed(1)} km</div>`);
+      } else {
+        console.warn('Distance value is not a valid number:', distance);
+      }
+    } else {
+      console.warn('Distance is undefined or null for organization:', orgName);
     }
     parts.push(`</div>`);
     parts.push(`<div class="faa-res-org__grid-item">`);
@@ -1103,7 +1112,7 @@ function getAllFormData() {
 /**
  * Normalize Canadian postal code for API submission
  * Converts to uppercase and removes all spaces (e.g., "K1A 0A6" → "K1A0A6")
- * 
+ *
  * @param {string} v - Postal code to normalize
  * @returns {string} Normalized postal code (uppercase, no spaces)
  */
@@ -1117,7 +1126,7 @@ function normalizePostal(v) {
  * Validate Canadian postal code format
  * Accepts formats like: K1A 0A6, K1A0A6, k1a 0a6
  * Pattern: Letter-Digit-Letter space/no-space Digit-Letter-Digit
- * 
+ *
  * @param {string} postalCode - Postal code to validate
  * @returns {boolean} True if valid, false otherwise
  */
@@ -1133,7 +1142,7 @@ function isValidPostalCode(postalCode) {
 /**
  * Set the main results container HTML
  * Updates the entire results section (faa-res-section)
- * 
+ *
  * @param {string} html - HTML content to set
  * @returns {void}
  */
@@ -1146,7 +1155,7 @@ function setResultsHTML(html) {
  * Set search results content HTML (for pagination updates)
  * Updates only the content area (faa-res-content), preserving the map
  * Falls back to main results container if content container doesn't exist
- * 
+ *
  * @param {string} html - HTML content to set
  * @returns {void}
  */
@@ -1233,7 +1242,7 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
 /**
  * Show a specific marker on the map and display its info window
  * Centers the map on the marker location and triggers a click event
- * 
+ *
  * @param {string} orgId - Organization ID to show on map
  * @returns {void}
  */
@@ -1264,7 +1273,7 @@ function showMarkerOnMap(orgId) {
  * Handle pagination button clicks and other dynamic UI interactions
  * Uses event delegation to handle clicks on dynamically generated elements
  * Handles: pagination buttons, "show on map" links, "back to search", and "view more" buttons
- * 
+ *
  * @param {Event} event - Click event or keyboard event
  * @returns {void}
  */
@@ -1323,7 +1332,7 @@ function handleDocumentClick(event) {
 /**
  * Handle start over process - reset form and show search with loading transition
  * Cleans up map resources, resets all state, clears results, and returns to search form
- * 
+ *
  * @returns {void}
  */
 function handleStartOver() {
@@ -1372,7 +1381,7 @@ function handleStartOver() {
  * Toggle organization details visibility (expand/collapse)
  * Shows or hides additional organization information when "More Info" is clicked
  * Updates button text between "More Info" and "Less Info"
- * 
+ *
  * @param {HTMLElement} button - The "View More" button that was clicked
  * @returns {void}
  */
@@ -1408,7 +1417,7 @@ function toggleOrgDetails(button) {
 /**
  * Escape HTML special characters to prevent XSS attacks
  * Converts &, <, >, ", and ' to their HTML entity equivalents
- * 
+ *
  * @param {string} str - String to escape
  * @returns {string} Escaped HTML-safe string
  */
@@ -1423,7 +1432,7 @@ function escapeHTML(str) {
  * Cleanup function for preventing memory leaks
  * Aborts pending requests and hides overlays
  * Called automatically when page is unloaded
- * 
+ *
  * @returns {void}
  */
 function cleanup() {
@@ -1444,7 +1453,7 @@ window.addEventListener('beforeunload', cleanup);
  * Toggle the range field based on postal code input
  * Enables the range selector only when a valid postal code is entered
  * Shows/hides help text accordingly
- * 
+ *
  * @returns {void}
  */
 function toggleRangeField() {
@@ -1496,7 +1505,7 @@ function toggleRangeField() {
 /**
  * Validate the entire form before submission
  * Currently only validates postal code if provided
- * 
+ *
  * @returns {boolean} True if form is valid, false otherwise
  */
 function validateForm() {
@@ -1517,7 +1526,7 @@ function validateForm() {
 /**
  * Hide the parent section (form section)
  * Hides the Divi section containing the search form when showing results
- * 
+ *
  * @returns {void}
  */
 function hideParentSection() {
@@ -1530,7 +1539,7 @@ function hideParentSection() {
 /**
  * Show the parent section (form section)
  * Reveals the Divi section containing the search form
- * 
+ *
  * @returns {void}
  */
 function showParentSection() {

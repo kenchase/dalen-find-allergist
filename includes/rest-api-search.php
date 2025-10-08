@@ -460,7 +460,13 @@ function faa_physician_search(WP_REST_Request $req)
             // Include organization if it matches all criteria
             if ($location_match && $practice_population_match && $distance_match) {
                 if ($distance_km !== null && $distance_km !== false) {
-                    $org['distance_km'] = round($distance_km, 1);
+                    // Round to 1 decimal, but ensure minimum of 0.1 km to avoid showing "0 km"
+                    $rounded_distance = round($distance_km, 1);
+                    $org['distance_km'] = ($rounded_distance < 0.1 && $distance_km > 0) ? 0.1 : $rounded_distance;
+                    
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log('FAA: Distance calculated: ' . round($distance_km, 2) . 'km, displayed as: ' . $org['distance_km'] . 'km for org: ' . ($org['institutation_name'] ?? 'Unknown'));
+                    }
                 }
                 $filtered_orgs[] = $org;
             }
