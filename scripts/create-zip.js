@@ -59,12 +59,12 @@ async function createProductionZip() {
   console.log('📁 Adding files to production zip...');
 
   // Main plugin file - check if it exists
-  const mainPluginFile = path.join(__dirname, '..', 'dalen-find-allergist.php');
+  const mainPluginFile = path.join(__dirname, '..', 'faa.php');
   if (fs.existsSync(mainPluginFile)) {
-    archive.file(mainPluginFile, { name: `${pluginName}/dalen-find-allergist.php` });
+    archive.file(mainPluginFile, { name: `${pluginName}/faa.php` });
     console.log('✓ Added main plugin file');
   } else {
-    console.error('❌ Main plugin file not found: dalen-find-allergist.php');
+    console.error('❌ Main plugin file not found: faa.php');
     return;
   }
 
