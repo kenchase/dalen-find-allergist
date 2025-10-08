@@ -8,14 +8,146 @@
  * @since 1.0.0
  */
 
-// Constants
-const ENDPOINT = '/wp-json/faa/v1/physicians/search';
-const RESULTS_PER_PAGE = 20;
+/**
+ * NOTE: ACF Field Name Typo
+ * The ACF field for organization name is 'institutation_name' (with typo).
+ * This is the actual field name in the database and should not be "fixed"
+ * to 'institution_name' without updating the ACF field definition first.
+ */
 
-// Validation constants
-const VALIDATION_DEBOUNCE_DELAY = 300; // milliseconds
-const POSTAL_CODE_MAX_LENGTH = 6; // Without space
-const POSTAL_CODE_REGEX = /^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/;
+/**
+ * Configuration object - centralized settings for maintainability
+ * @const {Object} FAA_CONFIG
+ */
+const FAA_CONFIG = {
+  // API Settings
+  api: {
+    endpoint: '/wp-json/faa/v1/physicians/search',
+    timeout: 5000,
+  },
+
+  // Pagination Settings
+  pagination: {
+    resultsPerPage: 20,
+    maxVisiblePages: 2, // Number of page buttons to show on each side of current page
+  },
+
+  // Validation Settings
+  validation: {
+    debounceDelay: 300, // milliseconds
+    postalCode: {
+      maxLength: 6, // Without space
+      regex: /^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/,
+      formatLength: 7, // With space: A1A 1A1
+    },
+  },
+
+  // Google Maps Settings
+  map: {
+    defaultZoom: 10,
+    singleLocationZoom: 15,
+    markerIcon: {
+      url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+      scaledSize: { width: 32, height: 32 },
+    },
+  },
+
+  // UI Settings
+  ui: {
+    scrollOffset: 20, // Pixels offset when scrolling to elements
+    animationDelay: 100, // Delay before map initialization
+    transitionDelay: 500, // Delay for loading transitions
+    parentSectionSelector: '.et_pb_section', // Divi theme specific - parent section to hide/show
+  },
+
+  // Error Messages
+  messages: {
+    searchError: 'Sorry, something went wrong. Please try again.',
+    searching: 'Searching for allergists...',
+    noResults: 'No results found.',
+    networkError: 'Unable to connect. Please check your internet connection and try again.',
+  },
+};
+
+// Backward compatibility - maintain original constant names
+const ENDPOINT = FAA_CONFIG.api.endpoint;
+const RESULTS_PER_PAGE = FAA_CONFIG.pagination.resultsPerPage;
+const VALIDATION_DEBOUNCE_DELAY = FAA_CONFIG.validation.debounceDelay;
+const POSTAL_CODE_MAX_LENGTH = FAA_CONFIG.validation.postalCode.maxLength;
+const POSTAL_CODE_REGEX = FAA_CONFIG.validation.postalCode.regex;
+
+/******************************************************************************
+ * ERROR HANDLING
+ ******************************************************************************/
+
+/**
+ * Error types for centralized error handling
+ * @const {Object} FAA_ERROR_TYPES
+ */
+const FAA_ERROR_TYPES = {
+  NETWORK: 'network',
+  API_ERROR: 'api_error',
+  VALIDATION: 'validation',
+  NO_RESULTS: 'no_results',
+  GEOCODING: 'geocoding',
+  MAP_INIT: 'map_initialization',
+  UNKNOWN: 'unknown',
+};
+
+/**
+ * Centralized error handler
+ * Logs errors for debugging and shows user-friendly messages
+ * 
+ * @param {string} errorType - Type of error from FAA_ERROR_TYPES
+ * @param {Object} details - Additional error details for logging
+ * @param {string} customMessage - Optional custom message to display to user
+ * @returns {void}
+ */
+function handleError(errorType, details = {}, customMessage = null) {
+  // Get appropriate user message
+  const userMessage = customMessage || FAA_CONFIG.messages.searchError;
+
+  // Log error for debugging (only in console, not shown to users)
+  if (window.console && console.error) {
+    console.error(`[FAA Error - ${errorType}]:`, details);
+  }
+
+  // Show user-friendly message in results area
+  setResultsHTML(`<p role="alert" class="faa-error-message">${escapeHTML(userMessage)}</p>`);
+
+  // Optional: Send to error tracking service if available
+  if (typeof window.trackError === 'function') {
+    window.trackError('FAA', errorType, details);
+  }
+}
+
+/******************************************************************************
+ * UTILITY FUNCTIONS
+ ******************************************************************************/
+
+/**
+ * Debounce function - delays execution until after specified wait time
+ * Prevents excessive function calls during rapid user input
+ * 
+ * @param {Function} func - Function to debounce
+ * @param {number} wait - Milliseconds to wait before executing
+ * @returns {Function} Debounced function
+ */
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func.apply(this, args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+/******************************************************************************
+ * STATE MANAGEMENT
+ ******************************************************************************/
 
 // Global state management
 const AppState = {
@@ -28,11 +160,11 @@ const AppState = {
   currentPage: 1,
   allSearchResults: [],
   elements: {},
-  validationTimeout: null, // For debouncing validation
 };
 
 /**
- * Initialize the application
+ * Initialize the application when DOM is ready
+ * Sets up event listeners and caches DOM elements
  */
 document.addEventListener('DOMContentLoaded', function () {
   initializeApp();
@@ -40,6 +172,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /**
  * Initialize app and cache DOM elements
+ * Caches all DOM elements to AppState for efficient access throughout the application
+ * 
+ * @returns {void}
  */
 function initializeApp() {
   // Cache DOM elements to avoid repeated queries
@@ -55,19 +190,57 @@ function initializeApp() {
     rangeHelpText: document.getElementById('range-help-text'),
   };
 
-  // Find the first parent element with class "et_pb_section"
+  // Find the first parent element with configured selector (Divi theme specific)
   // This is used to hide/show the entire search form section when displaying results
-  // It assumes the form is inside a ".et_pb_section" (Divi theme) such a section
   if (AppState.elements.formSection) {
-    AppState.elements.parentSection = AppState.elements.formSection.closest('.et_pb_section');
+    AppState.elements.parentSection = AppState.elements.formSection.closest(FAA_CONFIG.ui.parentSectionSelector);
   }
+
+  // Create ARIA live region for search status announcements
+  createAriaLiveRegion();
 
   bindEventHandlers();
   initializeRangeFieldState();
 }
 
 /**
+ * Create ARIA live region for accessibility announcements
+ * Screen readers will announce updates to this region
+ * 
+ * @returns {void}
+ */
+function createAriaLiveRegion() {
+  if (!document.getElementById('faa-sr-status')) {
+    const liveRegion = document.createElement('div');
+    liveRegion.id = 'faa-sr-status';
+    liveRegion.className = 'sr-only';
+    liveRegion.setAttribute('role', 'status');
+    liveRegion.setAttribute('aria-live', 'polite');
+    liveRegion.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(liveRegion);
+  }
+}
+
+/**
+ * Update ARIA live region with status message
+ * Announces to screen readers without visual change
+ * 
+ * @param {string} message - Message to announce
+ * @returns {void}
+ */
+function announceToScreenReader(message) {
+  const liveRegion = document.getElementById('faa-sr-status');
+  if (liveRegion) {
+    liveRegion.textContent = message;
+  }
+}
+
+/**
  * Bind event handlers to DOM elements
+ * Sets up all interactive behaviors: form submission, button clicks, input validation
+ * Uses event delegation for dynamically generated content
+ * 
+ * @returns {void}
  */
 function bindEventHandlers() {
   const { form, searchBtn, clearBtn, postalInput } = AppState.elements;
@@ -98,27 +271,19 @@ function bindEventHandlers() {
 
   // Handle postal code input changes
   if (postalInput) {
+    // Create debounced validation function
+    const debouncedValidation = debounce(() => {
+      validatePostalCode();
+      toggleRangeField();
+    }, VALIDATION_DEBOUNCE_DELAY);
+
     postalInput.addEventListener('input', function () {
       formatPostalCodeInput();
-
-      // Debounce validation to improve performance
-      if (AppState.validationTimeout) {
-        clearTimeout(AppState.validationTimeout);
-      }
-
-      AppState.validationTimeout = setTimeout(() => {
-        validatePostalCode();
-        toggleRangeField();
-      }, VALIDATION_DEBOUNCE_DELAY);
+      debouncedValidation();
     });
 
-    // Also validate on blur for better UX (immediate)
+    // Also validate on blur for better UX (immediate, not debounced)
     postalInput.addEventListener('blur', function () {
-      // Clear any pending timeout and validate immediately
-      if (AppState.validationTimeout) {
-        clearTimeout(AppState.validationTimeout);
-        AppState.validationTimeout = null;
-      }
       validatePostalCode();
       toggleRangeField();
     });
@@ -129,7 +294,10 @@ function bindEventHandlers() {
 }
 
 /**
- * Clear the form and reset state
+ * Clear the form and reset all application state
+ * Resets form fields, clears results, removes validation messages, and shows the search form
+ * 
+ * @returns {void}
  */
 function clearForm() {
   const { form } = AppState.elements;
@@ -165,13 +333,20 @@ function clearForm() {
 
 /**
  * Initialize the range field state on page load
+ * The range field should be disabled until a valid postal code is entered
+ * 
+ * @returns {void}
  */
 function initializeRangeFieldState() {
   toggleRangeField();
 }
 
 /**
- * Format postal code input as user types (add space after 3rd character)
+ * Format postal code input as user types
+ * Converts to uppercase and adds space after 3rd character (e.g., K1A 0A6)
+ * Enforces maximum length of 6 characters (excluding space)
+ * 
+ * @returns {void}
  */
 function formatPostalCodeInput() {
   const { postalInput } = AppState.elements;
@@ -202,6 +377,10 @@ function formatPostalCodeInput() {
 
 /**
  * Validate postal code input and show/hide error messages
+ * Checks against Canadian postal code format (A1A 1A1)
+ * Updates UI with validation states and error messages
+ * 
+ * @returns {boolean} True if valid or empty, false if invalid
  */
 function validatePostalCode() {
   const { postalInput, postalError } = AppState.elements;
@@ -248,6 +427,9 @@ function validatePostalCode() {
 
 /**
  * Clear postal code validation state
+ * Removes all validation classes and hides error messages
+ * 
+ * @returns {void}
  */
 function clearPostalValidation() {
   const { postalInput, postalError } = AppState.elements;
@@ -264,6 +446,11 @@ function clearPostalValidation() {
 
 /**
  * Show loading overlay with spinner
+ * Creates and displays a full-screen loading overlay with animated spinner
+ * Automatically removes any existing overlay before creating a new one
+ * Styles are defined in find-allergist.css
+ * 
+ * @returns {void}
  */
 function showLoadingOverlay() {
   // Remove existing overlay if present
@@ -271,67 +458,22 @@ function showLoadingOverlay() {
 
   const overlay = document.createElement('div');
   overlay.id = 'search-loading-overlay';
+  overlay.className = 'faa-loading-overlay';
   overlay.innerHTML = `
-    <div class="search-loading-content">
-      <div class="search-spinner"></div>
-      <p>Searching for allergists...</p>
+    <div class="faa-loading-content">
+      <div class="faa-loading-spinner"></div>
+      <p>${escapeHTML(FAA_CONFIG.messages.searching)}</p>
     </div>
   `;
-
-  // Add CSS styles
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    backdrop-filter: blur(2px);
-  `;
-
-  const content = overlay.querySelector('.search-loading-content');
-  content.style.cssText = `
-    text-align: center;
-    padding: 2rem;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    max-width: 300px;
-  `;
-
-  const spinner = overlay.querySelector('.search-spinner');
-  spinner.style.cssText = `
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #007cba;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem auto;
-  `;
-
-  // Add CSS animation
-  if (!document.getElementById('search-spinner-styles')) {
-    const style = document.createElement('style');
-    style.id = 'search-spinner-styles';
-    style.textContent = `
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
 
   document.body.appendChild(overlay);
 }
 
 /**
- * Hide loading overlay
+ * Hide and remove loading overlay
+ * Removes the loading overlay element from the DOM if it exists
+ * 
+ * @returns {void}
  */
 function hideLoadingOverlay() {
   const overlay = document.getElementById('search-loading-overlay');
@@ -342,6 +484,10 @@ function hideLoadingOverlay() {
 
 /**
  * Scroll to results container smoothly
+ * Uses smooth scrolling behavior to bring the results into view
+ * Manages focus for keyboard navigation and screen reader accessibility
+ * 
+ * @returns {void}
  */
 function scrollToResults() {
   const resultsContainer = document.getElementById('results');
@@ -350,11 +496,25 @@ function scrollToResults() {
       behavior: 'smooth',
       block: 'start',
     });
+
+    // Set focus to first heading in results for keyboard navigation
+    setTimeout(() => {
+      const firstHeading = resultsContainer.querySelector('h2, h3');
+      if (firstHeading) {
+        firstHeading.setAttribute('tabindex', '-1');
+        firstHeading.focus();
+      }
+    }, FAA_CONFIG.ui.animationDelay + 100);
   }
 }
 
 /**
  * Handle search form submission - only makes API call for new searches
+ * Implements client-side pagination - new searches trigger API calls,
+ * pagination uses cached results for better performance
+ * 
+ * @param {number} page - Page number to display (default: 1)
+ * @returns {Promise<void>}
  */
 async function handleSearchSubmit(page = 1) {
   // Validate form before proceeding
@@ -401,8 +561,10 @@ async function handleSearchSubmit(page = 1) {
         headers: nonce ? { 'X-WP-Nonce': nonce } : undefined,
         signal: AppState.searchController.signal,
       });
+      
       if (!res.ok) {
-        throw new Error(`REST request failed (${res.status})`);
+        const errorType = res.status >= 500 ? FAA_ERROR_TYPES.API_ERROR : FAA_ERROR_TYPES.NETWORK;
+        throw new Error(`REST request failed with status ${res.status}`);
       }
 
       const data = await res.json();
@@ -411,9 +573,16 @@ async function handleSearchSubmit(page = 1) {
       AppState.allSearchResults = data.results || [];
       renderPaginatedResults(1, true); // isNewSearch = true
 
+      // Announce results to screen readers
+      const resultCount = AppState.allSearchResults.length;
+      const announcement = resultCount === 0 
+        ? 'No results found. Please try adjusting your search criteria.'
+        : `Found ${resultCount} result${resultCount === 1 ? '' : 's'}.`;
+      announceToScreenReader(announcement);
+
       // Hide overlay and scroll to results
       hideLoadingOverlay();
-      setTimeout(() => scrollToResults(), 100);
+      setTimeout(() => scrollToResults(), FAA_CONFIG.ui.animationDelay);
     } catch (err) {
       // Hide overlay on error
       hideLoadingOverlay();
@@ -423,12 +592,21 @@ async function handleSearchSubmit(page = 1) {
         return;
       }
 
-      console.error('Search error:', err);
-      setResultsHTML('<p role="alert">Sorry, something went wrong. Please try again.</p>');
+      // Use centralized error handler
+      const errorType = err.message.includes('fetch') || err.message.includes('network') 
+        ? FAA_ERROR_TYPES.NETWORK 
+        : FAA_ERROR_TYPES.API_ERROR;
+      
+      handleError(errorType, { 
+        message: err.message,
+        endpoint: ENDPOINT,
+        params: Object.fromEntries(params)
+      });
+      
       AppState.allSearchResults = [];
 
       // Still scroll to results to show error
-      setTimeout(() => scrollToResults(), 100);
+      setTimeout(() => scrollToResults(), FAA_CONFIG.ui.animationDelay);
     } finally {
       AppState.searchController = null;
     }
@@ -594,7 +772,7 @@ function renderPaginatedResults(page, isNewSearch = false) {
 
   // Initialize the map only for new searches, not for pagination
   if (isNewSearch) {
-    setTimeout(() => initializeMap(AppState.allSearchResults), 100);
+    setTimeout(() => initializeMap(AppState.allSearchResults), FAA_CONFIG.ui.animationDelay);
   }
 }
 
@@ -654,7 +832,7 @@ function initializeMap(results) {
 
   // Initialize map
   AppState.allergistMap = new google.maps.Map(mapContainer, {
-    zoom: 10,
+    zoom: FAA_CONFIG.map.defaultZoom,
     center: bounds.getCenter(),
     mapTypeId: google.maps.MapTypeId.ROADMAP,
   });
@@ -666,8 +844,11 @@ function initializeMap(results) {
       map: AppState.allergistMap,
       title: location.title,
       icon: {
-        url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-        scaledSize: new google.maps.Size(32, 32),
+        url: FAA_CONFIG.map.markerIcon.url,
+        scaledSize: new google.maps.Size(
+          FAA_CONFIG.map.markerIcon.scaledSize.width,
+          FAA_CONFIG.map.markerIcon.scaledSize.height
+        ),
       },
     });
 
@@ -687,7 +868,7 @@ function initializeMap(results) {
   // Fit map to show all markers
   if (locations.length === 1) {
     AppState.allergistMap.setCenter(bounds.getCenter());
-    AppState.allergistMap.setZoom(15);
+    AppState.allergistMap.setZoom(FAA_CONFIG.map.singleLocationZoom);
   } else {
     AppState.allergistMap.fitBounds(bounds);
   }
@@ -892,12 +1073,6 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
 
   parts.push(`</div>`); // Close orgs
   return parts.join('');
-
-  // Don't know where to include this yet
-  // Add "Show on map" link if this organization has a marker
-  // if (hasMapMarker) {
-  //   parts.push(`<li class="faa-res-org-list-item faa-res-org-list-item--map-link"><a href="#" class="show-on-map-link" data-org-id="${orgId}">📍 Show on map</a></li>`);
-  // }
 }
 
 /**
@@ -926,7 +1101,11 @@ function getAllFormData() {
 }
 
 /**
- * Normalize Canadian postal (uppercase, no spaces)
+ * Normalize Canadian postal code for API submission
+ * Converts to uppercase and removes all spaces (e.g., "K1A 0A6" → "K1A0A6")
+ * 
+ * @param {string} v - Postal code to normalize
+ * @returns {string} Normalized postal code (uppercase, no spaces)
  */
 function normalizePostal(v) {
   return String(v || '')
@@ -937,7 +1116,10 @@ function normalizePostal(v) {
 /**
  * Validate Canadian postal code format
  * Accepts formats like: K1A 0A6, K1A0A6, k1a 0a6
- * Returns true if valid, false otherwise
+ * Pattern: Letter-Digit-Letter space/no-space Digit-Letter-Digit
+ * 
+ * @param {string} postalCode - Postal code to validate
+ * @returns {boolean} True if valid, false otherwise
  */
 function isValidPostalCode(postalCode) {
   if (!postalCode || typeof postalCode !== 'string') {
@@ -949,7 +1131,11 @@ function isValidPostalCode(postalCode) {
 }
 
 /**
- * Basic helper to set results container HTML
+ * Set the main results container HTML
+ * Updates the entire results section (faa-res-section)
+ * 
+ * @param {string} html - HTML content to set
+ * @returns {void}
  */
 function setResultsHTML(html) {
   const container = document.getElementById('faa-res-section');
@@ -957,7 +1143,12 @@ function setResultsHTML(html) {
 }
 
 /**
- * Helper to set search results content HTML (for pagination updates)
+ * Set search results content HTML (for pagination updates)
+ * Updates only the content area (faa-res-content), preserving the map
+ * Falls back to main results container if content container doesn't exist
+ * 
+ * @param {string} html - HTML content to set
+ * @returns {void}
  */
 function setSearchResultsContentHTML(html) {
   const container = document.getElementById('faa-res-content');
@@ -991,7 +1182,7 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
   paginationParts.push('<span class="faa-res-pagination-numbers">');
 
   // Show page numbers with ellipsis for large page counts
-  const maxVisible = 2;
+  const maxVisible = FAA_CONFIG.pagination.maxVisiblePages;
   let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
   let endPage = Math.min(totalPages, startPage + maxVisible - 1);
 
@@ -1040,8 +1231,11 @@ function generatePaginationHTML(currentPage, totalPages, prevPage, nextPage) {
 }
 
 /**
- * Handle "Show on map" link clicks
- * @param {string} orgId - Organization ID
+ * Show a specific marker on the map and display its info window
+ * Centers the map on the marker location and triggers a click event
+ * 
+ * @param {string} orgId - Organization ID to show on map
+ * @returns {void}
  */
 function showMarkerOnMap(orgId) {
   const marker = AppState.orgMarkerMap.get(orgId);
@@ -1051,7 +1245,7 @@ function showMarkerOnMap(orgId) {
 
   // Center the map on the marker
   AppState.allergistMap.setCenter(marker.getPosition());
-  AppState.allergistMap.setZoom(15);
+  AppState.allergistMap.setZoom(FAA_CONFIG.map.singleLocationZoom);
 
   // Trigger the marker click event to show the info window
   google.maps.event.trigger(marker, 'click');
@@ -1067,7 +1261,12 @@ function showMarkerOnMap(orgId) {
 }
 
 /**
- * Handle pagination button clicks and show on map links
+ * Handle pagination button clicks and other dynamic UI interactions
+ * Uses event delegation to handle clicks on dynamically generated elements
+ * Handles: pagination buttons, "show on map" links, "back to search", and "view more" buttons
+ * 
+ * @param {Event} event - Click event or keyboard event
+ * @returns {void}
  */
 function handleDocumentClick(event) {
   // Handle pagination button clicks - improved targeting and disabled state checking
@@ -1078,11 +1277,14 @@ function handleDocumentClick(event) {
       // Prevent default behavior
       event.preventDefault();
 
-      // Scroll to top of results content with 20px offset
+      // Announce page change to screen readers
+      announceToScreenReader(`Loading page ${page}`);
+
+      // Scroll to top of results content with configured offset
       const resultsContentContainer = document.getElementById('faa-res-content');
       if (resultsContentContainer) {
         const elementTop = resultsContentContainer.getBoundingClientRect().top + window.pageYOffset;
-        const offsetTop = elementTop - 20; // 20px offset from top
+        const offsetTop = elementTop - FAA_CONFIG.ui.scrollOffset;
 
         window.scrollTo({
           top: offsetTop,
@@ -1120,6 +1322,9 @@ function handleDocumentClick(event) {
 
 /**
  * Handle start over process - reset form and show search with loading transition
+ * Cleans up map resources, resets all state, clears results, and returns to search form
+ * 
+ * @returns {void}
  */
 function handleStartOver() {
   // Show loading overlay
@@ -1160,12 +1365,16 @@ function handleStartOver() {
         block: 'start',
       });
     }
-  }, 500);
+  }, FAA_CONFIG.ui.transitionDelay);
 }
 
 /**
- * Toggle organization details visibility
+ * Toggle organization details visibility (expand/collapse)
+ * Shows or hides additional organization information when "More Info" is clicked
+ * Updates button text between "More Info" and "Less Info"
+ * 
  * @param {HTMLElement} button - The "View More" button that was clicked
+ * @returns {void}
  */
 function toggleOrgDetails(button) {
   // Find the parent organization container
@@ -1197,7 +1406,11 @@ function toggleOrgDetails(button) {
 }
 
 /**
- * Optimized HTML escaper for titles/strings we render
+ * Escape HTML special characters to prevent XSS attacks
+ * Converts &, <, >, ", and ' to their HTML entity equivalents
+ * 
+ * @param {string} str - String to escape
+ * @returns {string} Escaped HTML-safe string
  */
 function escapeHTML(str) {
   if (!str) return '';
@@ -1208,14 +1421,12 @@ function escapeHTML(str) {
 
 /**
  * Cleanup function for preventing memory leaks
+ * Aborts pending requests and hides overlays
+ * Called automatically when page is unloaded
+ * 
+ * @returns {void}
  */
 function cleanup() {
-  // Clear any pending timeouts
-  if (AppState.validationTimeout) {
-    clearTimeout(AppState.validationTimeout);
-    AppState.validationTimeout = null;
-  }
-
   // Abort any pending requests
   if (AppState.searchController) {
     AppState.searchController.abort();
@@ -1231,6 +1442,10 @@ window.addEventListener('beforeunload', cleanup);
 
 /**
  * Toggle the range field based on postal code input
+ * Enables the range selector only when a valid postal code is entered
+ * Shows/hides help text accordingly
+ * 
+ * @returns {void}
  */
 function toggleRangeField() {
   const { postalInput, rangeSelect } = AppState.elements;
@@ -1280,6 +1495,9 @@ function toggleRangeField() {
 
 /**
  * Validate the entire form before submission
+ * Currently only validates postal code if provided
+ * 
+ * @returns {boolean} True if form is valid, false otherwise
  */
 function validateForm() {
   const { postalInput } = AppState.elements;
@@ -1298,6 +1516,9 @@ function validateForm() {
 
 /**
  * Hide the parent section (form section)
+ * Hides the Divi section containing the search form when showing results
+ * 
+ * @returns {void}
  */
 function hideParentSection() {
   const { parentSection } = AppState.elements;
@@ -1308,6 +1529,9 @@ function hideParentSection() {
 
 /**
  * Show the parent section (form section)
+ * Reveals the Divi section containing the search form
+ * 
+ * @returns {void}
  */
 function showParentSection() {
   const { parentSection } = AppState.elements;
