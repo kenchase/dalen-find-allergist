@@ -1007,17 +1007,9 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
     parts.push(`</p>`);
 
     if (phone) {
-      parts.push(`<p class="faa-res-org__grid-item faa-res-org__text faa-res-org__phone"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}</p>`);
+      parts.push(`<p class="faa-res-org__grid-item faa-res-org__text faa-res-org__phone"><strong aria-label="Phone">T:</strong> ${escapeHTML(phone)}${phone_ext ? ` <br /><strong aria-label="Phon extension">Ext:</strong> ${escapeHTML(phone_ext)}` : ''}</p>`);
     } else {
       parts.push(`<p class="faa-res-org__grid-item faa-res-org__text faa-res-org__phone faa-res-org__phone--no-phone">Not available</p>`);
-    }
-
-    // Distance display in summary section (prominently visible)
-    if (distance !== undefined && distance !== null) {
-      const distanceNum = parseFloat(distance);
-      if (!isNaN(distanceNum)) {
-        parts.push(`<p class="faa-res-org__grid-item faa-res-org__text faa-res-distance"><strong>Distance:</strong> ${distanceNum.toFixed(1)} km</p>`);
-      }
     }
 
     parts.push(`<button class="faa-res-org__grid-item faa-res-org__btn faa-res-org-view-more">More Info</button>`);
@@ -1053,6 +1045,9 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
     }
     if (siteForClinicalTrials) {
       parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Site for Clinical Trials:</span> ${escapeHTML(siteForClinicalTrials)}</div>`);
+    }
+    if (fax) {
+      parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Fax:</span> ${escapeHTML(fax)}</div>`);
     }
     // Distance display - ensure it's displayed even if it's 0
     if (distance !== undefined && distance !== null) {
