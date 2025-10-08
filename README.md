@@ -45,6 +45,7 @@ Users with `wa_level_` roles can edit only their own physician profile with rest
 **Parameters**: `name`, `city`, `province`, `postal`, `kms` (1-500), `prac_pop`
 
 **Example**:
+
 ```bash
 GET /wp-json/faa/v1/physicians/search?postal=M5V3M6&kms=50
 ```
@@ -58,6 +59,7 @@ Returns all results in single response with client-side pagination
 - `[faa-profile-editor]` - ACF form for physicians to edit their profile
 
 **Complete search page**:
+
 ```
 [faa-search-form]
 [faa-search-results]
@@ -68,6 +70,7 @@ Returns all results in single response with client-side pagination
 **Physician**: `physician_credentials`
 
 **Organizations (Repeater)**: `organizations_details` containing:
+
 - `institutation_name` - Organization name
 - `institution_gmap` - Google Map field with `city`, `state_short`, `post_code`, `lat`, `lng`
 - `institution_practice_population` - Practice population (Adults/Pediatric)
@@ -92,7 +95,7 @@ npm install              # Install dependencies
 npm run dev              # Development build
 npm run build            # Production build
 npm run build:zip        # Create distribution package
-````
+```
 
 ## License
 
@@ -104,4 +107,4 @@ Developed for the Canadian Society of Allergy and Clinical Immunology (CSACI).
 
 ---
 
-*Note: Designed for the Canadian healthcare system with Canadian postal code formatting.*
+_Note: Designed for the Canadian healthcare system with Canadian postal code formatting._
