@@ -46,7 +46,7 @@ class FAA_Search_Form_Shortcode extends FAA_Shortcode_Base
         // Enqueue Google Maps API
         $has_maps_api = $this->enqueue_google_maps_api();
 
-        // Enqueue JavaScript
+        // Enqueue JavaScript (wp_enqueue_script prevents duplicates automatically)
         $asset_base_url = $this->plugin_url . '../assets/';
         wp_enqueue_script(
             'find-allergist-scripts',

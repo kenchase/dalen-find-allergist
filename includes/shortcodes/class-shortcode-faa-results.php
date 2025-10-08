@@ -54,7 +54,7 @@ class FAA_Search_Results_Shortcode extends FAA_Shortcode_Base
      */
     private function enqueue_assets()
     {
-        // Enqueue JavaScript
+        // Enqueue JavaScript (wp_enqueue_script prevents duplicates automatically)
         $asset_base_url = $this->plugin_url . '../assets/';
         wp_enqueue_script(
             'find-allergist-scripts',
