@@ -69,13 +69,7 @@ Returns all results in single response with client-side pagination
 
 **Physician**: `physician_credentials`
 
-**Organizations (Repeater)**: `organizations_details` containing:
-
-- `institutation_name` - Organization name
-- `institution_gmap` - Google Map field with `city`, `state_short`, `post_code`, `lat`, `lng`
-- `institution_practice_population` - Practice population (Adults/Pediatric)
-- `institution_phone` - Phone number
-- `institution_fax` - Fax number
+**Organizations (Repeater)**: `organizations_details` containing all org data including a Google Map that contains all location info
 
 ## File Structure
 
