@@ -69,10 +69,15 @@ class FAA_Search_Form_Shortcode extends FAA_Shortcode_Base
         <!-- Search Form -->
         <div id="faa-search" class="faa-search-wrap">
             <div class="faa-search-intro">
-                <h1 class="faa-search-intro__title"><?php echo esc_html(get_option('faa_search_form_title', 'Find An Allergist')); ?></h1>
+                <?php
+                // Get options from the faa_options array
+                $options = get_option(FAA_OPTIONS, []);
+                $form_title = isset($options['search_form_title']) ? $options['search_form_title'] : 'Find an Allergist Near You';
+                $intro_text = isset($options['search_form_intro']) ? $options['search_form_intro'] : '';
+                ?>
+                <h1 class="faa-search-intro__title"><?php echo esc_html($form_title); ?></h1>
                 <div class="faa-search-intro__text">
                     <?php
-                    $intro_text = get_option('faa_search_form_intro', '');
                     if (!empty($intro_text)) {
                         echo wp_kses_post($intro_text);
                     } else {
