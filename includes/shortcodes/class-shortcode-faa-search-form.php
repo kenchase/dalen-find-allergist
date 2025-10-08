@@ -135,7 +135,7 @@ class FAA_Search_Form_Shortcode extends FAA_Shortcode_Base
 
                 <div class="faa-form-field">
                     <label for="phy_postal" class="faa-form-field__label"><?php _e('Postal Code', FAA_TEXT_DOMAIN); ?></label>
-                    <input type="text" id="phy_postal" name="phy_postal" value="" maxlength="7" placeholder="<?php _e('Search by Postal Code', FAA_TEXT_DOMAIN); ?>" pattern="^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$"
+                    <input type="text" id="phy_postal" name="phy_postal" value="" maxlength="7" placeholder="<?php _e('Search by Postal Code', FAA_TEXT_DOMAIN); ?>" pattern="^[A-Za-z]\d[A-Za-z][ \-]?\d[A-Za-z]\d$"
                         aria-describedby="postal-error" autocomplete="postal-code" />
                     <div id="postal-error" class="field-error" style="display: none;" role="alert" aria-live="polite">
                         <?php _e('Please enter a valid Canadian postal code (e.g., K1A 0A6)', FAA_TEXT_DOMAIN); ?>
