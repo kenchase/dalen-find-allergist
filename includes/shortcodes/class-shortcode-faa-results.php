@@ -89,9 +89,6 @@ class FAA_Search_Results_Shortcode extends FAA_Shortcode_Base
             role="region"
             aria-live="polite"
             aria-label="<?php esc_attr_e('Search Results', FAA_TEXT_DOMAIN); ?>">
-            <p class="faa-res-section__initial-message">
-                <?php _e('Use the search form to find allergists in your area. Results will appear here.', FAA_TEXT_DOMAIN); ?>
-            </p>
         </div>
 <?php
     }
