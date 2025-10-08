@@ -850,7 +850,10 @@ function initializeMap(results) {
       title: location.title,
       icon: {
         url: FAA_CONFIG.map.markerIcon.url,
-        scaledSize: new google.maps.Size(FAA_CONFIG.map.markerIcon.scaledSize.width, FAA_CONFIG.map.markerIcon.scaledSize.height),
+        scaledSize: new google.maps.Size(
+          FAA_CONFIG.map.markerIcon.scaledSize.width,
+          FAA_CONFIG.map.markerIcon.scaledSize.height
+        ),
       },
     });
 
