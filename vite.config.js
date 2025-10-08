@@ -22,6 +22,10 @@ export default defineConfig({
         drop_console: true, // Remove console.log statements
         drop_debugger: true, // Remove debugger statements
       },
+      mangle: {
+        // Avoid using '$' as a variable name to prevent conflicts with jQuery
+        reserved: ['$', 'jQuery'],
+      },
     },
 
     // Configure rollup options
