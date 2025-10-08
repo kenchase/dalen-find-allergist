@@ -20,6 +20,9 @@
  * @const {Object} FAA_CONFIG
  */
 const FAA_CONFIG = {
+  // Debug Settings
+  debug: false, // Set to true for development, false for production
+
   // API Settings
   api: {
     endpoint: '/wp-json/faa/v1/physicians/search',
@@ -107,8 +110,8 @@ function handleError(errorType, details = {}, customMessage = null) {
   // Get appropriate user message
   const userMessage = customMessage || FAA_CONFIG.messages.searchError;
 
-  // Log error for debugging (only in console, not shown to users)
-  if (window.console && console.error) {
+  // Log error for debugging only in debug mode
+  if (FAA_CONFIG.debug && window.console && console.error) {
     console.error(`[FAA Error - ${errorType}]:`, details);
   }
 
@@ -371,7 +374,9 @@ function formatPostalCodeInput() {
     // Update the input value
     postalInput.value = value;
   } catch (error) {
-    console.warn('Error formatting postal code input:', error);
+    if (FAA_CONFIG.debug && window.console) {
+      console.error('Error formatting postal code input:', error);
+    }
   }
 }
 
@@ -386,7 +391,9 @@ function validatePostalCode() {
   const { postalInput, postalError } = AppState.elements;
 
   if (!postalInput || !postalError) {
-    console.warn('Postal validation elements not found');
+    if (FAA_CONFIG.debug && window.console) {
+      console.warn('Postal validation elements not found');
+    }
     return false;
   }
 
@@ -418,7 +425,9 @@ function validatePostalCode() {
       return false;
     }
   } catch (error) {
-    console.error('Error during postal code validation:', error);
+    if (FAA_CONFIG.debug && window.console) {
+      console.error('Error during postal code validation:', error);
+    }
     // On error, clear validation state to avoid broken UI
     clearPostalValidation();
     return false;
@@ -1054,10 +1063,10 @@ function generateOrganizationsHTML(organizations, physicianInfo, orgIdsWithMarke
       const distanceNum = parseFloat(distance);
       if (!isNaN(distanceNum)) {
         parts.push(`<div class="faa-res-org__grid-item-cell"><span class="faa-res-org__grid-item-label">Distance:</span> ${distanceNum.toFixed(1)} km</div>`);
-      } else {
+      } else if (FAA_CONFIG.debug && window.console) {
         console.warn('Distance value is not a valid number:', distance);
       }
-    } else {
+    } else if (FAA_CONFIG.debug && window.console) {
       console.warn('Distance is undefined or null for organization:', orgName);
     }
     parts.push(`</div>`);
@@ -1455,7 +1464,9 @@ function toggleRangeField() {
   const { postalInput, rangeSelect } = AppState.elements;
 
   if (!postalInput || !rangeSelect) {
-    console.warn('toggleRangeField: Required elements not found');
+    if (FAA_CONFIG.debug && window.console) {
+      console.warn('toggleRangeField: Required elements not found');
+    }
     return;
   }
 
