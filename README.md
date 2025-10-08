@@ -53,14 +53,14 @@ Returns all results in single response with client-side pagination
 
 ## Shortcodes
 
-- `[find_allergists_form]` - Search form with filters
-- `[find_allergists_results]` - Results container with pagination
-- `[acf-allergist-form]` - ACF form for physicians to edit their profile
+- `[faa-search-form]` - Search form with filters
+- `[faa-search-results]` - Results container with pagination
+- `[faa-profile-editor]` - ACF form for physicians to edit their profile
 
 **Complete search page**:
 ```
-[find_allergists_form]
-[find_allergists_results]
+[faa-search-form]
+[faa-search-results]
 ```
 
 ## ACF Fields
