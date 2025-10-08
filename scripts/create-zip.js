@@ -96,6 +96,7 @@ async function createProductionZip() {
 
     // Handle CSS files
     if (fs.existsSync(cssDir)) {
+      // Handle main find-allergist CSS
       const minifiedCss = path.join(cssDir, 'find-allergist-styles.min.css');
       const regularCss = path.join(cssDir, 'find-allergist.css');
 
@@ -107,27 +108,44 @@ async function createProductionZip() {
         archive.file(regularCss, { name: `${pluginName}/assets/css/find-allergist.css` });
         console.log('✓ Added CSS file');
       }
+
+      // Handle admin CSS
+      const adminMinifiedCss = path.join(cssDir, 'admin.min.css');
+      const adminRegularCss = path.join(cssDir, 'admin.css');
+
+      if (fs.existsSync(adminMinifiedCss)) {
+        archive.file(adminMinifiedCss, { name: `${pluginName}/assets/css/admin.css` });
+        console.log('✓ Added minified admin CSS as admin.css');
+      } else if (fs.existsSync(adminRegularCss)) {
+        archive.file(adminRegularCss, { name: `${pluginName}/assets/css/admin.css` });
+        console.log('✓ Added admin CSS file');
+      }
     }
 
     // Handle JS files
     if (fs.existsSync(jsDir)) {
-      const jsFiles = fs.readdirSync(jsDir).filter((file) => file.endsWith('.js'));
+      // Handle main find-allergist JS
+      const findAllergistMinJs = path.join(jsDir, 'find-allergist-scripts.min.js');
+      const findAllergistRegularJs = path.join(jsDir, 'find-allergist.js');
 
-      if (jsFiles.length > 0) {
-        // Look for specific patterns first
-        const minifiedJs = jsFiles.find((file) => file.includes('find-allergist') && file.includes('.min.js'));
-        const regularJs = jsFiles.find((file) => file === 'find-allergist.js');
-        const anyJs = jsFiles[0]; // fallback to first JS file found
+      if (fs.existsSync(findAllergistMinJs)) {
+        archive.file(findAllergistMinJs, { name: `${pluginName}/assets/js/find-allergist.js` });
+        console.log('✓ Added minified find-allergist JS as find-allergist.js');
+      } else if (fs.existsSync(findAllergistRegularJs)) {
+        archive.file(findAllergistRegularJs, { name: `${pluginName}/assets/js/find-allergist.js` });
+        console.log('✓ Added find-allergist JS file');
+      }
 
-        let jsFileToUse = minifiedJs || regularJs || anyJs;
+      // Handle admin JS
+      const adminMinJs = path.join(jsDir, 'admin.min.js');
+      const adminRegularJs = path.join(jsDir, 'admin.js');
 
-        if (jsFileToUse) {
-          const jsFilePath = path.join(jsDir, jsFileToUse);
-          archive.file(jsFilePath, { name: `${pluginName}/assets/js/find-allergist.js` });
-          console.log(`✓ Added ${jsFileToUse} as find-allergist.js`);
-        }
-      } else {
-        console.log('⚠️  No JS files found in dist/assets/js');
+      if (fs.existsSync(adminMinJs)) {
+        archive.file(adminMinJs, { name: `${pluginName}/assets/js/admin.js` });
+        console.log('✓ Added minified admin JS as admin.js');
+      } else if (fs.existsSync(adminRegularJs)) {
+        archive.file(adminRegularJs, { name: `${pluginName}/assets/js/admin.js` });
+        console.log('✓ Added admin JS file');
       }
     }
 
