@@ -1,68 +1,57 @@
 === Dalen Find Allergist ===
 Contributors: dalendesign
-Donate link: https://www.dalendesign.com/
 Tags: directory, search, allergist, physician, medical, location, distance, maps, healthcare, canada, rest-api, acf, wild-apricot, sso
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 0.99
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Advanced allergist and immunologist directory with comprehensive admin panel, Wild Apricot SSO integration, location-based search, client-side pagination, and enhanced security for Canadian healthcare professionals.
+WordPress plugin for CSACI providing a physician directory with location-based search, interactive maps, client-side pagination, and Wild Apricot SSO integration for Canadian healthcare professionals.
 
 == Description ==
 
-The Dalen Find Allergist plugin provides a comprehensive directory system for allergists and immunologists across Canada. Built specifically for the Canadian Society of Allergy and Clinical Immunology (CSACI), this plugin offers advanced search capabilities with location-based filtering, Wild Apricot SSO integration, and a complete admin panel for centralized management.
+The Find an Allergist plugin provides a comprehensive directory system for allergists and immunologists across Canada. Built specifically for the Canadian Society of Allergy and Clinical Immunology (CSACI), this plugin offers advanced search capabilities with location-based filtering, Wild Apricot SSO integration, and a complete admin panel for centralized management.
 
-**Version 0.99** represents continued optimization with Wild Apricot SSO integration enhancements, code cleanup, and improved plugin architecture while maintaining all core functionality.
+**Version 1.0.0** represents the stable production release with streamlined codebase, updated REST API namespace, and modern shortcode architecture.
 
 = Key Features =
 
-* **Complete Code Refactoring** - Major optimization with singleton pattern, enhanced security, and WordPress best practices
-* **Wild Apricot SSO Integration** - Seamless single sign-on with granular access controls for physician profile management
-* **Enhanced REST API** - Updated namespace `/wp-json/dalen/v1/physicians/search` with comprehensive validation
-* **Client-Side Pagination** - Instant page navigation without additional API calls (20 results per page)
-* **Comprehensive Admin Panel** - Dashboard, settings management, help documentation, and real-time validation
-* **Advanced Search Engine** - Multi-criteria search by name, location, specialty, and distance with smart caching
-* **Distance-Based Filtering** - Find physicians within 1-500km radius using Canadian postal codes
-* **Interactive Maps** - Google Maps integration showing all results regardless of current page
-* **Production-Ready Security** - Enhanced input validation, sanitization, and error handling
-* **Mobile Responsive** - Optimized pagination controls and responsive design for all devices
+* **Location-Based Search** - Find physicians within 1-500km radius using Canadian postal codes with distance filtering
+* **Wild Apricot SSO Integration** - Role-based access controls for physician profile management (`wa_level_` roles)
+* **REST API** - Modern endpoint `/wp-json/faa/v1/physicians/search` with comprehensive validation
+* **Client-Side Pagination** - Instant page navigation without additional API calls
+* **Comprehensive Admin Panel** - Dashboard, settings management, help documentation, and system status
+* **Advanced Search** - Multi-criteria search by name, location, specialty, and distance
+* **Interactive Maps** - Google Maps integration showing all practice locations
+* **Profile Editor** - ACF-based form shortcode for physicians to edit their own profiles
+* **Production-Ready Security** - Input validation, sanitization, and error handling throughout
+* **Mobile Responsive** - Optimized design for all devices
 
-= Version 0.99 Improvements =
+= Version 1.0.0 Highlights =
 
-* **Code Cleanup**: Removed optional login redirect functionality that was no longer needed
-* **SSO Enhancement**: Improved Wild Apricot SSO integration with better access controls
-* **Version Consistency**: Updated all version numbers across plugin files for consistency
-* **Documentation**: Updated all documentation to reflect current plugin state
-* **Architecture**: Maintained production-ready architecture with continued security focus
-* **Functionality**: All core search and management features remain fully functional
+* **Production Release**: Stable, production-ready codebase
+* **Modern API**: Updated REST endpoint namespace to `/wp-json/faa/v1/physicians/search`
+* **Enhanced Shortcodes**: New shortcode architecture with `[faa-search-form]`, `[faa-search-results]`, and `[faa-profile-editor]`
+* **Streamlined Code**: Clean, maintainable codebase following WordPress best practices
+* **Complete Documentation**: Updated documentation reflecting current plugin state
+* **ACF Integration**: Full integration with Advanced Custom Fields for physician data management
 
-= Previous Version 0.9.1 Improvements =
-
-* **Architecture**: Singleton pattern for main plugin class with proper dependency management
-* **Security**: Comprehensive input validation, sanitization, and escaping throughout
-* **Performance**: 30% reduction in plugin size through redundant code removal
-* **Standards**: 100% WordPress coding standards compliance with PHPDoc documentation
-* **Error Handling**: Robust error handling with user-friendly messages
-* **API Enhancement**: Updated REST endpoint namespace with enhanced security
-* **Code Organization**: Constants file and class-based shortcode architecture
-
-= Wild Apricot User Management =
+= Wild Apricot Integration =
 
 * **Automatic Role Detection** - Recognizes users with roles beginning with `wa_level_`
-* **Granular Access Control** - wa_level users can only access and edit their own physician profiles
-* **Content Security** - Prevents modifications to sensitive fields (author, slug, post status)
-* **UI Streamlining** - Hides unnecessary admin elements for cleaner physician interface
-* **Profile Limitations** - Enforces one physician profile per wa_level user for data integrity
-* **AJAX Security** - Prevents unauthorized AJAX operations with server-side validation
+* **Restricted Access** - wa_level users can only edit their own physician profile
+* **Content Security** - Prevents modifications to sensitive fields and access to other profiles
+* **Profile Editor** - Dedicated `[faa-profile-editor]` shortcode for physicians to manage their information
+* **UI Streamlining** - Simplified admin interface for physician users
 
-= Advanced Search Features =
+= Search Features =
 
-* **Name Search** - Fuzzy matching for first name, last name, or full name
+* **Name Search** - Search by physician first name, last name, or full name
 * **Location Filters** - City, province, or postal code filtering
 * **Distance Search** - Radius search from 1km to 500km with Canadian postal code geocoding
+* **Practice Population** - Filter by adult, pediatric, or all populations
 * **Smart Caching** - Results cached in browser memory for instant pagination
 * **Combined Search** - Mix multiple criteria for precise results
 
@@ -77,27 +66,26 @@ The Dalen Find Allergist plugin provides a comprehensive directory system for al
 
 = For Developers =
 
-* **Enhanced REST API** - `/wp-json/dalen/v1/physicians/search` with comprehensive parameters
-* **Object-Oriented Design** - Class-based architecture with singleton pattern
+* **REST API** - `/wp-json/faa/v1/physicians/search` with comprehensive parameters
+* **Object-Oriented Design** - Class-based architecture with proper namespacing
 * **WordPress Standards** - Full compliance with WordPress coding standards
-* **Extensible Hooks** - Proper action and filter hooks for customizations
-* **Security First** - Enhanced validation, sanitization, and capability checks
-* **Documentation** - Comprehensive PHPDoc comments throughout codebase
+* **Extensible Hooks** - Action and filter hooks for customizations
+* **Security First** - Input validation, sanitization, and capability checks throughout
+* **Build Tools** - Vite-based build system for modern asset management
 
 = Requirements =
 
 * WordPress 5.0 or higher
 * PHP 7.4 or higher
 * Advanced Custom Fields (ACF) plugin
-* Google Maps API key (for geocoding and mapping)
-* Wild Apricot SSO integration (for user role management features)
+* Google Maps API key (Geocoding API and Maps JavaScript API)
+* Wild Apricot SSO integration (optional, for user role management features)
 
-= Recommended for Development =
+= Development Tools =
 
-* Composer for dependency management
-* Node.js & NPM for frontend asset management
-* WordPress Coding Standards for code quality
-* PHPUnit for testing
+* Node.js and NPM for asset building
+* Vite for modern JavaScript bundling
+* PostCSS for CSS processing
 
 This plugin is specifically designed for the Canadian healthcare system and uses Canadian postal code formatting and geographic conventions.
 
@@ -121,18 +109,17 @@ This plugin is specifically designed for the Canadian healthcare system and uses
 1. **Install Advanced Custom Fields (ACF)** - Required for physician data management
 2. **Access Admin Panel** - Navigate to "Find Allergist" in your WordPress admin menu
 3. **Configure Google Maps API Key** - Add your API key through Find Allergist → Settings
-4. **Adjust Search Parameters** - Set default search radius (1-500km) and result limits (1-100)
-5. **Configure Wild Apricot Integration** - Set up SSO for physician profile management (if applicable)
-6. **Add Physician Data** - Create physician profiles manually or via import
-7. **Add Shortcodes** - Use `[find_allergist_form]` and `[find_allergist_results]` on your pages
+4. **Configure Wild Apricot Integration** - Set up SSO for physician profile management (if applicable)
+5. **Add Physician Data** - Create physician profiles manually or via import
+6. **Add Shortcodes** - Use `[faa-search-form]` and `[faa-search-results]` on your search page, and `[faa-profile-editor]` for physician profile editing
 
 = Admin Panel Configuration =
 
 After activation, access the comprehensive admin panel through "Find Allergist" in your WordPress admin menu:
 
-* **Dashboard** - View plugin statistics, recent activity, and system status
-* **Settings** - Configure Google Maps API key, search limits, and default radius
-* **Help** - Access complete documentation, examples, and troubleshooting guides
+* **Dashboard** - View plugin overview, quick links, and system status
+* **Settings** - Configure Google Maps API key
+* **Help** - Access documentation and troubleshooting guides
 
 = Google Maps API Setup =
 
@@ -163,17 +150,17 @@ For organizations using Wild Apricot SSO:
 
 == Frequently Asked Questions ==
 
-= What's new in version 0.99? =
+= What's new in version 1.0.0? =
 
-Version 0.99 includes continued optimization with improved Wild Apricot SSO integration, code cleanup by removing unused login redirect functionality, updated documentation, and version consistency across all plugin files while maintaining all core search and management features.
+Version 1.0.0 is the stable production release featuring a streamlined codebase, updated REST API namespace (`/wp-json/faa/v1/physicians/search`), modern shortcode architecture (`[faa-search-form]`, `[faa-search-results]`, `[faa-profile-editor]`), and comprehensive documentation.
 
 = How does Wild Apricot integration work? =
 
-Users with roles beginning with `wa_level_` are automatically recognized and granted access to manage their own physician profiles. The system enforces granular access controls, preventing users from editing other profiles or sensitive fields, while providing a streamlined admin interface.
+Users with roles beginning with `wa_level_` are automatically recognized and granted access to manage their own physician profile using the `[faa-profile-editor]` shortcode. The system enforces access controls, preventing users from editing other profiles or sensitive fields.
 
-= What is client-side pagination? =
+= How does client-side pagination work? =
 
-The new pagination system loads all search results in a single API call, then handles page navigation instantly in the browser. This provides immediate page changes without loading delays and allows all physician locations to be visible on the map regardless of the current page.
+The pagination system loads all search results in a single API call, then handles page navigation instantly in the browser. This provides immediate page changes without loading delays and allows all physician locations to be visible on the map regardless of the current page.
 
 = How does distance-based search work? =
 
@@ -185,11 +172,11 @@ All valid Canadian postal codes are supported. The plugin automatically geocodes
 
 = Can physicians have multiple practice locations? =
 
-Yes! The plugin supports physicians with multiple practice locations through ACF repeater fields. Each location can have its own address, phone number, and coordinates. Distance searches will find physicians if ANY of their locations are within the specified radius.
+Yes! The plugin supports physicians with multiple practice locations through ACF repeater fields (`organizations_details`). Each location can have its own address, phone number, and coordinates using ACF's Google Map field. Distance searches will find physicians if ANY of their locations are within the specified radius.
 
-= What specialties can be filtered? =
+= What populations can be filtered? =
 
-Additional specialty filters can be added by extending the ACF field structure or through the plugin's extensible hook system.
+The plugin supports filtering by practice population (adult, pediatric, or all) using the `prac_pop` parameter in searches.
 
 = Is the plugin mobile-friendly? =
 
@@ -197,27 +184,27 @@ Yes, the plugin is fully responsive with optimized pagination controls for mobil
 
 = How do I configure plugin settings? =
 
-Access the comprehensive admin panel through "Find Allergist" in your WordPress admin menu. You can configure Google Maps API keys with real-time testing, set search result limits (1-100), adjust default radius (1-500km), and access complete help documentation.
+Access the admin panel through "Find Allergist" in your WordPress admin menu. Navigate to Settings to configure your Google Maps API key and view system status.
 
-= What's the difference between the old and new API endpoints? =
+= What is the API endpoint? =
 
-The API endpoint has been updated from `/wp-json/my/v1/physicians/search` to `/wp-json/dalen/v1/physicians/search` with enhanced security, comprehensive input validation, and improved error handling. The new endpoint includes distance parameter validation (1-500km) and user-friendly error messages.
+The REST API endpoint is `/wp-json/faa/v1/physicians/search` with comprehensive input validation and security measures. It supports parameters for name, city, province, postal code, distance (1-500km), and practice population filtering.
 
 = How secure is the plugin? =
 
-Version 0.9.1 includes comprehensive security enhancements: input validation and sanitization throughout, proper escaping of all outputs, nonce verification, capability checks, enhanced error handling, and protection against unauthorized modifications.
+The plugin includes comprehensive security measures: input validation and sanitization throughout, proper escaping of all outputs, nonce verification, capability checks, and protection against unauthorized access and modifications.
 
 = Can I customize the search functionality? =
 
-Yes! The plugin provides extensive hooks and filters for customization. Developers can modify search parameters, add custom fields, integrate with existing themes, and extend functionality through the object-oriented architecture.
+Yes! The plugin provides hooks and filters for customization. Developers can modify search parameters, add custom fields, and extend functionality through the class-based architecture.
 
 = Does this work with caching plugins? =
 
-Yes, the plugin is compatible with caching plugins. The client-side pagination actually improves performance by reducing server requests, and the admin panel settings are cached for optimal performance.
+Yes, the plugin is compatible with caching plugins. The client-side pagination improves performance by reducing server requests.
 
 = How do I troubleshoot API key issues? =
 
-Use the real-time API key testing feature in Find Allergist → Settings. The admin panel provides instant validation and specific error messages to help diagnose API configuration issues.
+Verify your Google Maps API key is properly configured in Find Allergist → Settings. Ensure you have enabled both the Geocoding API and Maps JavaScript API in your Google Cloud Console.
 
 == Screenshots ==
 
@@ -232,114 +219,34 @@ Use the real-time API key testing feature in Find Allergist → Settings. The ad
 
 == Changelog ==
 
-= 0.99 (2025-09-11) =
-* **CODE CLEANUP** - Removed optional login redirect functionality (login-redirect.php) that was no longer needed
-* **ENHANCED:** Improved Wild Apricot SSO integration with better access controls
-* **UPDATED:** All version numbers across plugin files for consistency (main plugin, constants, class files, package.json)
-* **MAINTAINED:** All existing core functionality for physician search and management
-* **DOCUMENTATION:** Updated README.md and readme.txt to reflect current plugin state
-* **ARCHITECTURE:** Continued focus on production-ready code with security best practices
+= 1.0.0 (2025-10-08) =
+* **PRODUCTION RELEASE** - Stable version 1.0.0 with production-ready codebase
+* **API NAMESPACE** - Updated REST API endpoint to `/wp-json/faa/v1/physicians/search`
+* **SHORTCODE UPDATES** - New shortcode names: `[faa-search-form]`, `[faa-search-results]`, `[faa-profile-editor]`
+* **PROFILE EDITOR** - Added `[faa-profile-editor]` shortcode for physicians to edit their own profiles using ACF form
+* **DOCUMENTATION** - Comprehensive documentation updates reflecting current plugin state
+* **CODE CLEANUP** - Streamlined codebase with consistent naming conventions (`faa_` prefix)
+* **ACF INTEGRATION** - Full integration with Advanced Custom Fields for physician data management
+* **BUILD SYSTEM** - Vite-based build system for modern asset management
+* **SECURITY** - Maintained comprehensive input validation and sanitization
+* **WILD APRICOT** - Role-based access controls for `wa_level_` users with profile editing capabilities
 
-= 0.9.1 (2025-08-23) =
-* **MAJOR REFACTORING** - Complete code review and optimization with 30% size reduction
-* **NEW:** Main plugin class with singleton pattern (`Dalen_Find_Allergist_Plugin`)
-* **NEW:** Constants file for better organization (`includes/constants.php`)
-* **NEW:** Wild Apricot SSO integration with comprehensive user role management
-* **NEW:** Client-side pagination with instant page navigation (20 results per page)
-* **NEW:** Enhanced REST API namespace updated to `/wp-json/dalen/v1/physicians/search`
-* **NEW:** Granular access controls for wa_level users on physician profiles
-* **NEW:** Object-oriented shortcode architecture with base classes
-* **ENHANCED:** Security improvements with comprehensive input validation throughout
-* **ENHANCED:** Error handling with user-friendly messages and proper WordPress responses
-* **ENHANCED:** Admin settings with real-time validation and API key testing
-* **ENHANCED:** JavaScript architecture with state management for pagination
-* **IMPROVED:** All function names now use proper `dalen_` prefix (WordPress standards)
-* **IMPROVED:** Code documentation with comprehensive PHPDoc comments
-* **IMPROVED:** WordPress coding standards compliance (100%)
-* **IMPROVED:** Database queries optimization with post-query filtering
-* **ADDED:** Input validation for distance parameters (1-500km range)
-* **ADDED:** Smart search caching in browser memory for instant pagination
-* **ADDED:** Content security preventing unauthorized profile modifications
-* **ADDED:** UI streamlining for wa_level users with simplified admin interface
-* **ADDED:** Profile limitation system (one physician per wa_level user)
-* **REMOVED:** 572 lines of redundant code for better maintainability
-* **SECURITY:** Enhanced sanitization and escaping throughout codebase
-* **PERFORMANCE:** Reduced plugin size by ~30% through code optimization
 
-= 0.4.0 (2025-08-22) =
-* **NEW:** Wild Apricot SSO integration with comprehensive user role management
-* **NEW:** Granular access controls for wa_level users on physician profiles
-* **NEW:** Automated capability assignment and query filtering for secure content access
-* **NEW:** UI streamlining with hidden admin elements for simplified user experience
-* **NEW:** Content security preventing unauthorized modifications to sensitive fields
-* **NEW:** Profile limitation system ensuring one physician profile per wa_level user
-* **NEW:** WA_User_Manager class for centralized user management functionality
-* **IMPROVED:** Enhanced security with server-side validation and AJAX blocking
-* **IMPROVED:** Optimized code structure with OOP approach and reduced redundancy
-* **IMPROVED:** Better user experience with clean, focused admin interface for physicians
-
-= 0.3.0 (2025-08-21) =
-* **NEW:** Client-side pagination for instant page navigation
-* **NEW:** Smart search detection (new search vs. page navigation)
-* **NEW:** Enhanced map integration showing all results regardless of current page
-* **NEW:** Responsive pagination controls optimized for mobile devices
-* **IMPROVED:** Search performance with single API call per search
-* **IMPROVED:** User experience with instant page changes and smooth scrolling
-* **IMPROVED:** Memory management with automatic result cleanup
-* **IMPROVED:** JavaScript architecture with better error handling
-
-= 0.2.0 (2025-08-20) =
-* **NEW:** Complete admin panel with dashboard, settings, and help documentation
-* **NEW:** Centralized Google Maps API key management through admin interface
-* **NEW:** Configurable search parameters (results limit, default radius)
-* **NEW:** Real-time settings validation and API key testing
-* **NEW:** Admin dashboard with quick stats and recent activity
-* **NEW:** Comprehensive help documentation with examples
-* **IMPROVED:** Enhanced file structure with dedicated admin components
-* **IMPROVED:** Better error handling and user feedback
-* **IMPROVED:** Responsive admin interface design
-
-= 0.1.0 (2025-08-14) =
-* **Initial release**
-* **NEW:** Distance-based search with Canadian postal code geocoding
-* **NEW:** REST API endpoint for physician search
-* **NEW:** Advanced search form with multiple filter options
-* **NEW:** Google Maps integration for location display
-* **NEW:** Responsive design for mobile compatibility
-* **NEW:** ACF integration for physician data management
-* **NEW:** Custom post type for physician profiles
-* **NEW:** Shortcode system for easy page integration
-* **NEW:** Haversine formula for accurate distance calculations
-* **NEW:** Support for multiple practice locations per physician
-* **NEW:** Optimized database queries for performance
 
 == Upgrade Notice ==
 
-= 0.9.1 =
-**MAJOR UPDATE** - Complete refactoring with 30% size reduction, Wild Apricot SSO integration, client-side pagination, enhanced security, and 100% WordPress coding standards compliance. Backup before upgrading. API endpoint updated to `/wp-json/dalen/v1/physicians/search`.
-
-= 0.4.0 =
-Major update with Wild Apricot SSO integration and comprehensive user role management. Adds granular access controls for physician profile management.
-
-= 0.3.0 =
-Significant performance improvement with client-side pagination. Search results now load instantly between pages with single API calls.
-
-= 0.2.0 =
-Major update with comprehensive admin panel. Upgrade to access centralized settings management, dashboard analytics, and enhanced configuration options.
-
-= 0.1.0 =
-Initial release of the Dalen Find Allergist plugin. Install to begin using the advanced physician directory with distance-based search capabilities.
+= 1.0.0 =
+**PRODUCTION RELEASE** - Stable version 1.0.0 with updated REST API endpoint (`/wp-json/faa/v1/physicians/search`) and new shortcode names (`[faa-search-form]`, `[faa-search-results]`, `[faa-profile-editor]`). Update your shortcodes after upgrading.
 
 == API Documentation ==
 
 = Search Endpoint =
 
-**GET** `/wp-json/dalen/v1/physicians/search` *(Updated namespace)*
+**GET** `/wp-json/faa/v1/physicians/search`
 
-**Enhanced Security & Validation:**
+**Security & Validation:**
 * All parameters are properly sanitized and validated
 * Distance parameter limited to 1-500km range
-* Required search criteria validation
 * Comprehensive error handling with user-friendly messages
 
 **Parameters:**
@@ -348,16 +255,21 @@ Initial release of the Dalen Find Allergist plugin. Install to begin using the a
 * `province` (string) - Province filter
 * `postal` (string) - Postal code for distance filtering
 * `kms` (integer) - Search radius in kilometers (1-500)
+* `prac_pop` (string) - Practice population filter (adult, pediatric, or all)
+
 **Example Requests:**
 ```
 # Search by name
-GET /wp-json/dalen/v1/physicians/search?name=John%20Smith
+GET /wp-json/faa/v1/physicians/search?name=John%20Smith
 
 # Distance-based search (50km radius from Toronto downtown)  
-GET /wp-json/dalen/v1/physicians/search?postal=M5V3M6&kms=50
+GET /wp-json/faa/v1/physicians/search?postal=M5V3M6&kms=50
 
 # Province-wide search
-GET /wp-json/dalen/v1/physicians/search?province=Ontario
+GET /wp-json/faa/v1/physicians/search?province=Ontario
+
+# Pediatric physicians in a specific city
+GET /wp-json/faa/v1/physicians/search?city=Vancouver&prac_pop=pediatric
 ```
 
 **Response Format:**
@@ -370,14 +282,12 @@ GET /wp-json/dalen/v1/physicians/search?province=Ontario
       "title": "Dr. John Smith",
       "link": "https://example.com/physicians/john-smith/",
       "acf": {
-        "city": "Toronto",
-        "province": "Ontario", 
-        "postal": "M5V 3M6",
-        "credentials": "MD, FRCPC",
+        "physician_credentials": "MD, FRCPC",
         "organizations_details": [
           {
             "institutation_name": "Hospital for Sick Children",
             "institution_gmap": {
+              "address": "555 University Ave",
               "city": "Toronto",
               "state": "Ontario",
               "post_code": "M5G 1X8",
@@ -399,20 +309,28 @@ GET /wp-json/dalen/v1/physicians/search?province=Ontario
 = Shortcodes =
 
 **Search Form:**
-`[find_allergist_form]` - Displays the search form with all filter options
+`[faa-search-form]` - Displays the search form with all filter options (name, city, province, postal code, distance, practice population)
 
-**Complete Search Interface:**
-`[find_allergist_results]` - Displays the complete search interface including:
-* Search form with all filter options
-* Results container with client-side pagination  
+**Search Results:**
+`[faa-search-results]` - Displays the results container with:
+* Client-side pagination  
 * Interactive Google Maps integration
 * Mobile responsive design
+
+**Profile Editor:**
+`[faa-profile-editor]` - ACF form for physicians to edit their own profile (requires appropriate user role)
+
+**Complete Search Page Setup:**
+```
+[faa-search-form]
+[faa-search-results]
+```
 
 **Features:**
 * Instant pagination without loading delays
 * Smart search detection (new vs. page navigation)
 * Memory efficient with automatic result cleanup
-* Mobile optimized pagination controls
+* Mobile optimized controls
 
 == Technical Specifications ==
 
@@ -421,19 +339,28 @@ GET /wp-json/dalen/v1/physicians/search?province=Ontario
 * PHP 7.4+
 * MySQL 5.6+
 * Advanced Custom Fields plugin
-* Google Maps API key
+* Google Maps API key (Geocoding API and Maps JavaScript API)
+
+= ACF Field Structure =
+* **Physician Field**: `physician_credentials` - Text field for credentials (MD, FRCPC, etc.)
+* **Organizations Repeater**: `organizations_details` - Repeater field containing:
+  * Organization name
+  * Google Map field (address, coordinates, postal code)
+  * Phone number
+  * Additional organization details
 
 = Performance =
-* Optimized database queries
-* Efficient distance calculations
+* Optimized database queries with post-query filtering
+* Client-side pagination for instant navigation
+* Efficient distance calculations using Haversine formula
 * Minimal server resource usage
 * Compatible with caching plugins
 
 = Security =
-* Sanitized input validation
-* Secure API endpoints
+* Comprehensive input validation and sanitization
+* Secure REST API endpoints with nonce verification
 * WordPress coding standards compliance
-* Regular security updates
+* Role-based access controls for Wild Apricot users
 
 == Support ==
 
@@ -441,6 +368,6 @@ For technical support, feature requests, or bug reports:
 
 * **Developer:** Dalen Design
 * **Website:** [https://www.dalendesign.com/](https://www.dalendesign.com/)
-* **Documentation:** See README.md for detailed technical documentation
+* **Documentation:** See README.md in the plugin directory for detailed technical documentation
 
-This plugin is developed specifically for the Canadian Society of Allergy and Clinical Immunology (CSACI).
+This plugin is developed specifically for the Canadian Society of Allergy and Clinical Immunology (CSACI) and is designed for the Canadian healthcare system using Canadian postal code formatting and geographic conventions.
